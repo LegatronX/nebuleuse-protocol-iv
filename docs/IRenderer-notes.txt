@@ -1,0 +1,7 @@
+renderer.clear();
+renderer.drawShip(player.x, player.y, player.angle, player.thrust);
+renderer.drawBullet(b.x, b.y, b.kind);
+renderer.drawEnemy(e);
+renderer.spawnParticles(x, y, palette);
+renderer.setShake(intensity);
+renderer.present();

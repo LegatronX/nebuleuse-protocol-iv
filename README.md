@@ -1,6 +1,35 @@
 # Nébuleuse Protocol IV
 
-Petit shoot 'em up vertical en HTML/CSS/JS pur (aucune dépendance), jouable directement dans un navigateur.
+Shoot 'em up vertical. **Migration en cours** (branche `migration/pixi-v5`) du monolithe
+HTML/CSS/JS autonome vers un projet modulaire Vite + PixiJS (rendu WebGL, shader de
+nébuleuse animé). Voir `archive/NOTES.md` pour le journal de migration.
+
+## Jouer maintenant
+
+- **Version stable actuelle (monolithe, Canvas 2D)** : [`public/legacy/nebuleuse-v4.7.html`](public/legacy/nebuleuse-v4.7.html)
+  — ouvrable directement dans un navigateur, aucune installation requise. Repère git :
+  tag `v4.7-freeze`.
+- **Nouveau socle (Vite + PixiJS, en construction)** :
+  ```bash
+  npm install
+  npm run dev
+  ```
+
+## Structure du dépôt
+
+- `public/legacy/` — tout l'historique du monolithe (v4.1 à v4.7), conservé et jouable tel
+  quel, jamais supprimé.
+- `archive/` — outillage Python de build devenu obsolète (`build_v41.py`…`build_v47.py`),
+  ancien `manifest.json` racine, journal de migration (`NOTES.md`).
+- `src/` — le nouveau code modulaire (Vite). `src/render/` contient le contrat de rendu
+  (`IRenderer`, à venir) et ses implémentations (`PixiRenderer.js`, `Canvas2DRenderer.js`
+  à venir).
+- `docs/` — notes de conception et plan de migration.
+
+## Historique du monolithe (v4.1 → v4.7)
+
+Pour référence — ces fichiers vivent désormais dans `public/legacy/` et `archive/` ; les
+chemins ci-dessous sont ceux d'origine, avant réorganisation.
 
 ## Fichiers
 

@@ -1,0 +1,10 @@
+﻿Fichier (déjà fourni ou à venir),Chemin cible dans le repo
+package.json,/package.json
+vite.config.js,/vite.config.js
+PixiRenderer.js,/src/render/PixiRenderer.js
+nebula.frag.js,/src/render/nebula.frag.js
+main.js (démo / banc d'essai),/src/main.js
+IRenderer.js (mouvement 3),/src/render/IRenderer.js
+Canvas2DRenderer.js (mouvement 3),/src/render/Canvas2DRenderer.js
+overlays / settings (mouvement 3–4),/src/ui/*.js
+vagues / armes / boss (mouvement 4),/src/data/*.json

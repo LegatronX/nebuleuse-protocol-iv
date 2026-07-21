@@ -1,0 +1,64 @@
+nebuleuse-iv/                       # racine du dépôt GitHub
+│
+├── .github/
+│   └── workflows/
+│       └── deploy.yml              # build Vite → déploiement GitHub Pages
+│
+├── .gitignore                      # node_modules/, dist/, etc. (voir §VI)
+├── README.md                       # à réécrire : décrit le nouveau projet
+├── package.json                    # dépendances (pixi.js, vite, vite-plugin-pwa)
+├── vite.config.js                  # config + manifest PWA régénéré proprement
+├── index.html                      # COQUILLE minimale (point d'entrée Vite) — §III
+│
+├── public/                         # servi TEL QUEL, copié à l'identique dans dist/
+│   ├── icons/                      # icônes du projet MODERNE (référencées par le plugin PWA)
+│   │   ├── icon-192.png
+│   │   ├── icon-512.png
+│   │   ├── apple-touch-icon.png
+│   │   └── favicon-32.png
+│   └── legacy/                     # l'ancien v4.7, AUTOSUFFISANT, jouable à /legacy/
+│       ├── nebuleuse-v4.7.html
+│       ├── manifest.json           # l'ancien manifest (clos dans ce sous-monde)
+│       └── icons/                  # copie temporaire des icônes pour le legacy
+│
+├── src/                            # le code source modulaire (Vite le transforme)
+│   ├── main.js                     # point d'entrée JS (charge le renderer + la logique)
+│   ├── style.css                   # styles extraits du <style> du monolithe
+│   │
+│   ├── game/                       # LOGIQUE — ignore le rendu (le cœur)
+│   │   ├── engine.js               # boucle, fixed timestep, accumulateur
+│   │   ├── state.js                # machine à états (menu/play/pause/over)
+│   │   ├── player.js
+│   │   ├── weapons.js
+│   │   ├── waves.js
+│   │   ├── enemies.js
+│   │   ├── collisions.js           # spatial hash
+│   │   └── progression.js          # nanites, laboratoire, meta
+│   │
+│   ├── render/                     # COUCHE RENDU — le contrat et ses implémentations
+│   │   ├── IRenderer.js            # le contrat (JSDoc / interface formelle)
+│   │   ├── PixiRenderer.js         # cible WebGL
+│   │   ├── Canvas2DRenderer.js     # fallback (encapsule l'ancien rendu)
+│   │   └── nebula.frag.js          # shader de la nébuleuse
+│   │
+│   ├── ui/                         # overlays DOM (menu, labo, réglages, pause)
+│   │   ├── overlays.js
+│   │   └── settings.js             # le menu Réglages (ex-patch v4.7, désormais natif)
+│   │
+│   ├── audio/
+│   │   └── audio.js
+│   │
+│   ├── accessibility/
+│   │   └── colorblind.js           # filtres CSS daltonien
+│   │
+│   └── data/                       # JSON data-driven (mouvement 4)
+│       ├── waves.json
+│       ├── weapons.json
+│       └── enemies.json
+│
+├── archive/                        # MUSÉE : obsolète, conservé pour l'histoire
+│   ├── build_v47.py
+│   ├── manifest.json               # l'ancien, racine (le plugin PWA le remplace)
+│   └── NOTES.md                    # journal de migration (décisions, dates)
+│
+└── docs/                           # captures, notes de conception, comparatifs visuels

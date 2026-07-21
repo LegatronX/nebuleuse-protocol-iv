@@ -1,1 +1,19 @@
+# Dépendances & build (régénérables : on ne les versionne jamais)
+node_modules/
+dist/
+*.local
+
+# Environnement & secrets
+.env
+.env.*
+
+# Système & éditeurs
 .DS_Store
+Thumbs.db
+*.log
+
+# Vite
+.vite/
+
+# Note : public/icons, public/legacy, src/, archive/ sont VERSIONNÉS.
+# Le manifest MODERNE n'existe pas dans le source (généré dans dist/ par le plugin).
