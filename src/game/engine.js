@@ -8,7 +8,7 @@ import { TAU, rand, clamp, pick } from '../util/math.js';
 import { loadMeta, saveMeta, loadBest, saveBest } from './meta.js';
 export { saveBest };
 import { SHIPS, DIFF, TALENTS, SECTORS, SECTOR_PALETTES, MUTATORS, getWaveTypes, currentSectorIndex } from './waves.js';
-import { AudioSys } from '../audio/audio.stub.js';
+import { AudioSys } from '../audio/audio.js';
 export function show(idOrEl) {
   const el = typeof idOrEl === 'string' ? document.getElementById(idOrEl) : idOrEl;
   if (el) el.classList.remove('hidden');
@@ -752,6 +752,8 @@ export function update(dt) {
     if (world.shake > 0) world.shake = Math.max(0, world.shake - dt * 1.4);
     if (world.hitFlash > 0) world.hitFlash -= dt;
   }
+
+  AudioSys.update(dt, world);
 }
 
 export function frame(t, renderer) {

@@ -6,7 +6,7 @@
 
 import { TAU, rand, clamp, pick } from '../util/math.js';
 import { world, getDiff, dm, spawnEnemy } from './engine.js';
-import { AudioSys } from '../audio/audio.stub.js';
+import { AudioSys } from '../audio/audio.js';
 import { enemyColor } from './theme.js';
 
 export function fireEnemyBullet(x, y, vx, vy, r = 5, color = '#f87171') {

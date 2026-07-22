@@ -1,10 +1,11 @@
 # Plan Mouvement 5 — Donner une âme au jeu
 
 ## Feuille de route
-- [ ] **M5.1 — La voix du jeu (AudioSys réel)**
+- [x] **M5.1 — La voix du jeu (AudioSys réel)**
   - Extraction du synthétiseur FM Web Audio API, générateur 3-stems, mastering et SFX depuis `docs/logic-source-extract.js`.
   - Intégration dans `src/audio/audio.js` avec initialisation idempotente au premier geste utilisateur.
-  - Persistance du mute dans `meta.muted` et liaisons de la musique aux transitions d'état.
+  - Persistance du mute dans `meta.muted` (`nebula4_mute`) et liaisons de la musique aux transitions d'état.
+  - Le stub silencieux `audio.stub.js` est retiré et n'a plus aucun import actif.
 - [ ] **M5.2 — La variété (Boss & Drops)**
   - Langage de patterns de tir et 5 boss aux identités et phases distinctes.
   - Drops aléatoires, coffres de fin de vague et vagues à thème.

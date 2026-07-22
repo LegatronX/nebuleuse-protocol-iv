@@ -8,7 +8,7 @@ import { rand, clamp } from '../util/math.js';
 import { world, getScoreMult, triggerCamPunch, triggerHitStop, gameOver } from './engine.js';
 import { saveBest } from './meta.js';
 import { addText } from './engine.js';
-import { AudioSys } from '../audio/audio.stub.js';
+import { AudioSys } from '../audio/audio.js';
 
 export function addScore(pts) {
   const mult = world.multiplier * getScoreMult();

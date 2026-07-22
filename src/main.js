@@ -12,6 +12,18 @@ import { world, update, resetGame, keys, pauseGame, resumeGame } from './game/en
 import { ensureDOM, updateHUD } from './ui/overlays.js';
 import { doBomb, doSpecial } from './game/combat.js';
 import { clamp } from './util/math.js';
+import { AudioSys } from './audio/audio.js';
+
+/* ------------------------------------------------------------------
+ * 0. Gestes Utilisateur & AudioContext Unlock (Autoplay Policy)
+ * ------------------------------------------------------------------ */
+const unlockAudio = () => {
+  AudioSys.init();
+  AudioSys.resume();
+};
+window.addEventListener('pointerdown', unlockAudio, { passive: true });
+window.addEventListener('keydown', unlockAudio, { passive: true });
+window.addEventListener('touchstart', unlockAudio, { passive: true });
 
 /* ------------------------------------------------------------------
  * 0. Choix du profil GFX et du renderer — le contrat pour seule boussole
