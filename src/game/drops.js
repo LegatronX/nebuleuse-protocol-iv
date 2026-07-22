@@ -61,7 +61,7 @@ function rollLoot() {
 }
 
 export function openChest(world, x, y) {
-  AudioSys.power(x);
+  AudioSys.chest(x);
   addText(x, y - 20, 'COFFRE !', '#fbbf24');
 
   for (let i = 0; i < 3; i++) {

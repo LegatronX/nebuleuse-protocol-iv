@@ -339,14 +339,13 @@ export function startGame(chosenMode = 'campagne') {
   world.lastMode = chosenMode;
   resetGame();
   world.state = 'playing';
-  AudioSys.startMusic();
+  AudioSys.startMusic('game');
 }
 
 export function pauseGame() {
   if (world.state !== 'playing') return;
   world.state = 'paused';
   show('pauseOverlay');
-  AudioSys.stopMusic();
   AudioSys.ui();
 }
 
@@ -354,7 +353,7 @@ export function resumeGame() {
   if (world.state !== 'paused') return;
   hide('pauseOverlay');
   world.state = 'playing';
-  AudioSys.startMusic();
+  AudioSys.startMusic('game');
   AudioSys.ui();
 }
 
@@ -364,7 +363,7 @@ export function gameOver() {
   world.meta.nanites += Math.max(0, totalEarned - world.runNanitesPaid);
   saveMeta(world.meta);
   show('gameoverOverlay');
-  AudioSys.stopMusic();
+  AudioSys.playGameOverJingle();
   AudioSys.explosion(true);
 }
 
@@ -374,8 +373,7 @@ export function showVictory() {
   world.meta.nanites += Math.max(0, totalEarned - world.runNanitesPaid);
   saveMeta(world.meta);
   show('victoryOverlay');
-  AudioSys.stopMusic();
-  AudioSys.power();
+  AudioSys.playVictoryJingle();
 }
 
 export function toMenu() {
@@ -384,7 +382,7 @@ export function toMenu() {
   hide('gameoverOverlay');
   hide('victoryOverlay');
   show('menu');
-  AudioSys.stopMusic();
+  AudioSys.startMusic('menu');
   AudioSys.ui();
 }
 

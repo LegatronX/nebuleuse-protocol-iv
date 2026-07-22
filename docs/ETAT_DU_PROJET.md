@@ -35,8 +35,9 @@ visuelle devient une récompense de progression (idée de Christian).
 - M4.0quater Transposition PixiRenderer — ✅ clos.
 - M4.1 Cœur du jeu — ✅ clos (stubs audio M4.5 en place).
 - M4.2 Interface & Ergo — ✅ clos (HUD Cyber-Arcade unifié, bandeaux cinématiques, contrôles clavier WASD/Flèches, menu, labo, vaisseaux, réglages).
-- M5.1 La voix du jeu (AudioSys réel) — ✅ clos (synthétiseur FM, musique 3-stems, réverbération cosmique et mastering branchés ; stub audio retiré).
-- M5.2 Variété Boss & Drops · M5.3 Power Fantasy & Score · M5.4 JSON / Narration / Succès.
+- M5.1 La voix du jeu (AudioSys réel) — ✅ clos (stub audio retiré).
+- M5.1b Composition sonore originale — ✅ clos (musique originale chantante, sections menu/jeu/boss/jingles, timbres SFX distincts, micro-variation ±2 demi-tons, mix anti-énervement).
+- M5.2 Variété Boss & Drops — Jalon 1 clos (patterns, drops, coffres, magnet, Cramoisi & Azur) ; Jalon 2 suspendu (en attente de validation à l'oreille par Christian).
 
 ## Décisions actées
 - Source de vérité pour la migration : **v4.7**.
