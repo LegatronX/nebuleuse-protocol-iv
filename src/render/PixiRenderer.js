@@ -173,13 +173,19 @@ export class PixiRenderer extends IRenderer {
     this.bannerLayer.visible = false;       // état persistant Pixi : on réinitialise
     this.nebula.uniforms.uTime = this.world.globalTime;
   }
+  regenerateBackground() {}
 
-  beginShake() {
+  beginCamera() {
     const s = this.world.shake;
     if (s > 0) { const m = s * 9; this.worldLayer.x = rand(-m, m); this.worldLayer.y = rand(-m, m); }
     else { this.worldLayer.x = 0; this.worldLayer.y = 0; }
   }
-  endShake() { this.worldLayer.x = 0; this.worldLayer.y = 0; }
+  endCamera() { this.worldLayer.x = 0; this.worldLayer.y = 0; }
+  beginShake() { this.beginCamera(); }
+  endShake() { this.endCamera(); }
+
+  drawNebulae() {}
+  drawPlanets() {}
 
   drawStars() {
     const g = this.starG; g.clear();

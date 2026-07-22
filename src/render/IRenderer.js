@@ -1,10 +1,12 @@
+import { gfxFlags } from './gfx.js';
+
 /**
  * IRenderer — le contrat de rendu de Nébuleuse Protocol IV.
  *
  * La logique de jeu ne connaît QUE ce contrat. Elle transmet l'état du monde
  * (bindWorld) puis appelle renderFrame() à chaque image. Le z-order est figé
  * ici, dans renderFrame(), et hérité par les deux implémentations :
- *   - Canvas2DRenderer : fidèle à l'existant (référence + fallback) ;
+ *   - Canvas2DRenderer : référence fidèle (fallback, niveaux 1–4) ;
  *   - PixiRenderer     : WebGL (cible).
  * On bascule de l'une à l'autre d'un interrupteur, à monde identique.
  */
@@ -20,13 +22,18 @@
  * @property {Array}  eBullets   @property {Array} beams
  * @property {Array}  powerups   @property {Array} particles
  * @property {Array}  shockwaves @property {Array} texts
+ * @property {Array}  planets
  */
 
 export class IRenderer {
   constructor() {
     /** @type {World|null} */
     this.world = null;
+    this.gfx = gfxFlags(1);
   }
+
+  /** Définit le profil de fidélité partagé. */
+  setGfx(gfxObject) { this.gfx = gfxObject; }
 
   /** Monte le rendu dans un conteneur DOM. @param {HTMLElement} host */
   mount(host) { this._abstract('mount'); }
@@ -44,7 +51,9 @@ export class IRenderer {
   renderFrame() {
     const w = this.world;
     this.drawBackground();
-    this.beginShake();
+    this.beginCamera();
+    this.drawNebulae();
+    this.drawPlanets();
     this.drawStars();
     this.drawPowerups();
     this.drawEnemies();
@@ -54,7 +63,7 @@ export class IRenderer {
     this.drawParticles();
     this.drawShockwaves();
     this.drawTexts();
-    this.endShake();
+    this.endCamera();
     this.flashOverlay();
     this.slowOverlay();
     if (w.waveBannerTime > 0 && w.state === 'playing') this.drawBanner();
@@ -63,8 +72,11 @@ export class IRenderer {
 
   /* ---- Verbes de calque (à implémenter par chaque renderer) ---- */
   drawBackground() { this._abstract('drawBackground'); }
-  beginShake() { this._abstract('beginShake'); }
-  endShake() { this._abstract('endShake'); }
+  regenerateBackground() { this._abstract('regenerateBackground'); }
+  beginCamera() { this._abstract('beginCamera'); }
+  endCamera() { this._abstract('endCamera'); }
+  drawNebulae() { this._abstract('drawNebulae'); }
+  drawPlanets() { this._abstract('drawPlanets'); }
   drawStars() { this._abstract('drawStars'); }
   drawPowerups() { this._abstract('drawPowerups'); }
   drawEnemies() { this._abstract('drawEnemies'); }
