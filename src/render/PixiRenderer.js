@@ -170,8 +170,9 @@ export class PixiRenderer extends IRenderer {
 
     this.overlayG = new Graphics();
     this.bannerLayer = new Container();
+    this.bannerBackG = new Graphics();
     this.bannerText = new Text('', {
-      fontFamily: 'sans-serif', fontSize: 40, fontWeight: '900',
+      fontFamily: 'sans-serif', fontSize: 36, fontWeight: '900',
       fill: '#ffffff', align: 'center',
     });
     this.bannerText.anchor.set(0.5);
@@ -185,7 +186,7 @@ export class PixiRenderer extends IRenderer {
     this.bannerGradient.width = 400;
     this.bannerGradient.height = 100;
     this.bannerGradient.mask = this.bannerText;
-    this.bannerLayer.addChild(this.bannerText, this.bannerGradient);
+    this.bannerLayer.addChild(this.bannerBackG, this.bannerText, this.bannerGradient);
     this.bannerLayer.visible = false;
 
     this.app.stage.addChild(this.bgLayer, this.worldLayer, this.overlayG, this.bannerLayer);
@@ -522,12 +523,56 @@ export class PixiRenderer extends IRenderer {
 
   drawBanner() {
     const total = 2.3, t = this.world.waveBannerTime;
-    let a = 1;
-    if (t > total - 0.4) a = (total - t) / 0.4;
-    else if (t < 0.6) a = t / 0.6;
-    this.bannerText.text = this.world.waveBanner;
-    this.bannerLayer.position.set(this.W / 2, this.H * 0.3);
-    this.bannerLayer.alpha = clamp(a, 0, 1);
+    if (t <= 0) {
+      this.bannerLayer.visible = false;
+      return;
+    }
+
+    const text = this.world.waveBanner || '';
+    const progress = 1 - (t / total);
+    const W = this.W, H = this.H;
+    const isBoss = text.includes('BOSS');
+
+    let posX = W / 2;
+    let alpha = 1;
+    let scale = 1;
+
+    if (progress < 0.2) {
+      const p = progress / 0.2;
+      posX = W * 1.3 - p * (W * 0.8);
+      alpha = clamp(p * 1.5, 0, 1);
+      scale = 1.2 - p * 0.2;
+    } else if (progress > 0.8) {
+      const p = (progress - 0.8) / 0.2;
+      posX = W / 2 - p * (W * 0.8);
+      alpha = clamp(1 - p, 0, 1);
+    }
+
+    const posY = H * 0.28;
+
+    const targetW = W * 0.86;
+    const calcSize = Math.min(42, Math.max(16, targetW / (Math.max(1, text.length) * 0.58)));
+    const fontSize = Math.round(calcSize * scale);
+
+    this.bannerText.style.fontSize = fontSize;
+    this.bannerText.style.fill = isBoss ? '#f43f5e' : '#ffffff';
+    this.bannerText.text = text;
+
+    // Draw backing dark strip
+    const stripH = 50;
+    this.bannerBackG.clear();
+    this.bannerBackG.beginFill(isBoss ? 0x1e0a19 : 0x071026, 0.85);
+    this.bannerBackG.drawRect(-W / 2, -stripH / 2, W, stripH);
+    this.bannerBackG.endFill();
+
+    this.bannerBackG.lineStyle(1.5, isBoss ? 0xf43f5e : 0x38bdf8, 0.8);
+    this.bannerBackG.moveTo(-W / 2, -stripH / 2);
+    this.bannerBackG.lineTo(W / 2, -stripH / 2);
+    this.bannerBackG.moveTo(-W / 2, stripH / 2);
+    this.bannerBackG.lineTo(W / 2, stripH / 2);
+
+    this.bannerLayer.position.set(posX, posY);
+    this.bannerLayer.alpha = clamp(alpha, 0, 1);
     this.bannerLayer.visible = true;
   }
 

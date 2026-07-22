@@ -454,20 +454,78 @@ export class Canvas2DRenderer extends IRenderer {
   drawBanner() {
     const ctx = this.ctx, W = this.W, H = this.H;
     const total = 2.3, t = this.world.waveBannerTime;
-    let a = 1;
-    if (t > total - 0.4) a = (total - t) / 0.4;
-    else if (t < 0.6) a = t / 0.6;
-    a = clamp(a, 0, 1);
+    if (t <= 0) return;
+
+    const text = this.world.waveBanner || '';
+    const progress = 1 - (t / total);
+
+    let posX = W / 2;
+    let alpha = 1;
+    let scale = 1;
+
+    if (progress < 0.2) {
+      const p = progress / 0.2;
+      posX = W * 1.3 - p * (W * 0.8);
+      alpha = clamp(p * 1.5, 0, 1);
+      scale = 1.2 - p * 0.2;
+    } else if (progress > 0.8) {
+      const p = (progress - 0.8) / 0.2;
+      posX = W / 2 - p * (W * 0.8);
+      alpha = clamp(1 - p, 0, 1);
+    }
+
     ctx.save();
-    ctx.globalAlpha = a; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    const size = clamp(W * 0.09, 30, 64);
-    ctx.font = `900 ${size}px sans-serif`;
-    const g = ctx.createLinearGradient(W / 2 - 160, 0, W / 2 + 160, 0);
-    g.addColorStop(0, '#a5f3fc'); g.addColorStop(0.5, '#818cf8'); g.addColorStop(1, '#f0abfc');
-    ctx.fillStyle = g;
-    ctx.fillText(this.world.waveBanner, W / 2, H * 0.3);
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)'; ctx.lineWidth = 1;
-    ctx.strokeText(this.world.waveBanner, W / 2, H * 0.3);
+    ctx.globalAlpha = alpha;
+
+    const posY = H * 0.28;
+    const isBoss = text.includes('BOSS');
+
+    // 1. Bandeau sombre de lisibilité
+    const stripH = 50;
+    const stripG = ctx.createLinearGradient(0, posY - stripH / 2, 0, posY + stripH / 2);
+    stripG.addColorStop(0, 'rgba(2, 4, 9, 0)');
+    stripG.addColorStop(0.2, isBoss ? 'rgba(30, 10, 25, 0.88)' : 'rgba(7, 16, 38, 0.85)');
+    stripG.addColorStop(0.8, isBoss ? 'rgba(30, 10, 25, 0.88)' : 'rgba(7, 16, 38, 0.85)');
+    stripG.addColorStop(1, 'rgba(2, 4, 9, 0)');
+
+    ctx.fillStyle = stripG;
+    ctx.fillRect(0, posY - stripH / 2, W, stripH);
+
+    // Lignes néon supérieure et inférieure
+    ctx.strokeStyle = isBoss ? '#f43f5e' : '#38bdf8';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(0, posY - stripH / 2); ctx.lineTo(W, posY - stripH / 2);
+    ctx.moveTo(0, posY + stripH / 2); ctx.lineTo(W, posY + stripH / 2);
+    ctx.stroke();
+
+    // 2. Taille de police adaptative (garantie 100% sans débordement)
+    const targetW = W * 0.86;
+    const calcSize = Math.min(42, Math.max(16, targetW / (Math.max(1, text.length) * 0.58)));
+    const fontSize = Math.round(calcSize * scale);
+
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = `900 ${fontSize}px sans-serif`;
+
+    const textG = ctx.createLinearGradient(posX - 140, 0, posX + 140, 0);
+    if (isBoss) {
+      textG.addColorStop(0, '#f43f5e');
+      textG.addColorStop(0.5, '#fbbf24');
+      textG.addColorStop(1, '#f0abfc');
+    } else {
+      textG.addColorStop(0, '#a5f3fc');
+      textG.addColorStop(0.5, '#818cf8');
+      textG.addColorStop(1, '#f0abfc');
+    }
+
+    ctx.fillStyle = textG;
+    ctx.fillText(text, posX, posY);
+
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.lineWidth = 1;
+    ctx.strokeText(text, posX, posY);
+
     ctx.restore();
   }
 
