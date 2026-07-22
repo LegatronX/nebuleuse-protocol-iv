@@ -256,10 +256,11 @@ export class PixiRenderer extends IRenderer {
       const x = b.x - b.width / 2;
       const cn = this._c(b.color);
       if (active) {
-        const segH = (H - b.y) / 3;                 // approximation du dégradé vertical
-        g.beginFill(cn, 0.9).drawRect(x, b.y, b.width, segH).endFill();
-        g.beginFill(cn, 0.5).drawRect(x, b.y + segH, b.width, segH).endFill();
-        g.beginFill(cn, 0.12).drawRect(x, b.y + 2 * segH, b.width, segH).endFill();
+        const segs = 24;
+        const segH = (H - b.y) / segs;
+        for (let i = 0; i < segs; i++) {
+          g.beginFill(cn, beamAlpha(i / segs)).drawRect(x, b.y + i * segH, b.width, segH + 1).endFill();
+        }
         g.beginFill(0xffffff, 0.8).drawRect(b.x - 3, b.y, 6, H - b.y).endFill();
       } else {
         const t = (b.life - b.active) / (b.total - b.active);
