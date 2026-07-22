@@ -1,7 +1,7 @@
 # Nébuleuse Protocol IV — État du projet
 
 > Document vivant. À mettre à jour à chaque mouvement achevé.
-> Dernière mise à jour : Mouvement 4.1 (Cœur du jeu).
+> Dernière mise à jour : Mouvement 4.2 (Interface et Écrans).
 
 ## Identité
 Shoot'em up vertical, PWA installable (portrait). Progression permanente
@@ -20,7 +20,7 @@ visuelle devient une récompense de progression (idée de Christian).
 - `src/render/gfx.js` — niveaux de fidélité (à créer au M4.0ter).
 - `src/render/nebula.frag.js` — shader de la nébuleuse vivante.
 - `src/main.js` — boucle de jeu, pilotée par le contrat.
-- `src/util/` (math, color), `src/game/` (theme), `src/ui/` (à venir).
+- `src/ui/overlays.js`, `src/ui/ui.css` — tous les overlays DOM et le HUD réels.
 - `docs/render-source-extract.js` — rendu v4.6 (référence).
 - `docs/render-v47-extract.js` — rendu v4.7 (planètes, secteurs, ondes…).
 - `docs/logic-source-extract.js` — logique v4.7 (5087 lignes).
@@ -33,9 +33,9 @@ visuelle devient une récompense de progression (idée de Christian).
 - M4.0bis Extraction rendu v4.7 — ✅ fait.
 - M4.0ter `gfx.js` + features v4.7 derrière drapeaux (Canvas2D) — ✅ fait.
 - M4.0quater Transposition PixiRenderer — ✅ clos.
-- M4.1 Cœur du jeu — ✅ clos (stubs audio M4.5 et UI M4.2 en place).
-- M4.2 Interface · M4.3 Progression · M4.4 Données JSON ·
-  M4.5 Audio + accessibilité + adieu au générateur.
+- M4.1 Cœur du jeu — ✅ clos (stubs audio M4.5 en place).
+- M4.2 Interface — ✅ clos (HUD, menu, pause, gameover, victory, lab, ships, settings).
+- M4.3 Progression · M4.4 Données JSON · M4.5 Audio + accessibilité + adieu au générateur.
 
 ## Décisions actées
 - Source de vérité pour la migration : **v4.7**.
