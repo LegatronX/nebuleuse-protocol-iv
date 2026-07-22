@@ -1,44 +1,33 @@
 // ============================================================
-// NÉBULEUSE PROTOCOL IV — main.js (Mouvement 3)
-// Point d'entrée piloté par le CONTRAT IRenderer.
-//
-// ⚠ La logique ci-dessous est une LOGIQUE DE DÉMONSTRATION :
-//   elle remplit les structures du world et exerce tous les verbes
-//   du contrat, afin de valider Canvas2DRenderer et PixiRenderer.
-//   La vraie logique du monolithe (spawner, équilibrage, progression)
-//   s'y substituera au Mouvement 4, fonction par fonction.
+// NÉBULEUSE PROTOCOL IV — main.js (Mouvement 4.0ter)
+// Point d'entrée piloté par le CONTRAT IRenderer & GFX Levels.
 //
 // Commandes : glisser/pointeur = piloter · Espace = bombe ·
 //             Maj (maintenir) = ralenti · R = recommencer
-// URL       : ?renderer=canvas2d|pixi   ·   ?quality=low
+// URL       : ?gfx=1..5   ·   ?renderer=canvas2d|pixi   ·   ?quality=low
 // ============================================================
 
 import { Canvas2DRenderer } from './render/Canvas2DRenderer.js';
 import { PixiRenderer } from './render/PixiRenderer.js';
+import { gfxFlags } from './render/gfx.js';
 import { TAU, rand, clamp, pick } from './util/math.js';
 import { enemyColor, powerColor } from './game/theme.js';
 
 /* ------------------------------------------------------------------
- * 0. Choix du renderer — le contrat pour seule boussole
+ * 0. Choix du profil GFX et du renderer — le contrat pour seule boussole
  * ------------------------------------------------------------------ */
 const params = new URLSearchParams(location.search);
 const lowQuality = params.get('quality') === 'low';
-const requested = params.get('renderer') || 'canvas2d';
+const gfxLevel = parseInt(params.get('gfx') || '5', 10);
+const gfx = gfxFlags(gfxLevel);
 
-// Un renderer conforme au contrat doit implémenter drawPlayer en propre.
-// (L'ancien PixiRenderer de démonstration ne l'a pas → repli Canvas 2D.)
-const pixiConforme = typeof PixiRenderer.prototype.drawPlayer === 'function';
+const engine = params.get('renderer') || gfx.engine;
 
 let renderer, rendererName;
-if (requested === 'pixi' && pixiConforme) {
+if (engine === 'pixi') {
   renderer = new PixiRenderer({ lowQuality });
   rendererName = 'PixiJS (WebGL)';
 } else {
-  if (requested === 'pixi' && !pixiConforme) {
-    console.warn('[Nébuleuse] PixiRenderer n\u2019honore pas encore le contrat IRenderer ' +
-      '(drawPlayer absent) — repli sur Canvas2DRenderer. ' +
-      'Le mode Pixi s\u2019activera dès livraison du PixiRenderer conforme.');
-  }
   renderer = new Canvas2DRenderer({ lowQuality });
   rendererName = 'Canvas 2D (référence)';
 }
@@ -54,11 +43,15 @@ const world = {
   globalTime: 0,
   state: 'menu',                 // 'playing' | 'gameover'
   shake: 0, hitFlash: 0, slowTime: 0,
-  waveBanner: '', waveBannerTime: 0,
+  camPunchMag: 0, camPunchTime: 0, camPunchDuration: 0.001,
+  wave: 1, waveBanner: '', waveBannerTime: 0,
   stars: [],                     // créé par le renderer (resize → _initStars)
+  planets: [],
   player: null,
   enemies: [], pBullets: [], eBullets: [], beams: [],
   powerups: [], particles: [], shockwaves: [], texts: [],
+  gfx,
+  meta: { trail: 'default' },
 };
 
 // Variables de jeu (hors rendu)
@@ -87,16 +80,59 @@ const BOSS_HP = 4200, BOSS_SCORE = 10000;
 const hpScale = 1;                 // la difficulté modulera ceci (Mouvement 4)
 
 /* ------------------------------------------------------------------
- * 3. Montage du renderer
+ * 3. Logique de planètes en parallaxe (Démonstration v4.7)
+ * ------------------------------------------------------------------ */
+let planetTimer = 4;
+const PLANET_TYPES = [
+  { c1: '#38bdf8', c2: '#1e3a8a', ring: true,  crated: false, aura: 'rgba(56, 189, 248, 0.25)' },
+  { c1: '#f43f5e', c2: '#881337', ring: false, crated: true,  aura: 'rgba(244, 63, 94, 0.22)' },
+  { c1: '#a855f7', c2: '#4c1d95', ring: true,  crated: false, aura: 'rgba(168, 85, 247, 0.28)' },
+  { c1: '#fbbf24', c2: '#78350f', ring: false, crated: true,  aura: 'rgba(251, 191, 36, 0.20)' },
+  { c1: '#34d399', c2: '#064e3b', ring: false, crated: false, aura: 'rgba(52, 211, 153, 0.25)' },
+];
+
+function spawnPlanet() {
+  const type = pick(PLANET_TYPES);
+  const r = rand(36, 75);
+  world.planets.push({
+    x: rand(r + 30, Math.max(r + 31, W - r - 30)),
+    y: -r - 50,
+    r,
+    vy: rand(12, 26),
+    type,
+    rot: rand(0, TAU),
+    craters: [
+      { x: rand(-0.4, 0.3), y: rand(-0.4, 0.4), r: rand(0.12, 0.25) },
+      { x: rand(-0.3, 0.4), y: rand(-0.3, 0.3), r: rand(0.1, 0.2) },
+    ],
+  });
+}
+
+function updatePlanets(dt) {
+  const sf = world.state === 'playing' ? 1 : 0.35;
+  if ((planetTimer -= dt * sf) <= 0) {
+    spawnPlanet();
+    planetTimer = rand(20, 38);
+  }
+  for (let i = world.planets.length - 1; i >= 0; i--) {
+    const p = world.planets[i];
+    p.y += p.vy * dt * sf;
+    if (p.y - p.r > H + 100) world.planets.splice(i, 1);
+  }
+}
+
+/* ------------------------------------------------------------------
+ * 4. Montage du renderer
  * ------------------------------------------------------------------ */
 const host = document.getElementById('game-host') || document.body;
 renderer.mount(host);
 renderer.bindWorld(world);
+renderer.setGfx(gfx);
 renderer.resize(W, H);
 world.W = W; world.H = H;
 
 /* ------------------------------------------------------------------
- * 4. HUD temporaire (DOM) — sera remplacé par src/ui/ au Mouvement 4
+ * 5. HUD temporaire (DOM) — sera remplacé par src/ui/ au Mouvement 4
  * ------------------------------------------------------------------ */
 const hudStyle = document.createElement('style');
 hudStyle.textContent = `
@@ -137,7 +173,7 @@ hud.innerHTML = `
   <div class="hud-hull"><i id="hud-hull-bar"></i></div>
   <div class="hud-bottom">
     <span id="hud-bombs">💣 3</span>
-    <span id="hud-renderer">${rendererName}</span>
+    <span id="hud-renderer">${gfx.level} · ${gfx.name} (${rendererName})</span>
   </div>
   <div class="hud-help">Glisser : piloter · Espace : bombe · Maj : ralenti · R : recommencer</div>
   <div id="hud-msg" class="hud-msg hidden"></div>
@@ -166,7 +202,7 @@ function updateHUD() {
 }
 
 /* ------------------------------------------------------------------
- * 5. Entrées (pointeur + clavier)
+ * 6. Entrées (pointeur + clavier)
  * ------------------------------------------------------------------ */
 function pointerToTarget(e) {
   const rect = host.getBoundingClientRect();
@@ -190,16 +226,17 @@ window.addEventListener('keyup', (e) => {
 });
 
 /* ------------------------------------------------------------------
- * 6. Logique de démonstration (miroir du monolithe)
+ * 7. Logique de démonstration (miroir du monolithe)
  * ------------------------------------------------------------------ */
 function startRun() {
   score = 0; wave = 0; multiplier = 1; multTime = 0; weaponLevel = 2; waveTimer = 1.2;
   world.state = 'playing';
   world.shake = 0; world.hitFlash = 0; world.slowTime = 0;
+  world.camPunchMag = 0; world.camPunchTime = 0;
   world.waveBanner = ''; world.waveBannerTime = 0;
   world.enemies.length = 0; world.pBullets.length = 0; world.eBullets.length = 0;
   world.beams.length = 0; world.powerups.length = 0; world.particles.length = 0;
-  world.shockwaves.length = 0; world.texts.length = 0;
+  world.shockwaves.length = 0; world.texts.length = 0; world.planets.length = 0;
   world.player = {
     x: W / 2, y: H * 0.78, alive: true, tilt: 0, invuln: 1,
     colors: ['#dffcff', '#2b7fff'],
@@ -212,14 +249,14 @@ function startRun() {
 function pickEnemyType(w) {
   const pool = ['drone', 'drone', 'zig'];
   if (w >= 2) pool.push('speeder');
-  if (w >= 3) pool.push('tank', 'splitter');
-  if (w >= 4) pool.push('turret');
+  if (w >= 3) pool.push('tank', 'splitter', 'sentinel');
+  if (w >= 4) pool.push('turret', 'swarmer');
   if (w >= 6) pool.push('elite');
   return pick(pool);
 }
 
 function spawnEnemy(type, x, y) {
-  const def = ENEMY_DEFS[type];
+  const def = ENEMY_DEFS[type] || { r: 16, hp: 30, speed: 80, score: 120 };
   const hp = def.hp * hpScale;
   world.enemies.push({
     x: x ?? rand(40, W - 40),
@@ -246,8 +283,17 @@ function spawnBoss() {
   });
 }
 
+function triggerCamPunch(mag, duration = 0.12) {
+  world.camPunchMag = Math.max(world.camPunchMag, mag);
+  world.camPunchDuration = duration;
+  world.camPunchTime = duration;
+}
+
 function nextWave() {
   wave++;
+  world.wave = wave;
+  renderer.regenerateBackground();
+
   if (wave % 10 === 0) {
     spawnBoss();
     world.waveBanner = '⚠ NÉBULEUSE PRIME ⚠';
@@ -276,9 +322,11 @@ function explode(x, y, color, radius, count) {
   }
   world.shake = Math.max(world.shake, Math.min(1, radius / 45));
 }
+
 function addText(str, x, y, color) {
   world.texts.push({ x, y, str: String(str), color, life: 0.9, maxLife: 0.9 });
 }
+
 function spawnPowerup(x, y) {
   world.powerups.push({ x, y, t: 0, r: 12, type: pick(['W', 'S', 'H', 'B', 'M', 'Z']) });
 }
@@ -308,24 +356,26 @@ function hurtPlayer(dmg) {
   }
   world.hitFlash = 1;
   world.shake = Math.max(world.shake, 0.7);
+  triggerCamPunch(0.12, 0.15);
   player.invuln = 1.3;
   explode(player.x, player.y, '#60a5fa', 12, 6);
   if (player.hull <= 0) {
     player.hull = 0; player.alive = false; world.state = 'gameover';
     explode(player.x, player.y, '#dffcff', 30, 26);
-    world.shockwaves.push({ x: player.x, y: player.y, r: 20, vr: 900, life: 0.7, maxLife: 0.7 });
+    world.shockwaves.push({ x: player.x, y: player.y, r: 20, vr: 900, life: 0.7, maxLife: 0.7, color: '#60a5fa', color2: '#a855f7' });
     world.shake = 1;
   }
 }
 
 function killEnemy(e) {
-  const base = e.type === 'boss' ? BOSS_SCORE : ENEMY_DEFS[e.type].score;
+  const base = e.type === 'boss' ? BOSS_SCORE : (ENEMY_DEFS[e.type] ? ENEMY_DEFS[e.type].score : 120);
   const pts = Math.round(base * multiplier);
   score += pts;
   addText('+' + pts, e.x, e.y, '#a5f3fc');
   explode(e.x, e.y, e.color || enemyColor(e.type), Math.max(6, e.r));
   if (e.elite || e.type === 'miniboss' || e.type === 'boss') {
-    world.shockwaves.push({ x: e.x, y: e.y, r: e.r * 0.4, vr: 650, life: 0.5, maxLife: 0.5 });
+    world.shockwaves.push({ x: e.x, y: e.y, r: e.r * 0.4, vr: 650, life: 0.5, maxLife: 0.5, color: '#facc15', color2: '#ec4899' });
+    triggerCamPunch(0.08, 0.12);
   }
   if (e.type === 'splitter') { spawnEnemy('mini', e.x - 14, e.y); spawnEnemy('mini', e.x + 14, e.y); }
   if (e.type === 'boss') {
@@ -333,8 +383,9 @@ function killEnemy(e) {
     world.waveBannerTime = 3;
     multiplier = Math.min(9, multiplier + 2);
     world.shake = 1;
+    triggerCamPunch(0.18, 0.25);
     for (let i = 0; i < 3; i++) {
-      world.shockwaves.push({ x: e.x + rand(-40, 40), y: e.y + rand(-30, 30), r: 20, vr: 800, life: 0.7, maxLife: 0.7 });
+      world.shockwaves.push({ x: e.x + rand(-40, 40), y: e.y + rand(-30, 30), r: 20, vr: 800, life: 0.7, maxLife: 0.7, color: '#a855f7', color2: '#38bdf8' });
     }
   }
   const dropChance = e.type === 'boss' ? 1 : (e.elite || e.type === 'miniboss') ? 0.9 : 0.14;
@@ -347,15 +398,16 @@ function doBomb() {
   const player = world.player;
   if (!player || !player.alive || player.bombs <= 0) return;
   player.bombs--;
-  world.shockwaves.push({ x: player.x, y: player.y, r: 24, vr: 1200, life: 0.7, maxLife: 0.7 });
+  world.shockwaves.push({ x: player.x, y: player.y, r: 24, vr: 1200, life: 0.7, maxLife: 0.7, color: '#fb7185', color2: '#a855f7' });
   world.shake = 1;
+  triggerCamPunch(0.15, 0.18);
   addText('BOMBE', player.x, player.y - 44, '#fb7185');
   for (const b of world.eBullets) explode(b.x, b.y, b.color, 4, 2);
   world.eBullets.length = 0;
-  for (const e of world.enemies) e.hp -= 250;   // cleanupEnemies achèvera les blessés
+  for (const e of world.enemies) e.hp -= 250;
 }
 
-/* ---- Mises à jour (mêmes noms que le monolithe) ---- */
+/* ---- Mises à jour ---- */
 function updateBackground(dt) {
   const speedFactor = world.state === 'playing' ? 1 : 0.35;
   for (const s of world.stars) {
@@ -413,6 +465,8 @@ function updateEnemies(eDt) {
       case 'tank': e.y += e.speed * eDt; break;
       case 'splitter': e.y += e.speed * eDt; break;
       case 'mini': e.y += e.speed * eDt; e.x += Math.sin(e.t * 6) * 60 * eDt; break;
+      case 'sentinel': e.y += e.speed * eDt; e.x += Math.sin(e.t * 1.5) * 40 * eDt; break;
+      case 'swarmer': e.y += e.speed * 1.4 * eDt; e.x += Math.sin(e.t * 5) * 20 * eDt; break;
       case 'turret':
         if (e.y < e.stopY) e.y += e.speed * eDt;
         else if ((e.fireCd -= eDt) <= 0) { e.fireCd = 1.6; fireAtPlayer(e, 240, enemyColor('turret')); }
@@ -497,10 +551,12 @@ function updateParticles(dt) {
   }
   world.particles = world.particles.filter((p) => p.life > 0);
 }
+
 function updateShockwaves(dt) {
   for (const s of world.shockwaves) { s.r += s.vr * dt; s.life -= dt; }
   world.shockwaves = world.shockwaves.filter((s) => s.life > 0);
 }
+
 function updateTexts(dt) {
   for (const t of world.texts) { t.y -= 32 * dt; t.life -= dt; }
   world.texts = world.texts.filter((t) => t.life > 0);
@@ -508,7 +564,6 @@ function updateTexts(dt) {
 
 function updateCollisions() {
   const p = world.player;
-  // tirs du joueur contre ennemis
   for (const b of world.pBullets) {
     if (b.dead) continue;
     for (const e of world.enemies) {
@@ -561,6 +616,12 @@ function cleanupEnemies() {
 function update(dt) {
   world.globalTime += dt;
   updateBackground(dt);
+  if (world.gfx.planets) updatePlanets(dt);
+
+  if (world.camPunchTime > 0) {
+    world.camPunchTime = Math.max(0, world.camPunchTime - dt);
+    if (world.camPunchTime <= 0) world.camPunchMag = 0;
+  }
   if (world.shake > 0) world.shake = Math.max(0, world.shake - dt * 1.4);
   if (world.hitFlash > 0) world.hitFlash = Math.max(0, world.hitFlash - dt * 2.2);
   if (world.slowTime > 0) world.slowTime = Math.max(0, world.slowTime - dt);
@@ -582,7 +643,7 @@ function update(dt) {
 }
 
 /* ------------------------------------------------------------------
- * 7. Boucle — indépendante du renderer (requestAnimationFrame)
+ * 8. Boucle — indépendante du renderer (requestAnimationFrame)
  * ------------------------------------------------------------------ */
 let last = performance.now();
 function frame(t) {
