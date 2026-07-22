@@ -1,3 +1,8 @@
+// ============================================================
+// Nébuleuse Protocol IV
+// © 2026 Christian ROLANDO — Tous droits réservés.
+// Voir le fichier LICENSE à la racine du dépôt.
+// ============================================================
 // Niveaux de fidélité graphique — l'échelle rejoue l'histoire du jeu (v4.1 → v4.7+WebGL).
 export const GFX_LEVELS = {
   1: { name:'Genèse',    additive:false, planets:false, nebulae:false, sectors:false,

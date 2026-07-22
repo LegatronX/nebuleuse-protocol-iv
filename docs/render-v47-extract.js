@@ -1,4 +1,9 @@
 // ============================================================
+// Nébuleuse Protocol IV
+// © 2026 Christian ROLANDO — Tous droits réservés.
+// Voir le fichier LICENSE à la racine du dépôt.
+// ============================================================
+// ============================================================
 // Extrait du moteur de rendu — nebuleuse-v4.7.html (spécifique v4.7)
 // Catalogue exhaustif des ajouts de rendu v4.7 pour IRenderer, Canvas2DRenderer & PixiRenderer
 // Note : ceci est un EXTRAIT — pour référence et portage.

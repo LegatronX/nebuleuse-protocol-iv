@@ -1,3 +1,8 @@
+// ============================================================
+// Nébuleuse Protocol IV
+// © 2026 Christian ROLANDO — Tous droits réservés.
+// Voir le fichier LICENSE à la racine du dépôt.
+// ============================================================
 // vite.config.js — le plugin PWA régénère un manifest propre
 // (le vôtre contenait des clés mal formées ; il sera remplacé avantageusement)
 import { defineConfig } from 'vite';

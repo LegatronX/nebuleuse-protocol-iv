@@ -1,4 +1,9 @@
 // ============================================================
+// Nébuleuse Protocol IV
+// © 2026 Christian ROLANDO — Tous droits réservés.
+// Voir le fichier LICENSE à la racine du dépôt.
+// ============================================================
+// ============================================================
 // Extrait du moteur de rendu — nebuleuse-v4.6.html (base non patchée)
 // Pour Dolphin : catalogue exhaustif des appels de dessin Canvas 2D
 // Note : ceci est un EXTRAIT (fonctions déplacées hors de leur IIFE

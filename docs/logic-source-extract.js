@@ -1,4 +1,9 @@
 // ============================================================
+// Nébuleuse Protocol IV
+// © 2026 Christian ROLANDO — Tous droits réservés.
+// Voir le fichier LICENSE à la racine du dépôt.
+// ============================================================
+// ============================================================
 // Extrait de la logique du jeu — nebuleuse-v4.7.html
 // Catalogue exhaustif de la logique du monolithe (hors rendu)
 // Note : ceci est un EXTRAIT — pour lecture et référence.

@@ -1,3 +1,8 @@
+// ============================================================
+// Nébuleuse Protocol IV
+// © 2026 Christian ROLANDO — Tous droits réservés.
+// Voir le fichier LICENSE à la racine du dépôt.
+// ============================================================
 // src/game/theme.js
 // Palettes de couleurs par type, identiques au monolithe (nebuleuse-v4.6.html).
 

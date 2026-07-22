@@ -1,3 +1,8 @@
+// ============================================================
+// Nébuleuse Protocol IV
+// © 2026 Christian ROLANDO — Tous droits réservés.
+// Voir le fichier LICENSE à la racine du dépôt.
+// ============================================================
 // src/util/color.js
 // Identique au monolithe (nebuleuse-v4.6.html).
 

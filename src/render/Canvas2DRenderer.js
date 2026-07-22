@@ -1,3 +1,8 @@
+// ============================================================
+// Nébuleuse Protocol IV
+// © 2026 Christian ROLANDO — Tous droits réservés.
+// Voir le fichier LICENSE à la racine du dépôt.
+// ============================================================
 import { IRenderer } from './IRenderer.js';
 import { TAU, rand, clamp, pick } from '../util/math.js';
 import { hexToRgba } from '../util/color.js';

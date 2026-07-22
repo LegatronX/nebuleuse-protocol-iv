@@ -1,3 +1,8 @@
+// ============================================================
+// Nébuleuse Protocol IV
+// © 2026 Christian ROLANDO — Tous droits réservés.
+// Voir le fichier LICENSE à la racine du dépôt.
+// ============================================================
 import {
   Application, Container, Sprite, Texture, Graphics, Text, Filter, BLEND_MODES,
 } from 'pixi.js';

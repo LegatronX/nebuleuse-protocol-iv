@@ -1,3 +1,8 @@
+// ============================================================
+// Nébuleuse Protocol IV
+// © 2026 Christian ROLANDO — Tous droits réservés.
+// Voir le fichier LICENSE à la racine du dépôt.
+// ============================================================
 // src/render/nebula.frag.js
 // Conventions Pixi : vTextureCoord et uSampler sont pré-déclarés par le moteur.
 export const NEBULA_FRAGMENT = /* glsl */`

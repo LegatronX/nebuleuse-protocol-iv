@@ -1,4 +1,9 @@
 // ============================================================
+// Nébuleuse Protocol IV
+// © 2026 Christian ROLANDO — Tous droits réservés.
+// Voir le fichier LICENSE à la racine du dépôt.
+// ============================================================
+// ============================================================
 // NÉBULEUSE PROTOCOL IV — main.js (Mouvement 4.0ter)
 // Point d'entrée piloté par le CONTRAT IRenderer & GFX Levels.
 //
