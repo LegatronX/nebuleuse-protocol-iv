@@ -1,7 +1,7 @@
 # Nébuleuse Protocol IV — État du projet
 
 > Document vivant. À mettre à jour à chaque mouvement achevé.
-> Dernière mise à jour : Mouvement 4.0ter.
+> Dernière mise à jour : Mouvement 4.0quater.
 
 ## Identité
 Shoot'em up vertical, PWA installable (portrait). Progression permanente
@@ -32,7 +32,7 @@ visuelle devient une récompense de progression (idée de Christian).
 - M4.0 Extraction logique v4.7 — ✅ fait.
 - M4.0bis Extraction rendu v4.7 — ✅ fait.
 - M4.0ter `gfx.js` + features v4.7 derrière drapeaux (Canvas2D) — ✅ fait.
-- M4.0quater Transposition PixiRenderer — à venir.
+- M4.0quater Transposition PixiRenderer — ✅ clos.
 - M4.1 Cœur du jeu · M4.2 Interface · M4.3 Progression ·
   M4.4 Données JSON · M4.5 Audio + accessibilité + adieu au générateur.
 
