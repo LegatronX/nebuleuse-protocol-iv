@@ -76,33 +76,33 @@ export function ensureDOM(world) {
         <div id="bossBarWrap"><div id="bossBar"></div></div>
       </div>
 
-      <div class="mid">
-        <div class="panel bars">
-          <div class="bar-row">
-            <span>Coque</span>
-            <div class="bar"><div id="hullFill" class="fill hull"></div></div>
-          </div>
-          <div class="bar-row">
-            <span>Bouclier</span>
-            <div class="bar"><div id="shieldFill" class="fill shield"></div></div>
-          </div>
-          <div class="bar-row">
-            <span>Énergie</span>
-            <div class="bar"><div id="energyFill" class="fill energy"></div></div>
-          </div>
-        </div>
-      </div>
-
       <div class="bottom">
-        <button id="specialBtn" aria-label="Nova">NOVA</button>
-
-        <div class="panel status">
-          <div id="weapon">Arme 1</div>
-          <div id="bombs" class="bombs">💣 3</div>
-          <div id="multiplier">x1.0</div>
+        <div class="panel status-panel">
+          <div class="status-head">
+            <span id="weapon">Arme 1</span>
+            <span id="bombs" class="bombs">💣 3</span>
+            <span id="multiplier">x1.0</span>
+          </div>
+          <div class="bars-compact">
+            <div class="bar-row-compact">
+              <span class="bar-lbl">COQUE</span>
+              <div class="bar"><div id="hullFill" class="fill hull"></div></div>
+            </div>
+            <div class="bar-row-compact">
+              <span class="bar-lbl">BOUCLIER</span>
+              <div class="bar"><div id="shieldFill" class="fill shield"></div></div>
+            </div>
+            <div class="bar-row-compact">
+              <span class="bar-lbl">NOVA</span>
+              <div class="bar"><div id="energyFill" class="fill energy"></div></div>
+            </div>
+          </div>
         </div>
 
-        <button id="bombBtn" aria-label="Bombe">BOMBE</button>
+        <div class="action-buttons">
+          <button id="specialBtn" aria-label="Nova">NOVA</button>
+          <button id="bombBtn" aria-label="Bombe">BOMBE</button>
+        </div>
       </div>
     `;
     document.body.appendChild(hud);

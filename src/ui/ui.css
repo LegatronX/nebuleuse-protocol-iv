@@ -186,38 +186,6 @@ body {
   margin-top: 2px;
 }
 
-#hud .mid {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.bars { width: 100%; max-width: 280px; }
-
-.bar-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 11px;
-  margin: 3px 0;
-}
-
-.bar-row span { width: 55px; text-align: right; color: var(--muted); font-size: 10px; }
-
-.bar {
-  flex: 1;
-  height: 8px;
-  background: rgba(15, 23, 42, 0.8);
-  border-radius: 4px;
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.fill { height: 100%; width: 100%; transition: width 0.15s linear; }
-.fill.hull { background: linear-gradient(90deg, #f43f5e, #fb7185); }
-.fill.shield { background: linear-gradient(90deg, #0284c7, #38bdf8); }
-.fill.energy { background: linear-gradient(90deg, #c026d3, #f0abfc); }
-
 #bossHud {
   position: fixed;
   top: 75px; left: 50%;
@@ -236,12 +204,62 @@ body {
 #hud .bottom {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-end;
   pointer-events: auto;
+  gap: 12px;
 }
 
-.status { display: flex; gap: 12px; font-size: 12px; font-weight: 700; }
-.bombs { color: var(--magenta); }
+.status-panel {
+  min-width: 175px;
+  padding: 8px 12px;
+}
+
+.status-head {
+  display: flex;
+  gap: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  margin-bottom: 5px;
+}
+
+.bars-compact {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.bar-row-compact {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.bar-lbl {
+  width: 48px;
+  font-size: 8px;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 0.5px;
+}
+
+.bar {
+  flex: 1;
+  height: 4px;
+  background: rgba(15, 23, 42, 0.8);
+  border-radius: 2px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.fill { height: 100%; width: 100%; transition: width 0.15s linear; }
+.fill.hull { background: linear-gradient(90deg, #f43f5e, #fb7185); }
+.fill.shield { background: linear-gradient(90deg, #0284c7, #38bdf8); }
+.fill.energy { background: linear-gradient(90deg, #c026d3, #f0abfc); }
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+}
 
 #specialBtn, #bombBtn {
   background: linear-gradient(135deg, #7c3aed 0%, #c026d3 100%);
@@ -252,6 +270,7 @@ body {
   border-radius: 10px;
   font-size: 13px;
   cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 #bombBtn { background: linear-gradient(135deg, #e11d48 0%, #f43f5e 100%); }
