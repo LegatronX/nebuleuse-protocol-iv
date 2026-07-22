@@ -127,13 +127,26 @@ export class PixiRenderer extends IRenderer {
     );
 
     this.overlayG = new Graphics();
+    this.bannerLayer = new Container();
     this.bannerText = new Text('', {
       fontFamily: 'sans-serif', fontSize: 40, fontWeight: '900',
-      fill: '#a5f3fc', stroke: '#ffffff', strokeThickness: 1, align: 'center',
+      fill: '#ffffff', align: 'center',
     });
-    this.bannerText.anchor.set(0.5); this.bannerText.visible = false;
+    this.bannerText.anchor.set(0.5);
+    const bannerGradTex = makeGradientTexture(400, 100, [
+      { offset: 0,   color: '#a5f3fc' },
+      { offset: 0.5, color: '#818cf8' },
+      { offset: 1,   color: '#f0abfc' },
+    ], 'horizontal');
+    this.bannerGradient = new Sprite(bannerGradTex);
+    this.bannerGradient.anchor.set(0.5);
+    this.bannerGradient.width = 400;
+    this.bannerGradient.height = 100;
+    this.bannerGradient.mask = this.bannerText;
+    this.bannerLayer.addChild(this.bannerText, this.bannerGradient);
+    this.bannerLayer.visible = false;
 
-    this.app.stage.addChild(this.bgLayer, this.worldLayer, this.overlayG, this.bannerText);
+    this.app.stage.addChild(this.bgLayer, this.worldLayer, this.overlayG, this.bannerLayer);
 
     // Fond : shader de nébuleuse (vTextureCoord déclaré explicitement dans le fragment).
     this.bgSprite = new Sprite(Texture.WHITE);
@@ -157,7 +170,7 @@ export class PixiRenderer extends IRenderer {
 
   /* ---- Verbes de calque ---- */
   drawBackground() {
-    this.bannerText.visible = false;        // état persistant Pixi : on réinitialise
+    this.bannerLayer.visible = false;       // état persistant Pixi : on réinitialise
     this.nebula.uniforms.uTime = this.world.globalTime;
   }
 
@@ -343,9 +356,9 @@ export class PixiRenderer extends IRenderer {
     if (t > total - 0.4) a = (total - t) / 0.4;
     else if (t < 0.6) a = t / 0.6;
     this.bannerText.text = this.world.waveBanner;
-    this.bannerText.x = this.W / 2; this.bannerText.y = this.H * 0.3;
-    this.bannerText.alpha = clamp(a, 0, 1);
-    this.bannerText.visible = true;
+    this.bannerLayer.position.set(this.W / 2, this.H * 0.3);
+    this.bannerLayer.alpha = clamp(a, 0, 1);
+    this.bannerLayer.visible = true;
   }
 
   flashOverlay() {
