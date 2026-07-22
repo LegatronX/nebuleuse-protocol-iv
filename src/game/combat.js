@@ -274,4 +274,20 @@ export function updateCollisions() {
       }
     }
   }
+
+  // 5. Powerups vs Joueur (Magnet & Collecte)
+  for (let i = world.powerups.length - 1; i >= 0; i--) {
+    const pw = world.powerups[i];
+    const dist = Math.hypot(pw.x - p.x, pw.y - p.y);
+    if (dist < 140) {
+      const angle = Math.atan2(p.y - pw.y, p.x - pw.x);
+      pw.x += Math.cos(angle) * 320 * 0.016;
+      pw.y += Math.sin(angle) * 320 * 0.016;
+    }
+    if (dist < pw.r + p.r + 6) {
+      const type = pw.type;
+      world.powerups.splice(i, 1);
+      import('./engine.js').then(({ applyPowerup }) => applyPowerup(type));
+    }
+  }
 }

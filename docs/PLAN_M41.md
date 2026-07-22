@@ -14,7 +14,7 @@
 - [x] **M4.1b** : ennemis, tirs, faisceaux (comportements de tous les types d'ennemis, tirs, faisceaux boss).
 - [x] **M4.1c** : collisions, graze, score, bombe, NOVA (collisions, frôlements, score, bombe, NOVA, game over).
 - [x] **M4.1d** : joueur complet (pilotage, tir, bouclier, coque, invulnérabilité, tilt, talents meta).
-- [ ] **M4.1e** : bonus, particules, textes, ondes (powerups, particules, float texts, ondes chromatiques, polish final).
+- [x] **M4.1e** : bonus, particules, textes, ondes (powerups, particules, float texts, ondes chromatiques, polish final).
 
 ## Jalons d'arrêt & Validation
 
