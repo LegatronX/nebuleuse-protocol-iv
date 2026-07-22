@@ -76,17 +76,13 @@ export function explosion(x, y, color = '#38bdf8', size = 30, isBoss = false) {
   AudioSys.explosion(isBoss);
 }
 
+import { rollDrop } from './drops.js';
+
 export function dropPowerup(x, y) {
   const chance = 0.22;
   if (Math.random() < chance) {
-    const types = ['hull', 'shield', 'weapon', 'bomb', 'energy'];
-    const weights = [0.25, 0.35, 0.2, 0.08, 0.12];
-    let r = Math.random(), sum = 0, chosen = 'hull';
-    for (let i = 0; i < types.length; i++) {
-      sum += weights[i];
-      if (r <= sum) { chosen = types[i]; break; }
-    }
-    world.powerups.push({ x, y, vy: 65, type: chosen, r: 12, t: rand(0, Math.PI * 2) });
+    const type = rollDrop();
+    world.powerups.push({ x, y, vy: 65, type, r: 12, t: rand(0, Math.PI * 2) });
   }
 }
 

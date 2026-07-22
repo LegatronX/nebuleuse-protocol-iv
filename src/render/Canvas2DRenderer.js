@@ -241,9 +241,9 @@ export class Canvas2DRenderer extends IRenderer {
       ctx.fillStyle = 'rgba(3, 10, 20, 0.78)'; ctx.fill();
       ctx.lineWidth = 2; ctx.strokeStyle = c; ctx.stroke();
       ctx.rotate(-p.t * 1.5);
-      ctx.fillStyle = '#ffffff'; ctx.font = '900 13px sans-serif';
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText(p.type, 0, 1);
+      const labelMap = { CHEST: '📦', MAGNET: '🧲', NANITES: '⬡', LIFE: '♥', hull: 'H', shield: 'S', weapon: 'W', bomb: 'B', energy: 'M' };
+      const lbl = labelMap[p.type] || p.type;
+      ctx.fillText(lbl, 0, 1);
       ctx.restore();
     }
   }

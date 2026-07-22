@@ -20,12 +20,16 @@ const ENEMY_COLORS = {
 };
 
 const POWER_COLORS = {
-  W: '#67e8f9',
-  S: '#60a5fa',
-  H: '#34d399',
-  B: '#fb7185',
-  M: '#fbbf24',
+  W: '#67e8f9', weapon: '#67e8f9',
+  S: '#60a5fa', shield: '#60a5fa',
+  H: '#34d399', hull: '#34d399',
+  B: '#fb7185', bomb: '#fb7185',
+  M: '#fbbf24', energy: '#fbbf24',
   Z: '#c084fc',
+  CHEST: '#fbbf24',
+  MAGNET: '#f472b6',
+  NANITES: '#67e8f9',
+  LIFE: '#fb7185',
 };
 
 export function enemyColor(type) {

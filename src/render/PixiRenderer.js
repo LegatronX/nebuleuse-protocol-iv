@@ -337,8 +337,9 @@ export class PixiRenderer extends IRenderer {
       glow.beginFill(cn, 0.18).drawCircle(p.x, p.y, p.r + 10 + pulse).endFill();
       const r = p.r + pulse * 0.3;
       this._poly(g, p.x, p.y, p.t * 1.5, HEX(r), 0x030a14, 0.78, cn, 1, 2);
+      const labelMap = { CHEST: '📦', MAGNET: '🧲', NANITES: '⬡', LIFE: '♥', hull: 'H', shield: 'S', weapon: 'W', bomb: 'B', energy: 'M' };
       const t = this._getPowerText();
-      t.text = p.type; t.style.fill = '#ffffff';
+      t.text = labelMap[p.type] || p.type; t.style.fill = '#ffffff';
       t.x = p.x; t.y = p.y + 1; t.alpha = 1; t.visible = true;
     }
     for (let i = this._powerTextIdx; i < this._powerTextPool.length; i++) this._powerTextPool[i].visible = false;

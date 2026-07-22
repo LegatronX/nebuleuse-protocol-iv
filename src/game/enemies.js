@@ -8,6 +8,7 @@ import { TAU, rand, clamp, pick } from '../util/math.js';
 import { world, getDiff, dm, spawnEnemy } from './engine.js';
 import { AudioSys } from '../audio/audio.js';
 import { enemyColor } from './theme.js';
+import { updateBossAI } from './bosses.js';
 
 export function fireEnemyBullet(x, y, vx, vy, r = 5, color = '#f87171') {
   world.eBullets.push({ x, y, vx, vy, r, color });
@@ -62,60 +63,8 @@ export function updateBeams(dt) {
 }
 
 export function updateBoss(dt) {
-  const b = world.boss;
-  if (!b) return;
-
-  b.t += dt;
-  b.spin += dt * 1.2;
-  b.patternTime += dt;
-
-  const d = getDiff();
-  const fireRate = dm().fire;
-
-  if (b.entering) {
-    b.y += (b.targetY - b.y) * dt * 2.2;
-    if (Math.abs(b.y - b.targetY) < 4) {
-      b.y = b.targetY;
-      b.entering = false;
-    }
-    return;
-  }
-
-  b.x = world.W / 2 + Math.sin(b.t * 0.8) * (world.W * 0.32);
-
-  const hpRatio = b.hp / b.maxHp;
-  if (b.phase === 1 && hpRatio < 0.65) b.phase = 2;
-  if (b.phase === 2 && hpRatio < 0.35) b.phase = 3;
-
-  b.fireCd -= dt / fireRate;
-  if (b.fireCd <= 0) {
-    if (b.kind === 0) {
-      fireFan(b, 7 + b.phase * 2, Math.PI * 0.8, 160 + d * 30, '#f43f5e', 6);
-      b.fireCd = 1.3 - b.phase * 0.2;
-    } else if (b.kind === 1) {
-      fireBurst(b, 4 + b.phase, 230, '#38bdf8', 6);
-      b.fireCd = 1.1 - b.phase * 0.15;
-    } else if (b.kind === 2) {
-      fireFan(b, 10, Math.PI * 1.1, 140, '#34d399', 5);
-      b.fireCd = 1.5 - b.phase * 0.2;
-    } else {
-      fireFan(b, 12, Math.PI * 1.4, 180 + b.phase * 20, '#f0abfc', 6);
-      if (b.phase >= 2) fireAimed(b, 260, '#f43f5e', 7);
-      b.fireCd = 0.95 - b.phase * 0.15;
-    }
-  }
-
-  b.minionCd -= dt;
-  if (b.minionCd <= 0) {
-    b.minionCd = b.finalBoss ? 4.5 : 6.0;
-    const mType = pick(['drone', 'zig', 'speeder']);
-    spawnEnemy(mType, b.x - 40, b.y + 20);
-    spawnEnemy(mType, b.x + 40, b.y + 20);
-  }
-
-  if (b.finalBoss && b.phase >= 2 && b.patternTime > 7.0) {
-    b.patternTime = 0;
-    spawnBeam(b.x, 70, b.color);
+  if (world.boss) {
+    updateBossAI(world, world.boss, dt);
   }
 }
 
