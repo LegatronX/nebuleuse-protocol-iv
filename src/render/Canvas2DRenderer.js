@@ -3,9 +3,40 @@ import { TAU, rand, clamp, pick } from '../util/math.js';
 import { hexToRgba } from '../util/color.js';
 import { enemyColor, powerColor } from '../game/theme.js';
 
+const SECTOR_PALETTES = [
+  {
+    top: '#030711', mid: '#060b1c', bottom: '#0a0618',
+    colors: [
+      'rgba(56, 189, 248, 0.10)',
+      'rgba(129, 140, 248, 0.12)',
+      'rgba(217, 70, 239, 0.08)',
+      'rgba(16, 185, 129, 0.06)'
+    ]
+  },
+  {
+    top: '#0a0713', mid: '#150a24', bottom: '#1a0a1f',
+    colors: [
+      'rgba(168, 85, 247, 0.14)',
+      'rgba(217, 70, 239, 0.10)',
+      'rgba(99, 102, 241, 0.10)',
+      'rgba(56, 189, 248, 0.05)'
+    ]
+  },
+  {
+    top: '#0d0508', mid: '#1a070a', bottom: '#150306',
+    colors: [
+      'rgba(244, 63, 94, 0.14)',
+      'rgba(251, 146, 60, 0.10)',
+      'rgba(217, 70, 239, 0.07)',
+      'rgba(251, 191, 36, 0.06)'
+    ]
+  }
+];
+
 /**
- * Canvas2DRenderer — transposition fidèle du moteur de rendu de nebuleuse-v4.6.
+ * Canvas2DRenderer — transposition fidèle du moteur de rendu v4.7.
  * Sert de RÉFÉRENCE visuelle (test comparatif) et de FALLBACK sans WebGL.
+ * Supporte les 5 niveaux GFX (Genèse -> Traversée derrière drapeaux).
  */
 export class Canvas2DRenderer extends IRenderer {
   constructor({ lowQuality = false } = {}) {
@@ -39,23 +70,41 @@ export class Canvas2DRenderer extends IRenderer {
     if (p) { p.x = clamp(p.x, 20, this.W - 20); p.y = clamp(p.y, 70, this.H - 40); }
   }
 
+  _currentSectorIndex() {
+    const wave = (this.world && this.world.wave) || 1;
+    if (wave >= 10) return 2;
+    if (wave >= 5) return 1;
+    return 0;
+  }
+
+  regenerateBackground() { this._makeBackground(); }
+
   /* ---- Fond (pré-rendu une fois dans le canvas hors-écran bg) ---- */
   _makeBackground() {
     const { bctx, W, H, DPR } = this;
     this.bg.width  = Math.floor(W * DPR);
     this.bg.height = Math.floor(H * DPR);
     bctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+    const pal = this.gfx.sectors
+      ? SECTOR_PALETTES[this._currentSectorIndex()]
+      : SECTOR_PALETTES[0];
+
     const g = bctx.createLinearGradient(0, 0, 0, H);
-    g.addColorStop(0, '#030711'); g.addColorStop(0.45, '#060b1c'); g.addColorStop(1, '#0a0618');
-    bctx.fillStyle = g; bctx.fillRect(0, 0, W, H);
-    const colors = ['rgba(56, 189, 248, 0.10)', 'rgba(129, 140, 248, 0.12)',
-                    'rgba(217, 70, 239, 0.08)', 'rgba(16, 185, 129, 0.06)'];
+    g.addColorStop(0, pal.top);
+    g.addColorStop(0.45, pal.mid);
+    g.addColorStop(1, pal.bottom);
+    bctx.fillStyle = g;
+    bctx.fillRect(0, 0, W, H);
+
     for (let i = 0; i < 9; i++) {
       const x = rand(0, W), y = rand(0, H);
       const r = rand(Math.min(W, H) * 0.18, Math.min(W, H) * 0.55);
       const rg = bctx.createRadialGradient(x, y, 0, x, y, r);
-      rg.addColorStop(0, pick(colors)); rg.addColorStop(1, 'rgba(0, 0, 0, 0)');
-      bctx.fillStyle = rg; bctx.beginPath(); bctx.arc(x, y, r, 0, TAU); bctx.fill();
+      rg.addColorStop(0, pick(pal.colors));
+      rg.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      bctx.fillStyle = rg;
+      bctx.beginPath(); bctx.arc(x, y, r, 0, TAU); bctx.fill();
     }
   }
 
@@ -70,18 +119,92 @@ export class Canvas2DRenderer extends IRenderer {
       stars.push({ x: Math.random() * W, y: Math.random() * H, z,
                    r: z * 1.7 + 0.3, s: 25 + z * 130, tw: rand(0, TAU) });
     }
-    this.world.stars = stars;   // les étoiles appartiennent au monde (animées par la logique)
+    this.world.stars = stars;
   }
 
   /* ---- Verbes de calque ---- */
   drawBackground() { this.ctx.drawImage(this.bg, 0, 0, this.W, this.H); }
 
-  beginShake() {
-    const ctx = this.ctx, s = this.world.shake;
+  beginCamera() {
+    const ctx = this.ctx, w = this.world;
     ctx.save();
-    if (s > 0) { const m = s * 9; ctx.translate(rand(-m, m), rand(-m, m)); }
+    if (this.gfx.cameraPunch && w.camPunchTime > 0 && w.camPunchMag > 0) {
+      const t = w.camPunchTime / w.camPunchDuration;
+      const s = 1 + w.camPunchMag * t;
+      ctx.translate(this.W / 2, this.H / 2);
+      ctx.scale(s, s);
+      ctx.translate(-this.W / 2, -this.H / 2);
+    }
+    if (w.shake > 0) {
+      const m = w.shake * 9;
+      ctx.translate(rand(-m, m), rand(-m, m));
+    }
   }
-  endShake() { this.ctx.restore(); }
+  endCamera() { this.ctx.restore(); }
+  beginShake() { this.beginCamera(); }
+  endShake() { this.endCamera(); }
+
+  drawNebulae() {
+    if (!this.gfx.nebulae) return;
+    const ctx = this.ctx, W = this.W, H = this.H, gt = this.world.globalTime;
+    ctx.save();
+    ctx.globalCompositeOperation = 'screen';
+    const blobs = [
+      { x: W * 0.3 + Math.sin(gt * 0.1) * 40, y: H * 0.25 + Math.cos(gt * 0.08) * 30, r: W * 0.45, color: 'rgba(56, 189, 248, 0.14)' },
+      { x: W * 0.7 + Math.cos(gt * 0.12) * 50, y: H * 0.65 + Math.sin(gt * 0.07) * 40, r: W * 0.5, color: 'rgba(168, 85, 247, 0.12)' },
+      { x: W * 0.4 + Math.sin(gt * 0.09) * 35, y: H * 0.8 + Math.cos(gt * 0.11) * 35, r: W * 0.42, color: 'rgba(244, 63, 94, 0.09)' },
+    ];
+    for (const b of blobs) {
+      const g = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.r);
+      g.addColorStop(0, b.color);
+      g.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, TAU); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  drawPlanets() {
+    if (!this.gfx.planets || !this.world.planets) return;
+    const ctx = this.ctx;
+    for (const p of this.world.planets) {
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      if (p.type.aura) {
+        const ag = ctx.createRadialGradient(0, 0, p.r * 0.8, 0, 0, p.r * 1.55);
+        ag.addColorStop(0, p.type.aura);
+        ag.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = ag;
+        ctx.beginPath(); ctx.arc(0, 0, p.r * 1.55, 0, TAU); ctx.fill();
+      }
+      if (p.type.ring) {
+        ctx.save(); ctx.rotate(p.rot);
+        ctx.scale(1, 0.32);
+        ctx.beginPath(); ctx.arc(0, 0, p.r * 1.75, 0, Math.PI);
+        ctx.strokeStyle = hexToRgba(p.type.c1, 0.4); ctx.lineWidth = p.r * 0.28; ctx.stroke();
+        ctx.restore();
+      }
+      const g = ctx.createRadialGradient(-p.r * 0.3, -p.r * 0.35, p.r * 0.1, 0, 0, p.r);
+      g.addColorStop(0, p.type.c1);
+      g.addColorStop(1, p.type.c2);
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(0, 0, p.r, 0, TAU); ctx.fill();
+      if (p.type.crated && p.craters) {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.18)';
+        for (const c of p.craters) {
+          ctx.beginPath(); ctx.arc(c.x * p.r, c.y * p.r, c.r * p.r, 0, TAU); ctx.fill();
+        }
+      }
+      if (p.type.ring) {
+        ctx.save(); ctx.rotate(p.rot);
+        ctx.scale(1, 0.32);
+        ctx.beginPath(); ctx.arc(0, 0, p.r * 1.75, Math.PI, TAU);
+        ctx.strokeStyle = hexToRgba(p.type.c1, 0.4); ctx.lineWidth = p.r * 0.28; ctx.stroke();
+        ctx.restore();
+      }
+      ctx.restore();
+    }
+  }
 
   drawStars() {
     const ctx = this.ctx, gt = this.world.globalTime;
@@ -99,7 +222,7 @@ export class Canvas2DRenderer extends IRenderer {
       const pulse = Math.sin(p.t * 6) * 2;
       ctx.save();
       ctx.translate(p.x, p.y); ctx.rotate(p.t * 1.5);
-      ctx.globalCompositeOperation = 'lighter';
+      if (this.gfx.additive) ctx.globalCompositeOperation = 'lighter';
       ctx.fillStyle = c; ctx.globalAlpha = 0.18;
       ctx.beginPath(); ctx.arc(0, 0, p.r + 10 + pulse, 0, TAU); ctx.fill();
       ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
@@ -124,7 +247,7 @@ export class Canvas2DRenderer extends IRenderer {
     const ctx = this.ctx;
     for (const e of this.world.enemies) {
       if (e.type === 'boss') { this._drawBoss(e); continue; }
-      const c = enemyColor(e.type);
+      const c = (e.type === 'sentinel') ? '#facc15' : (e.type === 'swarmer') ? '#fb923c' : enemyColor(e.type);
       ctx.save(); ctx.translate(e.x, e.y);
       switch (e.type) {
         case 'drone':    ctx.rotate(Math.PI);   this._drawTriangle(14, c); break;
@@ -138,6 +261,19 @@ export class Canvas2DRenderer extends IRenderer {
         case 'miniboss':
           ctx.rotate(e.t * 0.8); this._drawStar(30, c);
           ctx.rotate(-e.t * 0.8); this._drawHexagon(16, '#fff7ed'); break;
+        case 'sentinel':
+          ctx.rotate(e.t * 0.6);
+          this._drawHexagon(e.r || 20, c);
+          ctx.rotate(-e.t * 1.2);
+          ctx.beginPath();
+          ctx.arc(0, 0, (e.r || 20) * 0.32, 0, TAU);
+          ctx.fillStyle = `rgba(255, 255, 255, ${0.5 + 0.4 * Math.sin(e.t * 6)})`;
+          ctx.fill();
+          break;
+        case 'swarmer':
+          ctx.rotate(Math.PI);
+          this._drawTriangle(e.r || 10, c);
+          break;
       }
       ctx.restore();
       if (e.elite) {
@@ -161,7 +297,7 @@ export class Canvas2DRenderer extends IRenderer {
     ctx.save(); ctx.translate(e.x, e.y);
     const sc = e.r / 54; ctx.scale(sc, sc);
     const ratio = clamp(e.hp / e.maxHp, 0, 1);
-    ctx.globalCompositeOperation = 'lighter';
+    if (this.gfx.additive) ctx.globalCompositeOperation = 'lighter';
     const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 90);
     g.addColorStop(0, hexToRgba(e.color, 0.3 + 0.2 * Math.sin(gt * 4)));
     g.addColorStop(1, hexToRgba(e.color, 0));
@@ -193,7 +329,7 @@ export class Canvas2DRenderer extends IRenderer {
       const x = b.x - b.width / 2;
       ctx.save();
       if (active) {
-        ctx.globalCompositeOperation = 'lighter';
+        if (this.gfx.additive) ctx.globalCompositeOperation = 'lighter';
         const g = ctx.createLinearGradient(0, b.y, 0, H);
         g.addColorStop(0, hexToRgba(b.color, 0.95));
         g.addColorStop(0.2, hexToRgba(b.color, 0.72));
@@ -215,7 +351,7 @@ export class Canvas2DRenderer extends IRenderer {
     ctx.save();
     ctx.translate(player.x, player.y); ctx.rotate(player.tilt * 0.4);
     if (player.invuln > 0 && Math.floor(gt * 12) % 2 === 0) ctx.globalAlpha = 0.35;
-    ctx.globalCompositeOperation = 'lighter';
+    if (this.gfx.additive) ctx.globalCompositeOperation = 'lighter';
     const eg = ctx.createRadialGradient(0, 18, 0, 0, 18, 26);
     eg.addColorStop(0, 'rgba(80, 200, 255, 0.8)'); eg.addColorStop(1, 'rgba(80, 200, 255, 0)');
     ctx.fillStyle = eg; ctx.beginPath(); ctx.arc(0, 18, 26, 0, TAU); ctx.fill();
@@ -242,7 +378,7 @@ export class Canvas2DRenderer extends IRenderer {
   drawBullets() {
     const ctx = this.ctx;
     ctx.save();
-    ctx.globalCompositeOperation = 'lighter';
+    if (this.gfx.additive) ctx.globalCompositeOperation = 'lighter';
     for (const b of this.world.pBullets) {
       ctx.fillStyle = b.homing ? 'rgba(251, 191, 36, 0.3)' : 'rgba(103, 232, 249, 0.28)';
       ctx.beginPath(); ctx.arc(b.x, b.y, b.r * 2.2, 0, TAU); ctx.fill();
@@ -260,7 +396,8 @@ export class Canvas2DRenderer extends IRenderer {
 
   drawParticles() {
     const ctx = this.ctx;
-    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    ctx.save();
+    if (this.gfx.additive) ctx.globalCompositeOperation = 'lighter';
     for (const p of this.world.particles) {
       ctx.globalAlpha = clamp(p.life / p.maxLife, 0, 1);
       ctx.fillStyle = p.color;
@@ -271,13 +408,28 @@ export class Canvas2DRenderer extends IRenderer {
 
   drawShockwaves() {
     const ctx = this.ctx;
-    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    ctx.save();
+    if (this.gfx.additive) ctx.globalCompositeOperation = 'lighter';
     for (const s of this.world.shockwaves) {
       const a = s.life / s.maxLife;
-      ctx.strokeStyle = `rgba(255, 255, 255, ${a * 0.7})`; ctx.lineWidth = 8 * a + 2;
-      ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, TAU); ctx.stroke();
-      ctx.strokeStyle = `rgba(103, 232, 249, ${a * 0.4})`; ctx.lineWidth = 16 * a + 4;
-      ctx.beginPath(); ctx.arc(s.x, s.y, s.r * 0.92, 0, TAU); ctx.stroke();
+      if (this.gfx.chromaticWaves) {
+        ctx.strokeStyle = `rgba(255, 255, 255, ${a * 0.85})`;
+        ctx.lineWidth = 3 * a + 1;
+        ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, TAU); ctx.stroke();
+        ctx.strokeStyle = hexToRgba(s.color || '#38bdf8', a * 0.6);
+        ctx.lineWidth = 14 * a + 2;
+        ctx.beginPath(); ctx.arc(s.x, s.y, s.r * 0.95, 0, TAU); ctx.stroke();
+        if (s.color2) {
+          ctx.strokeStyle = hexToRgba(s.color2, a * 0.45);
+          ctx.lineWidth = 22 * a + 4;
+          ctx.beginPath(); ctx.arc(s.x, s.y, s.r * 0.88, 0, TAU); ctx.stroke();
+        }
+      } else {
+        ctx.strokeStyle = `rgba(255, 255, 255, ${a * 0.7})`; ctx.lineWidth = 8 * a + 2;
+        ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, TAU); ctx.stroke();
+        ctx.strokeStyle = `rgba(103, 232, 249, ${a * 0.4})`; ctx.lineWidth = 16 * a + 4;
+        ctx.beginPath(); ctx.arc(s.x, s.y, s.r * 0.92, 0, TAU); ctx.stroke();
+      }
     }
     ctx.restore();
   }
