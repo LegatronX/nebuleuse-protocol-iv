@@ -528,10 +528,36 @@ export function updateAssist(dt) {
   }
 }
 
+export function fireHoming(count = 1) {
+  const p = world.player;
+  if (!p || !p.alive || !world.enemies.length) return;
+
+  for (let i = 0; i < count; i++) {
+    const spread = (i - (count - 1) / 2) * 0.25;
+    const angle = -Math.PI / 2 + spread;
+    const speed = 520;
+
+    world.pBullets.push({
+      x: p.x + rand(-8, 8),
+      y: p.y - 12,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      dmg: 28 + p.weapon * 4,
+      r: 5,
+      color: '#fbbf24',
+      life: 3,
+      homing: true,
+      angle,
+      speed,
+      turn: 6,
+    });
+  }
+}
+
 export function firePlayer() {
   const p = world.player;
   if (!p || !p.alive) return;
-  const w = p.weaponLevel || 1;
+  const w = p.weapon || 1;
   p.fireCd = Math.max(0.07, (0.155 - w * 0.011) * (p.fireMul || 1));
 
   const dmg = 12 + w * 3;
@@ -551,11 +577,17 @@ export function firePlayer() {
     shot(p.x, 0, -sp);
     shot(p.x - 12, -90, -sp);
     shot(p.x + 12, 90, -sp);
-  } else {
+  } else if (w === 4) {
     shot(p.x - 6, 0, -sp);
     shot(p.x + 6, 0, -sp);
     shot(p.x - 14, -140, -sp * 0.92);
     shot(p.x + 14, 140, -sp * 0.92);
+  } else {
+    shot(p.x, 0, -sp, 5, '#e8feff');
+    shot(p.x - 9, -60, -sp);
+    shot(p.x + 9, 60, -sp);
+    shot(p.x - 18, -170, -sp * 0.9);
+    shot(p.x + 18, 170, -sp * 0.9);
   }
 
   AudioSys.shoot();
@@ -566,13 +598,62 @@ export function updatePlayer(dt) {
   if (!p || !p.alive) return;
 
   p.invuln -= dt;
+  p.shieldDelay = (p.shieldDelay || 0) - dt;
   p.fireCd = (p.fireCd || 0) - dt;
+  p.missileCd = (p.missileCd || 0) - dt;
 
-  if (p.shield < p.maxShield) {
-    p.shield = Math.min(p.maxShield, p.shield + 2 * dt);
+  p.energy = Math.min(100, p.energy + (p.energyRegen || 1.5) * dt);
+
+  if (p.shieldDelay <= 0 && p.shield < p.maxShield) {
+    p.shield = Math.min(p.maxShield, p.shield + (p.shieldRegen || 3.5) * dt);
   }
 
+  p.tilt = clamp((p.x - (p.prevX || p.x)) / 12, -0.45, 0.45);
+  p.prevX = p.x;
+
   if (p.fireCd <= 0) firePlayer();
+
+  if (p.weapon >= 4 && p.missileCd <= 0 && world.enemies.length) {
+    fireHoming(1);
+    p.missileCd = 1.25 - p.weapon * 0.05;
+  }
+
+  if (Math.random() < 0.7) {
+    world.particles.push({
+      x: p.x + rand(-4, 4),
+      y: p.y + 18,
+      vx: rand(-12, 12),
+      vy: rand(90, 170),
+      life: 0.28,
+      maxLife: 0.28,
+      size: rand(1, 3),
+      color: '#38bdf8',
+    });
+  }
+}
+
+export function applyPowerup(type) {
+  const p = world.player;
+  if (!p || !p.alive) return;
+
+  if (type === 'hull') {
+    p.hull = Math.min(p.maxHull, p.hull + 28);
+    addText(p.x, p.y - 20, '+28 Coque', '#34d399');
+  } else if (type === 'shield') {
+    p.shield = Math.min(p.maxShield, p.shield + 35);
+    addText(p.x, p.y - 20, '+35 Bouclier', '#60a5fa');
+  } else if (type === 'weapon') {
+    p.weapon = Math.min(5, p.weapon + 1);
+    addText(p.x, p.y - 20, 'Arme +1', '#fbbf24');
+  } else if (type === 'bomb') {
+    p.bombs = Math.min(6, p.bombs + 1);
+    addText(p.x, p.y - 20, '+1 Bombe', '#a78bfa');
+  } else if (type === 'energy') {
+    p.energy = Math.min(p.maxEnergy, p.energy + 40);
+    addText(p.x, p.y - 20, '+40 Énergie', '#f0abfc');
+  }
+
+  AudioSys.power();
 }
 
 export function update(dt) {
