@@ -7,7 +7,8 @@
 import { AudioSys } from '../audio/audio.stub.js';
 import { loadMeta, saveMeta, saveBest, formatTime, isShipUnlocked } from '../game/meta.js';
 import { SHIPS, TALENTS, DIFF } from '../game/waves.js';
-import { startGame, pauseGame, resumeGame, resetGame, toMenu, doBomb, doSpecial } from '../game/engine.js';
+import { startGame, pauseGame, resumeGame, resetGame, toMenu } from '../game/engine.js';
+import { doBomb, doSpecial } from '../game/combat.js';
 
 const CB_FILTERS = {
   none: 'none',

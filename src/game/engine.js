@@ -5,10 +5,22 @@
 // ============================================================
 
 import { TAU, rand, clamp, pick } from '../util/math.js';
-import { loadMeta, saveMeta, loadBest, saveBest, formatTime } from './meta.js';
+import { loadMeta, saveMeta, loadBest, saveBest } from './meta.js';
+export { saveBest };
 import { SHIPS, DIFF, TALENTS, SECTORS, SECTOR_PALETTES, MUTATORS, getWaveTypes, currentSectorIndex } from './waves.js';
 import { AudioSys } from '../audio/audio.stub.js';
-import { show, hide, isHidden } from '../ui/ui.stub.js';
+export function show(idOrEl) {
+  const el = typeof idOrEl === 'string' ? document.getElementById(idOrEl) : idOrEl;
+  if (el) el.classList.remove('hidden');
+}
+export function hide(idOrEl) {
+  const el = typeof idOrEl === 'string' ? document.getElementById(idOrEl) : idOrEl;
+  if (el) el.classList.add('hidden');
+}
+export function isHidden(idOrEl) {
+  const el = typeof idOrEl === 'string' ? document.getElementById(idOrEl) : idOrEl;
+  return el ? el.classList.contains('hidden') : true;
+}
 
 export const world = {
   W: window.innerWidth || 390,
@@ -479,6 +491,7 @@ export function triggerCamPunch(mag = 0.04, duration = 0.14) {
 
 import { updateEnemies, updateBullets, updateBeams } from './enemies.js';
 import { updateCollisions, doBomb, doSpecial } from './combat.js';
+export { doBomb, doSpecial };
 
 export function updatePowerups(dt) {
   for (let i = world.powerups.length - 1; i >= 0; i--) {

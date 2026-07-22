@@ -5,7 +5,8 @@
 // ============================================================
 
 import { rand, clamp } from '../util/math.js';
-import { world, getScoreMult, triggerCamPunch, triggerHitStop, gameOver, saveBest } from './engine.js';
+import { world, getScoreMult, triggerCamPunch, triggerHitStop, gameOver } from './engine.js';
+import { saveBest } from './meta.js';
 import { addText } from './engine.js';
 import { AudioSys } from '../audio/audio.stub.js';
 
