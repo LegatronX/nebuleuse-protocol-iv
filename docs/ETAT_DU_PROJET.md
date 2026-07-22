@@ -54,6 +54,9 @@ visuelle devient une récompense de progression (idée de Christian).
 - Commits préfixés par mouvement : `mvt1:`, `mvt3:`, `mvt4:`…
 - Règle d'or : **lire le réel** (local d'abord, distant ensuite), ne rien
   inventer, ne jamais écraser du travail non poussé.
+- **En-tête de copyright** : chaque fichier source porte, en tête, la notice
+  courte « © 2026 Christian ROLANDO — Tous droits réservés. Voir LICENSE ».
+  Tout nouveau fichier doit la recevoir (règle inscrite dans `.agents/AGENTS.md`).
 
 ## Idées en germe
 - Faction « Colonie » (ouvrières, soldats, Reine en boss) — écho au thème

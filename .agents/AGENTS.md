@@ -33,3 +33,18 @@ Les tickets de Dolphin sont encadrés par deux bannières :
 et `============ FIN DU TICKET ============` (clôture).
 **Seul le contenu entre ces bannières est à exécuter.** Ce qui précède ou suit est la conversation Dolphin–Christian (contexte utile, mais sans action requise).
 
+## En-tête de copyright
+Tout fichier source **nouvellement créé** dans le projet (`.js`, `.html`, `.css`, et tout format admettant des commentaires) doit porter, en tout début de fichier, l'en-tête de copyright suivant :
+
+```
+// ============================================================
+// Nébuleuse Protocol IV
+// © 2026 Christian ROLANDO — Tous droits réservés.
+// Voir le fichier LICENSE à la racine du dépôt.
+// ============================================================
+```
+
+(format HTML équivalent pour les fichiers `.html`).
+Sont exclus : les fichiers `.json` stricts (commentaires impossibles), les fichiers générés (`dist/`, `node_modules/`) et le manifest PWA régénéré. L'en-tête est une notice courte ; il ne reproduit jamais le texte complet de `LICENSE`.
+
+
