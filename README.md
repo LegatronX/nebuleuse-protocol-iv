@@ -1,3 +1,5 @@
+> © 2026 Christian ROLANDO — Tous droits réservés. Voir [LICENSE](LICENSE).
+
 # Nébuleuse Protocol IV
 
 Shoot 'em up vertical. **Migration en cours** (branche `migration/pixi-v5`) du monolithe

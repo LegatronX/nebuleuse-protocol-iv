@@ -45,6 +45,7 @@ visuelle devient une récompense de progression (idée de Christian).
   Laboratoire, 4 rangs, en nanites.
 - Le dépôt est public pour lecture ; le privé (correspondance, roman, notes)
   reste local/iCloud, jamais commité.
+- **Licence** : voie commerciale. Notice de copyright restrictive multilingue (FR/EN/ES), prévalence du français, © 2026 Christian ROLANDO. Fichier `LICENSE` à la racine. Le code reste public en consultation ; l'exploitation commerciale est interdite sans autorisation. Clause de contribution (inbound gracieux/non exclusif).
 
 ## Conventions
 - Le chemin d'un fichier figure en **titre** au-dessus du bloc, jamais en
@@ -59,6 +60,7 @@ visuelle devient une récompense de progression (idée de Christian).
   des fourmis cher à Christian ; à envisager au M4.1 ou M4.3.
 - La correspondance Dolphin–Christian, préservée en local, a vocation à être
   mise en forme (enseignement / publication).
+- Nettoyage à prévoir (M4.5) : l'ancien `manifest.json` racine a des clés mal formées (espaces parasites) ; il sera rendu obsolète par `vite-plugin-pwa`.
 
 ## Collaboration (stigmergie)
 Dolphin = architecte (tickets, code de référence). Antigravity (« Anti ») =
