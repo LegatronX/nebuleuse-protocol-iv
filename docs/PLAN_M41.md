@@ -11,7 +11,7 @@
 ## Sous-étapes & Statut
 
 - [x] **M4.1a** : world réel, meta, boucle, spawner (`src/game/engine.js`, `src/game/meta.js`, `src/game/waves.js`, orchestration `main.js`, HUD DOM minimal).
-- [ ] **M4.1b** : ennemis, tirs, faisceaux (comportements de tous les types d'ennemis, tirs, faisceaux boss).
+- [x] **M4.1b** : ennemis, tirs, faisceaux (comportements de tous les types d'ennemis, tirs, faisceaux boss).
 - [ ] **M4.1c** : collisions, graze, score, bombe, NOVA (collisions, frôlements, score, bombe, NOVA, game over).
 - [ ] **M4.1d** : joueur complet (pilotage, tir, bouclier, coque, invulnérabilité, tilt, talents meta).
 - [ ] **M4.1e** : bonus, particules, textes, ondes (powerups, particules, float texts, ondes chromatiques, polish final).
