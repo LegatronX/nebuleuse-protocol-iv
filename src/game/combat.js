@@ -98,6 +98,7 @@ export function killEnemy(e) {
     world.runBossKills++;
     explosion(e.x, e.y, e.color || '#f0abfc', 70, true);
     if (e.finalBoss) world.finalDefeated = true;
+    world.boss = null;
   } else if (e.type === 'miniboss') {
     world.runBossKills++;
     explosion(e.x, e.y, '#fbbf24', 50, true);

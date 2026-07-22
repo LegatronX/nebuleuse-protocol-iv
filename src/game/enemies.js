@@ -4,7 +4,7 @@
 // Voir le fichier LICENSE à la racine du dépôt.
 // ============================================================
 
-import { TAU, rand, clamp } from '../util/math.js';
+import { TAU, rand, clamp, pick } from '../util/math.js';
 import { world, getDiff, dm, spawnEnemy } from './engine.js';
 import { AudioSys } from '../audio/audio.stub.js';
 import { enemyColor } from './theme.js';
