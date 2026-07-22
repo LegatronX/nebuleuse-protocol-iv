@@ -17,13 +17,15 @@ export default defineConfig({
         name: 'Nébuleuse Protocol IV',
         short_name: 'Nébuleuse IV',
         description: "Shoot 'em up vertical — progression permanente, mini-boss, élites, boss final.",
-        theme_color: '#020409',
-        background_color: '#020409',
+        start_url: './',
+        scope: './',
         display: 'standalone',
         orientation: 'portrait',
+        theme_color: '#020409',
+        background_color: '#020409',
         icons: [
-          { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' },
-          { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png' }
+          { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' }
         ]
       }
     })
