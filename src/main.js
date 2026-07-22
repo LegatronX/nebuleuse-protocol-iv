@@ -8,7 +8,7 @@ import './ui/ui.css';
 import { Canvas2DRenderer } from './render/Canvas2DRenderer.js';
 import { PixiRenderer } from './render/PixiRenderer.js';
 import { gfxFlags } from './render/gfx.js';
-import { world, update, resetGame } from './game/engine.js';
+import { world, update, resetGame, keys, pauseGame, resumeGame } from './game/engine.js';
 import { ensureDOM, updateHUD } from './ui/overlays.js';
 import { doBomb, doSpecial } from './game/combat.js';
 import { clamp } from './util/math.js';
@@ -54,7 +54,7 @@ onResize();
 ensureDOM(world);
 
 /* ------------------------------------------------------------------
- * 2. Contrôles (Pointeur / Clavier)
+ * 2. Contrôles (Pointeur / Clavier / Pavé Fléché / WASD / ZQSD)
  * ------------------------------------------------------------------ */
 let isPointerDown = false;
 let lastPX = world.W / 2;
@@ -67,30 +67,43 @@ window.addEventListener('pointerdown', (e) => {
 });
 
 window.addEventListener('pointermove', (e) => {
-  if (!isPointerDown || !world.player || !world.player.alive) return;
-  const sens = (world.meta && world.meta.sensitivity) || 1.35;
-  const dx = (e.clientX - lastPX) * sens;
-  const dy = (e.clientY - lastPY) * sens;
-  lastPX = e.clientX;
-  lastPY = e.clientY;
+  if (!world.player || !world.player.alive || world.state !== 'playing') return;
+  if (isPointerDown) {
+    const sens = (world.meta && world.meta.sensitivity) || 1.35;
+    const dx = (e.clientX - lastPX) * sens;
+    const dy = (e.clientY - lastPY) * sens;
+    lastPX = e.clientX;
+    lastPY = e.clientY;
 
-  world.player.x = clamp(world.player.x + dx, 20, world.W - 20);
-  world.player.y = clamp(world.player.y + dy, 70, world.H - 40);
-  world.player.tilt = clamp(dx * 0.08, -1, 1);
+    world.player.x = clamp(world.player.x + dx, 20, world.W - 20);
+    world.player.y = clamp(world.player.y + dy, 70, world.H - 40);
+    world.player.tilt = clamp(dx * 0.08, -1, 1);
+  }
 });
 
 window.addEventListener('pointerup', () => { isPointerDown = false; });
 window.addEventListener('pointercancel', () => { isPointerDown = false; });
 
 window.addEventListener('keydown', (e) => {
+  keys[e.code] = true;
+  keys[e.key] = true;
+
   if (e.key === 'r' || e.key === 'R') {
     resetGame();
   } else if (e.code === 'Space') {
     e.preventDefault();
     doBomb();
-  } else if (e.key === 'Shift') {
+  } else if (e.key === 'Shift' || e.key === 'ShiftLeft' || e.key === 'ShiftRight') {
     doSpecial();
+  } else if (e.key === 'Escape' || e.code === 'KeyP') {
+    if (world.state === 'playing') pauseGame();
+    else if (world.state === 'paused') resumeGame();
   }
+});
+
+window.addEventListener('keyup', (e) => {
+  keys[e.code] = false;
+  keys[e.key] = false;
 });
 
 /* ------------------------------------------------------------------

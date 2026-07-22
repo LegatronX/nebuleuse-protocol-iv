@@ -606,6 +606,8 @@ export function firePlayer() {
   AudioSys.shoot();
 }
 
+export const keys = {};
+
 export function updatePlayer(dt) {
   const p = world.player;
   if (!p || !p.alive) return;
@@ -620,6 +622,24 @@ export function updatePlayer(dt) {
   if (p.shieldDelay <= 0 && p.shield < p.maxShield) {
     p.shield = Math.min(p.maxShield, p.shield + (p.shieldRegen || 3.5) * dt);
   }
+
+  // Deplacement Clavier (Flèches / WASD / ZQSD)
+  let kx = 0;
+  let ky = 0;
+  if (keys.ArrowLeft || keys.KeyA || keys.KeyQ) kx -= 1;
+  if (keys.ArrowRight || keys.KeyD) kx += 1;
+  if (keys.ArrowUp || keys.KeyW || keys.KeyZ) ky -= 1;
+  if (keys.ArrowDown || keys.KeyS) ky += 1;
+
+  if (kx || ky) {
+    const len = Math.hypot(kx, ky) || 1;
+    const speed = p.speed || 380;
+    p.x += (kx / len) * speed * dt;
+    p.y += (ky / len) * speed * dt;
+  }
+
+  p.x = clamp(p.x, 20, world.W - 20);
+  p.y = clamp(p.y, 70, world.H - 40);
 
   p.tilt = clamp((p.x - (p.prevX || p.x)) / 12, -0.45, 0.45);
   p.prevX = p.x;
