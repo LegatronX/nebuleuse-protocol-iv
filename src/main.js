@@ -103,9 +103,16 @@ window.addEventListener('pointermove', (e) => {
 window.addEventListener('pointerup', () => { isPointerDown = false; });
 window.addEventListener('pointercancel', () => { isPointerDown = false; });
 
+import { doBomb, doSpecial } from './game/combat.js';
+
 window.addEventListener('keydown', (e) => {
   if (e.key === 'r' || e.key === 'R') {
     resetGame();
+  } else if (e.code === 'Space') {
+    e.preventDefault();
+    doBomb();
+  } else if (e.key === 'Shift') {
+    doSpecial();
   }
 });
 

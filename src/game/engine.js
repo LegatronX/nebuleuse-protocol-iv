@@ -477,14 +477,102 @@ export function triggerCamPunch(mag = 0.04, duration = 0.14) {
   world.camPunchTime = duration;
 }
 
+import { updateEnemies, updateBullets, updateBeams } from './enemies.js';
+import { updateCollisions, doBomb, doSpecial } from './combat.js';
+
+export function updatePowerups(dt) {
+  for (let i = world.powerups.length - 1; i >= 0; i--) {
+    const p = world.powerups[i];
+    p.t += dt;
+    p.y += p.vy * dt;
+    if (p.y > world.H + 40) world.powerups.splice(i, 1);
+  }
+}
+
+export function updateParticles(dt) {
+  for (let i = world.particles.length - 1; i >= 0; i--) {
+    const pt = world.particles[i];
+    pt.life -= dt;
+    pt.x += pt.vx * dt;
+    pt.y += pt.vy * dt;
+    if (pt.life <= 0) world.particles.splice(i, 1);
+  }
+}
+
+export function updateTexts(dt) {
+  for (let i = world.texts.length - 1; i >= 0; i--) {
+    const tx = world.texts[i];
+    tx.life -= dt;
+    tx.y += tx.vy * dt;
+    if (tx.life <= 0) world.texts.splice(i, 1);
+  }
+}
+
+export function updateShockwaves(dt) {
+  for (let i = world.shockwaves.length - 1; i >= 0; i--) {
+    const sw = world.shockwaves[i];
+    sw.life -= dt;
+    const progress = 1 - (sw.life / sw.maxLife);
+    sw.r = 10 + progress * (sw.maxR - 10);
+    if (sw.life <= 0) world.shockwaves.splice(i, 1);
+  }
+}
+
 export function updateAssist(dt) {
   if (world.autoBombCooldown > 0) world.autoBombCooldown -= dt;
   const p = world.player;
   const assist = (world.meta && world.meta.assist) || false;
   if (assist && p && p.alive && p.bombs > 0 && world.autoBombCooldown <= 0 && p.hull <= p.maxHull * 0.25) {
     world.autoBombCooldown = 8.0;
-    // doBomb stub call for now
+    doBomb();
   }
+}
+
+export function firePlayer() {
+  const p = world.player;
+  if (!p || !p.alive) return;
+  const w = p.weaponLevel || 1;
+  p.fireCd = Math.max(0.07, (0.155 - w * 0.011) * (p.fireMul || 1));
+
+  const dmg = 12 + w * 3;
+  const y = p.y - 18;
+  const sp = 760;
+
+  const shot = (x, vx, vy, r = 4, color = '#8ffcff') => {
+    world.pBullets.push({ x, y: y + rand(-1, 1), vx, vy, dmg, r, color, life: 2 });
+  };
+
+  if (w === 1) {
+    shot(p.x, 0, -sp);
+  } else if (w === 2) {
+    shot(p.x - 8, 0, -sp);
+    shot(p.x + 8, 0, -sp);
+  } else if (w === 3) {
+    shot(p.x, 0, -sp);
+    shot(p.x - 12, -90, -sp);
+    shot(p.x + 12, 90, -sp);
+  } else {
+    shot(p.x - 6, 0, -sp);
+    shot(p.x + 6, 0, -sp);
+    shot(p.x - 14, -140, -sp * 0.92);
+    shot(p.x + 14, 140, -sp * 0.92);
+  }
+
+  AudioSys.shoot();
+}
+
+export function updatePlayer(dt) {
+  const p = world.player;
+  if (!p || !p.alive) return;
+
+  p.invuln -= dt;
+  p.fireCd = (p.fireCd || 0) - dt;
+
+  if (p.shield < p.maxShield) {
+    p.shield = Math.min(p.maxShield, p.shield + 2 * dt);
+  }
+
+  if (p.fireCd <= 0) firePlayer();
 }
 
 export function update(dt) {
@@ -526,10 +614,27 @@ export function update(dt) {
     if (world.shake > 0) world.shake = Math.max(0, world.shake - dt * 1.4);
     if (world.hitFlash > 0) world.hitFlash -= dt;
 
+    updatePlayer(dt);
     updateSpawner(dt);
+
+    const eDt = dt * (world.slowTime > 0 ? 0.45 : 1);
+
+    updateEnemies(eDt);
+    updateBullets(dt, eDt);
+    updateBeams(dt);
+    updateCollisions();
+    updatePowerups(dt);
+    updateParticles(dt);
+    updateTexts(dt);
+    updateShockwaves(dt);
 
     if (world.waveBannerTime > 0) world.waveBannerTime -= dt;
   } else if (world.state === 'gameover' || world.state === 'victory') {
+    updateParticles(dt);
+    updateTexts(dt);
+    updateShockwaves(dt);
+    updateBeams(dt);
+
     if (world.shake > 0) world.shake = Math.max(0, world.shake - dt * 1.4);
     if (world.hitFlash > 0) world.hitFlash -= dt;
   }
