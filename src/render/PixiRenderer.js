@@ -69,9 +69,7 @@ function beamAlpha(t) {
 
 /**
  * PixiRenderer — implémentation WebGL du contrat IRenderer (PixiJS v7).
- * Cible de la migration ; produit un rendu comparable à Canvas2DRenderer.
- * Le ticker Pixi est arrêté : c'est le requestAnimationFrame de main.js
- * qui pilote, via renderFrame() hérité et present() qui rend le stage.
+ * Moteur du palier 5 (« Nébuleuse ») avec support complet des drapeaux GFX.
  */
 export class PixiRenderer extends IRenderer {
   constructor({ lowQuality = false } = {}) {
@@ -80,6 +78,27 @@ export class PixiRenderer extends IRenderer {
     this.W = 0; this.H = 0;
     this._floatTextPool = []; this._floatTextIdx = 0;
     this._powerTextPool = []; this._powerTextIdx = 0;
+    this._shockHaloPool = []; this._shockHaloIdx = 0;
+    this._planetPool = [];
+    this._planetTexMap = new Map();
+    this.bloomFilter = null;
+  }
+
+  setGfx(gfx) {
+    this.gfx = gfx;
+    this._applyBlendModes();
+    if (this.bloomFilter) {
+      this.worldLayer.filters = gfx.bloom ? [this.bloomFilter] : [];
+    }
+  }
+
+  _applyBlendModes() {
+    const mode = (this.gfx && this.gfx.additive) ? BLEND_MODES.ADD : BLEND_MODES.NORMAL;
+    for (const layer of [this.powerupGlowG, this.bossHalo, this.beamG,
+                         this.reactorSprite, this.bulletG, this.particleG,
+                         this.shockHaloLayer, this.shockG]) {
+      if (layer) layer.blendMode = mode;
+    }
   }
 
   /* ---- Cycle de vie ---- */
@@ -106,7 +125,20 @@ export class PixiRenderer extends IRenderer {
 
     // Calques, dans l'ordre du z-order (hérité de draw()).
     this.bgLayer = new Container();
-    this.worldLayer = new Container();      // reçoit la secousse
+    this.worldLayer = new Container();
+
+    this.nebulaLayer = new Container();
+    this.nebulaSprites = [0x6366f1, 0xec4899, 0x0ea5e9].map((tint, i) => {
+      const s = new Sprite(this.glowTex);
+      s.anchor.set(0.5);
+      s.blendMode = BLEND_MODES.SCREEN;
+      s.tint = tint;
+      s.alpha = [0.08, 0.07, 0.08][i];
+      this.nebulaLayer.addChild(s);
+      return s;
+    });
+
+    this.planetLayer = new Container();
     this.starG = new Graphics();
     this.powerupGlowG = new Graphics(); this.powerupGlowG.blendMode = BLEND_MODES.ADD;
     this.powerupG = new Graphics();
@@ -122,13 +154,18 @@ export class PixiRenderer extends IRenderer {
     this.playerG = new Graphics();
     this.bulletG = new Graphics(); this.bulletG.blendMode = BLEND_MODES.ADD;
     this.particleG = new Graphics(); this.particleG.blendMode = BLEND_MODES.ADD;
+
+    this.shockHaloLayer = new Container();
     this.shockG = new Graphics(); this.shockG.blendMode = BLEND_MODES.ADD;
     this.textLayer = new Container();
 
     this.worldLayer.addChild(
-      this.starG, this.powerupGlowG, this.powerupG, this.powerupTextLayer,
-      this.bossHalo, this.enemyG, this.beamG, this.reactorSprite, this.shipSprite, this.playerG,
-      this.bulletG, this.particleG, this.shockG, this.textLayer
+      this.nebulaLayer, this.planetLayer, this.starG,
+      this.powerupGlowG, this.powerupG, this.powerupTextLayer,
+      this.bossHalo, this.enemyG, this.beamG,
+      this.reactorSprite, this.shipSprite, this.playerG,
+      this.bulletG, this.particleG,
+      this.shockHaloLayer, this.shockG, this.textLayer
     );
 
     this.overlayG = new Graphics();
@@ -153,11 +190,20 @@ export class PixiRenderer extends IRenderer {
 
     this.app.stage.addChild(this.bgLayer, this.worldLayer, this.overlayG, this.bannerLayer);
 
-    // Fond : shader de nébuleuse (vTextureCoord déclaré explicitement dans le fragment).
+    // Fond : shader de nébuleuse
     this.bgSprite = new Sprite(Texture.WHITE);
     this.nebula = new Filter(null, NEBULA_FRAGMENT, { uTime: 0, uResolution: [window.innerWidth, window.innerHeight] });
     this.bgSprite.filters = [this.nebula];
     this.bgLayer.addChild(this.bgSprite);
+
+    // Initialisation robuste du Bloom via import dynamique
+    import('pixi-filters').then(({ AdvancedBloomFilter }) => {
+      this.bloomFilter = new AdvancedBloomFilter({ threshold: 0.4, bloomScale: 1.2, blur: 8, quality: 4 });
+      if (this.gfx && this.gfx.bloom) this.worldLayer.filters = [this.bloomFilter];
+      console.log('[Nébuleuse] AdvancedBloomFilter activé.');
+    }).catch(() => {
+      console.warn('[Nébuleuse] pixi-filters indisponible — bloom désactivé.');
+    });
   }
 
   resize(w, h) {
@@ -175,22 +221,100 @@ export class PixiRenderer extends IRenderer {
 
   /* ---- Verbes de calque ---- */
   drawBackground() {
-    this.bannerLayer.visible = false;       // état persistant Pixi : on réinitialise
+    this.bannerLayer.visible = false;
     this.nebula.uniforms.uTime = this.world.globalTime;
   }
   regenerateBackground() {}
 
   beginCamera() {
-    const s = this.world.shake;
-    if (s > 0) { const m = s * 9; this.worldLayer.x = rand(-m, m); this.worldLayer.y = rand(-m, m); }
-    else { this.worldLayer.x = 0; this.worldLayer.y = 0; }
+    const w = this.world;
+    let s = 1;
+    if (this.gfx && this.gfx.cameraPunch && w.camPunchTime > 0 && w.camPunchMag > 0) {
+      s = 1 + w.camPunchMag * (w.camPunchTime / w.camPunchDuration);
+    }
+    let sx = 0, sy = 0;
+    if (w.shake > 0) { const m = w.shake * 9; sx = rand(-m, m); sy = rand(-m, m); }
+    this.worldLayer.pivot.set(this.W / 2, this.H / 2);
+    this.worldLayer.position.set(this.W / 2 + sx, this.H / 2 + sy);
+    this.worldLayer.scale.set(s);
   }
-  endCamera() { this.worldLayer.x = 0; this.worldLayer.y = 0; }
+
+  endCamera() {
+    this.worldLayer.pivot.set(0, 0);
+    this.worldLayer.position.set(0, 0);
+    this.worldLayer.scale.set(1);
+  }
+
   beginShake() { this.beginCamera(); }
   endShake() { this.endCamera(); }
 
-  drawNebulae() {}
-  drawPlanets() {}
+  drawNebulae() {
+    if (!this.gfx || !this.gfx.nebulae) { this.nebulaLayer.visible = false; return; }
+    this.nebulaLayer.visible = true;
+    const t = this.world.globalTime * 0.15, W = this.W, H = this.H, m = Math.min(W, H);
+    const anim = [
+      { x: W * 0.25 + Math.sin(t) * 40,     y: H * 0.3  + Math.cos(t * 0.8) * 50, r: m * 0.48 },
+      { x: W * 0.75 + Math.cos(t * 1.2) * 50, y: H * 0.65 + Math.sin(t * 0.7) * 40, r: m * 0.55 },
+      { x: W * 0.5  + Math.sin(t * 0.7) * 60, y: H * 0.85 + Math.cos(t * 1.1) * 30, r: m * 0.42 },
+    ];
+    this.nebulaSprites.forEach((s, i) => {
+      s.x = anim[i].x; s.y = anim[i].y;
+      s.width = s.height = anim[i].r * 2;
+    });
+  }
+
+  _makePlanetTexture(p) {
+    const size = Math.ceil(p.r * 1.7 * 2 + p.r * 0.8);
+    const c = document.createElement('canvas'); c.width = c.height = size;
+    const g = c.getContext('2d');
+    const cx = size / 2, cy = size / 2;
+    if (p.type.aura) {
+      const aura = g.createRadialGradient(cx, cy, p.r * 0.85, cx, cy, p.r * 1.3);
+      aura.addColorStop(0, p.type.aura); aura.addColorStop(1, 'rgba(0,0,0,0)');
+      g.fillStyle = aura; g.beginPath(); g.arc(cx, cy, p.r * 1.3, 0, TAU); g.fill();
+    }
+    if (p.type.ring) {
+      g.save(); g.translate(cx, cy); g.rotate(0.38); g.scale(1, 0.32);
+      g.strokeStyle = p.type.aura || p.type.c1; g.lineWidth = 12;
+      g.beginPath(); g.arc(0, 0, p.r * 1.7, Math.PI, TAU); g.stroke(); g.restore();
+    }
+    const body = g.createRadialGradient(cx - p.r * 0.35, cy - p.r * 0.35, p.r * 0.05, cx, cy, p.r);
+    body.addColorStop(0, p.type.c1); body.addColorStop(0.65, p.type.c2); body.addColorStop(1, '#020617');
+    g.fillStyle = body; g.beginPath(); g.arc(cx, cy, p.r, 0, TAU); g.fill();
+    if (p.type.crated && p.craters) {
+      g.fillStyle = 'rgba(0,0,0,0.28)';
+      for (const cr of p.craters) { g.beginPath(); g.arc(cx + cr.x * p.r, cy + cr.y * p.r, cr.r * p.r, 0, TAU); g.fill(); }
+    }
+    if (p.type.ring) {
+      g.save(); g.translate(cx, cy); g.rotate(0.38); g.scale(1, 0.32);
+      g.strokeStyle = p.type.c1; g.lineWidth = 8; g.globalAlpha = 0.85;
+      g.beginPath(); g.arc(0, 0, p.r * 1.7, 0, Math.PI); g.stroke(); g.restore();
+    }
+    return Texture.from(c);
+  }
+
+  _getPlanetSprite(i) {
+    let s = this._planetPool[i];
+    if (!s) { s = new Sprite(); s.anchor.set(0.5); this.planetLayer.addChild(s); this._planetPool.push(s); }
+    return s;
+  }
+
+  drawPlanets() {
+    if (!this.gfx || !this.gfx.planets || !this.world.planets) { this.planetLayer.visible = false; return; }
+    this.planetLayer.visible = true;
+    const planets = this.world.planets;
+    for (const [planet, tex] of this._planetTexMap) {
+      if (!planets.includes(planet)) { tex.destroy(true); this._planetTexMap.delete(planet); }
+    }
+    for (let i = 0; i < planets.length; i++) {
+      const p = planets[i];
+      let tex = this._planetTexMap.get(p);
+      if (!tex) { tex = this._makePlanetTexture(p); this._planetTexMap.set(p, tex); }
+      const s = this._getPlanetSprite(i);
+      s.texture = tex; s.x = p.x; s.y = p.y; s.visible = true;
+    }
+    for (let i = planets.length; i < this._planetPool.length; i++) this._planetPool[i].visible = false;
+  }
 
   drawStars() {
     const g = this.starG; g.clear();
@@ -224,7 +348,7 @@ export class PixiRenderer extends IRenderer {
     let boss = null;
     for (const e of this.world.enemies) {
       if (e.type === 'boss') { boss = e; this._drawBoss(g, e); continue; }
-      const cn = this._c(enemyColor(e.type));
+      const cn = (e.type === 'sentinel') ? 0xfacc15 : (e.type === 'swarmer') ? 0xfb923c : this._c(enemyColor(e.type));
       switch (e.type) {
         case 'drone': this._poly(g, e.x, e.y, Math.PI, TRI(14), cn); break;
         case 'zig': this._poly(g, e.x, e.y, e.t * 2, DIA(13), cn); break;
@@ -237,6 +361,16 @@ export class PixiRenderer extends IRenderer {
         case 'miniboss':
           this._poly(g, e.x, e.y, e.t * 0.8, STAR(30), cn);
           this._poly(g, e.x, e.y, -e.t * 0.8, HEX(16), 0xfff7ed);
+          break;
+        case 'sentinel':
+          this._poly(g, e.x, e.y, e.t * 0.6, HEX(e.r || 20), 0xfacc15);
+          g.lineStyle(0);
+          g.beginFill(0xffffff, 0.5 + 0.4 * Math.sin(e.t * 6));
+          g.drawCircle(e.x, e.y, (e.r || 20) * 0.32);
+          g.endFill();
+          break;
+        case 'swarmer':
+          this._poly(g, e.x, e.y, Math.PI, TRI(e.r || 10), 0xfb923c);
           break;
       }
       if (e.elite) { g.lineStyle(2, 0xfbbf24, 0.8); g.drawCircle(e.x, e.y, e.r + 5); }
@@ -292,7 +426,7 @@ export class PixiRenderer extends IRenderer {
     const blink = p.invuln > 0 && Math.floor(gt * 12) % 2 === 0;
     const alpha = blink ? 0.35 : 1;
 
-    // Texture du vaisseau, mise en cache par paire de couleurs (prépare les skins du Laboratoire)
+    // Texture du vaisseau, mise en cache par paire de couleurs
     const c1 = p.colors ? p.colors[0] : '#dffcff';
     const c2 = p.colors ? p.colors[1] : '#2b7fff';
     const key = c1 + '|' + c2;
@@ -341,13 +475,37 @@ export class PixiRenderer extends IRenderer {
     }
   }
 
+  _getShockHalo() {
+    let s = this._shockHaloPool[this._shockHaloIdx];
+    if (!s) {
+      s = new Sprite(this.glowTex); s.anchor.set(0.5); s.blendMode = BLEND_MODES.ADD;
+      this.shockHaloLayer.addChild(s); this._shockHaloPool.push(s);
+    }
+    this._shockHaloIdx++;
+    return s;
+  }
+
   drawShockwaves() {
     const g = this.shockG; g.clear();
+    this._shockHaloIdx = 0;
     for (const s of this.world.shockwaves) {
       const a = s.life / s.maxLife;
-      g.lineStyle(8 * a + 2, 0xffffff, a * 0.7).drawCircle(s.x, s.y, s.r);
-      g.lineStyle(16 * a + 4, 0x67e8f9, a * 0.4).drawCircle(s.x, s.y, s.r * 0.92);
+      const primary = this._c(s.color || '#38bdf8');
+      const secondary = this._c(s.color2 || '#ec4899');
+      const thick = s.thick || 10;
+      if (this.gfx && this.gfx.chromaticWaves) {
+        g.lineStyle(thick * a + 4, secondary, a * 0.55); g.drawCircle(s.x, s.y, s.r * 1.04);
+        g.lineStyle(thick * a + 2, primary, a * 0.85);   g.drawCircle(s.x, s.y, s.r);
+        g.lineStyle(Math.max(1.5, thick * a * 0.4), 0xffffff, a * 0.95); g.drawCircle(s.x, s.y, s.r * 0.97);
+        const halo = this._getShockHalo();
+        halo.x = s.x; halo.y = s.y; halo.width = halo.height = s.r * 2.3;
+        halo.tint = primary; halo.alpha = a * 0.22; halo.visible = true;
+      } else {
+        g.lineStyle(8 * a + 2, 0xffffff, a * 0.7).drawCircle(s.x, s.y, s.r);
+        g.lineStyle(16 * a + 4, 0x67e8f9, a * 0.4).drawCircle(s.x, s.y, s.r * 0.92);
+      }
     }
+    for (let i = this._shockHaloIdx; i < this._shockHaloPool.length; i++) this._shockHaloPool[i].visible = false;
   }
 
   drawTexts() {
@@ -378,6 +536,7 @@ export class PixiRenderer extends IRenderer {
     const f = this.world.hitFlash;
     if (f > 0) g.beginFill(0xff5078, f * 0.4).drawRect(0, 0, this.W, this.H).endFill();
   }
+
   slowOverlay() {
     if (this.world.slowTime > 0) {
       this.overlayG.beginFill(0x50a0ff, 0.06).drawRect(0, 0, this.W, this.H).endFill();
@@ -479,6 +638,7 @@ export class PixiRenderer extends IRenderer {
     this._floatTextIdx++;
     return t;
   }
+
   _getPowerText() {
     let t = this._powerTextPool[this._powerTextIdx];
     if (!t) {
