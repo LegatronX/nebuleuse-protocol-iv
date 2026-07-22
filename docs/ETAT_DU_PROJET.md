@@ -34,8 +34,8 @@ visuelle devient une récompense de progression (idée de Christian).
 - M4.0ter `gfx.js` + features v4.7 derrière drapeaux (Canvas2D) — ✅ fait.
 - M4.0quater Transposition PixiRenderer — ✅ clos.
 - M4.1 Cœur du jeu — ✅ clos (stubs audio M4.5 en place).
-- M4.2 Interface — ✅ clos (HUD, menu, pause, gameover, victory, lab, ships, settings).
-- M4.3 Progression · M4.4 Données JSON · M4.5 Audio + accessibilité + adieu au générateur.
+- M4.2 Interface & Ergo — ✅ clos (HUD Cyber-Arcade unifié, bandeaux cinématiques, contrôles clavier WASD/Flèches, menu, labo, vaisseaux, réglages).
+- M4.3 Progression · M4.4 Données JSON · M4.5 Audio + accessibilité.
 
 ## Décisions actées
 - Source de vérité pour la migration : **v4.7**.
