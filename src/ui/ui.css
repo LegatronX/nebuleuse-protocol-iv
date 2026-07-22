@@ -145,7 +145,7 @@ body {
   justify-content: center;
 }
 
-/* ---- HUD ---- */
+/* ---- HUD UNIFIÉ (Cyber-Arcade Premium) ---- */
 #hud {
   position: fixed;
   inset: 0;
@@ -154,41 +154,99 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 12px;
+  padding: 10px 14px;
 }
 
-#hud .top {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-}
-
-.panel {
+.hud-card {
   background: var(--panel-bg);
   border: 1px solid var(--panel-border);
-  border-radius: 10px;
-  padding: 8px 12px;
+  border-radius: 12px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
 }
 
-.score-panel { min-width: 110px; }
-.wave-panel { text-align: center; }
+#hud .top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
 
-.label { font-size: 10px; text-transform: uppercase; color: var(--muted); letter-spacing: 1px; }
-.big { font-size: 20px; font-weight: 900; color: var(--cyan); }
-.small { font-size: 11px; color: var(--muted); }
-.lives { color: var(--rose); letter-spacing: 2px; }
-.combo { color: var(--gold); font-weight: 700; }
+.score-card {
+  padding: 6px 12px;
+  min-width: 100px;
+}
 
-#grazeDisplay {
-  font-size: 10px;
+.hud-label {
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.hud-val {
+  font-size: 16px;
+  font-weight: 900;
   color: var(--cyan);
-  font-weight: 700;
-  margin-top: 2px;
+  line-height: 1.1;
 }
+
+.hud-val.inline {
+  display: inline-block;
+  font-size: 14px;
+  margin-left: 4px;
+}
+
+.hud-sub {
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.wave-card {
+  padding: 6px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.wave-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hud-lives {
+  color: var(--rose);
+  font-size: 11px;
+  letter-spacing: 1.5px;
+}
+
+.hud-graze {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--cyan);
+  margin-top: 1px;
+}
+
+.pause-btn {
+  width: 36px; height: 36px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--cyan);
+  font-size: 16px;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: transform 0.1s ease;
+}
+
+.pause-btn:active { transform: scale(0.92); }
 
 #bossHud {
   position: fixed;
-  top: 75px; left: 50%;
+  top: 60px; left: 50%;
   transform: translateX(-50%);
   width: 80%; max-width: 320px;
   text-align: center;
@@ -197,30 +255,33 @@ body {
   z-index: 110;
 }
 
-#bossLabel { font-size: 12px; font-weight: 900; color: var(--rose); letter-spacing: 1.5px; margin-bottom: 4px; }
-#bossBarWrap { height: 10px; background: rgba(15, 23, 42, 0.9); border-radius: 5px; border: 1px solid var(--rose); overflow: hidden; }
-#bossBar { height: 10px; width: 100%; background: linear-gradient(90deg, #e11d48, #f43f5e); transition: width 0.1s linear; }
+#bossLabel { font-size: 11px; font-weight: 900; color: var(--rose); letter-spacing: 1.5px; margin-bottom: 3px; }
+#bossBarWrap { height: 8px; background: rgba(15, 23, 42, 0.9); border-radius: 4px; border: 1px solid var(--rose); overflow: hidden; }
+#bossBar { height: 8px; width: 100%; background: linear-gradient(90deg, #e11d48, #f43f5e); transition: width 0.1s linear; }
 
-#hud .bottom {
+#hud .bottom-bar {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
   pointer-events: auto;
-  gap: 12px;
+  gap: 10px;
 }
 
-.status-panel {
-  min-width: 175px;
+.status-dock {
   padding: 8px 12px;
+  min-width: 170px;
 }
 
 .status-head {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   font-size: 11px;
-  font-weight: 700;
-  margin-bottom: 5px;
+  font-weight: 800;
+  margin-bottom: 4px;
 }
+
+.status-head .bombs { color: var(--magenta); }
+.status-head .mult { color: var(--gold); }
 
 .bars-compact {
   display: flex;
@@ -235,9 +296,9 @@ body {
 }
 
 .bar-lbl {
-  width: 48px;
+  width: 44px;
   font-size: 8px;
-  font-weight: 700;
+  font-weight: 800;
   color: var(--muted);
   letter-spacing: 0.5px;
 }
@@ -256,24 +317,29 @@ body {
 .fill.shield { background: linear-gradient(90deg, #0284c7, #38bdf8); }
 .fill.energy { background: linear-gradient(90deg, #c026d3, #f0abfc); }
 
-.action-buttons {
+.action-dock {
   display: flex;
   gap: 8px;
 }
 
-#specialBtn, #bombBtn {
-  background: linear-gradient(135deg, #7c3aed 0%, #c026d3 100%);
-  border: none;
+.action-btn {
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
   color: #fff;
   font-weight: 900;
-  padding: 10px 16px;
-  border-radius: 10px;
-  font-size: 13px;
+  padding: 10px 14px;
+  font-size: 12px;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  transition: transform 0.1s ease;
 }
 
-#bombBtn { background: linear-gradient(135deg, #e11d48 0%, #f43f5e 100%); }
+.action-btn:active { transform: scale(0.94); }
+
+.nova-btn { background: linear-gradient(135deg, rgba(124, 58, 237, 0.85) 0%, rgba(192, 38, 211, 0.85) 100%); }
+.bomb-btn { background: linear-gradient(135deg, rgba(225, 29, 72, 0.85) 0%, rgba(244, 63, 94, 0.85) 100%); }
 
 /* ---- Grilles Laboratoire & Vaisseaux ---- */
 .grid {

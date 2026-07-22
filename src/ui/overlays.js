@@ -53,22 +53,23 @@ export function ensureDOM(world) {
     hud = document.createElement('div');
     hud.id = 'hud';
     hud.innerHTML = `
-      <div class="top">
-        <div class="panel score-panel">
-          <div class="label">Score</div>
-          <div id="score" class="big">0</div>
-          <div id="high" class="small">Record 0</div>
+      <div class="top-bar">
+        <div class="hud-card score-card">
+          <div class="hud-label">SCORE</div>
+          <div id="score" class="hud-val">0</div>
+          <div id="high" class="hud-sub">Record 0</div>
         </div>
 
-        <div class="panel wave-panel">
-          <div class="label">Vague</div>
-          <div id="wave" class="big">1</div>
-          <div id="lives" class="small lives">♥</div>
-          <div id="combo" class="small combo"></div>
-          <div id="grazeDisplay">FRÔLEMENTS 0</div>
+        <div class="hud-card wave-card">
+          <div class="wave-row">
+            <span class="hud-label">VAGUE</span>
+            <span id="wave" class="hud-val inline">1</span>
+            <span id="lives" class="hud-lives">♥</span>
+          </div>
+          <div id="grazeDisplay" class="hud-graze">⚡ 0</div>
         </div>
 
-        <button id="pauseBtn" class="icon-btn" aria-label="Pause">⏸</button>
+        <button id="pauseBtn" class="hud-card pause-btn" aria-label="Pause">⏸</button>
       </div>
 
       <div id="bossHud">
@@ -76,12 +77,12 @@ export function ensureDOM(world) {
         <div id="bossBarWrap"><div id="bossBar"></div></div>
       </div>
 
-      <div class="bottom">
-        <div class="panel status-panel">
+      <div class="bottom-bar">
+        <div class="hud-card status-dock">
           <div class="status-head">
             <span id="weapon">Arme 1</span>
             <span id="bombs" class="bombs">💣 3</span>
-            <span id="multiplier">x1.0</span>
+            <span id="multiplier" class="mult">x1.0</span>
           </div>
           <div class="bars-compact">
             <div class="bar-row-compact">
@@ -99,9 +100,9 @@ export function ensureDOM(world) {
           </div>
         </div>
 
-        <div class="action-buttons">
-          <button id="specialBtn" aria-label="Nova">NOVA</button>
-          <button id="bombBtn" aria-label="Bombe">BOMBE</button>
+        <div class="action-dock">
+          <button id="specialBtn" class="action-btn nova-btn" aria-label="Nova">NOVA</button>
+          <button id="bombBtn" class="action-btn bomb-btn" aria-label="Bombe">BOMBE</button>
         </div>
       </div>
     `;
@@ -338,7 +339,7 @@ export function updateHUD(world) {
   if (waveEl) waveEl.textContent = world.wave;
   if (livesEl && p) livesEl.textContent = '♥'.repeat(Math.max(0, p.lives));
   if (comboEl) comboEl.textContent = world.combo > 1 ? `Combo x${world.combo}` : '';
-  if (grazeDisplay) grazeDisplay.textContent = `FRÔLEMENTS ${world.grazes}`;
+  if (grazeDisplay) grazeDisplay.textContent = `⚡ ${world.grazes}`;
 
   // Boss HUD
   const bossHud = document.getElementById('bossHud');
