@@ -26,3 +26,10 @@
 - Chemin d'un fichier en titre, pas en commentaire.
 - Varyings/uniforms déclarés explicitement dans les shaders.
 - Ne modifier que ce que le ticket demande.
+
+## Format des tickets Dolphin
+Les tickets de Dolphin sont encadrés par deux bannières :
+`============ TICKET DOLPHIN -> ANTIGRAVITY — à exécuter ============` (ouverture)
+et `============ FIN DU TICKET ============` (clôture).
+**Seul le contenu entre ces bannières est à exécuter.** Ce qui précède ou suit est la conversation Dolphin–Christian (contexte utile, mais sans action requise).
+
