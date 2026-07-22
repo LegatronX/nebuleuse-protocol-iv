@@ -1,19 +1,27 @@
-# Dépendances & build (régénérables : on ne les versionne jamais)
+# Dépendances & build (régénérables)
 node_modules/
 dist/
+.vite/
 *.local
 
-# Environnement & secrets
+# Environnement & secrets — JAMAIS commités
 .env
 .env.*
+
+# Privé — correspondance, roman, notes (vivent en local/iCloud)
+correspondance/
+notes/
+journal/
+*.privé
+
+# Sauvegardes & exports
+*.bak
+*.backup
+exports/
 
 # Système & éditeurs
 .DS_Store
 Thumbs.db
 *.log
 
-# Vite
-.vite/
-
-# Note : public/icons, public/legacy, src/, archive/ sont VERSIONNÉS.
-# Le manifest MODERNE n'existe pas dans le source (généré dans dist/ par le plugin).
+# Versionnés, eux : public/, src/, archive/, docs/, .agents/
