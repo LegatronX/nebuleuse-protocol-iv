@@ -4,10 +4,13 @@
 // Voir le fichier LICENSE à la racine du dépôt.
 // ============================================================
 
+import './ui/ui.css';
 import { Canvas2DRenderer } from './render/Canvas2DRenderer.js';
 import { PixiRenderer } from './render/PixiRenderer.js';
 import { gfxFlags } from './render/gfx.js';
-import { world, initStars, startGame, update, resetGame } from './game/engine.js';
+import { world, update, resetGame } from './game/engine.js';
+import { ensureDOM, updateHUD } from './ui/overlays.js';
+import { doBomb, doSpecial } from './game/combat.js';
 import { clamp } from './util/math.js';
 
 /* ------------------------------------------------------------------
@@ -47,36 +50,11 @@ function onResize() {
 window.addEventListener('resize', onResize);
 onResize();
 
-// Démarrer le jeu réel
-startGame('campagne');
+// Initialiser les overlays DOM & le HUD
+ensureDOM(world);
 
 /* ------------------------------------------------------------------
- * 2. HUD DOM Minimal Temporaire (STUB M4.2)
- * ------------------------------------------------------------------ */
-let hudEl = document.getElementById('hud');
-if (!hudEl) {
-  hudEl = document.createElement('div');
-  hudEl.id = 'hud';
-  hudEl.style.position = 'fixed';
-  hudEl.style.top = '12px';
-  hudEl.style.left = '12px';
-  hudEl.style.color = '#38bdf8';
-  hudEl.style.fontFamily = 'monospace';
-  hudEl.style.fontSize = '14px';
-  hudEl.style.pointerEvents = 'none';
-  hudEl.style.zIndex = '1000';
-  document.body.appendChild(hudEl);
-}
-
-function updateMinimalHUD() {
-  const p = world.player;
-  const hullStr = p ? `${Math.ceil(p.hull)}/${p.maxHull}` : '--';
-  const nanites = (world.meta && world.meta.nanites) || 0;
-  hudEl.innerHTML = `Vague: ${world.wave} | Score: ${world.score} | Coque: ${hullStr} | Nanites: ${nanites}⬡ | GFX: ${gfx.level}·${gfx.name}`;
-}
-
-/* ------------------------------------------------------------------
- * 3. Contrôles (Pointeur / Clavier)
+ * 2. Contrôles (Pointeur / Clavier)
  * ------------------------------------------------------------------ */
 let isPointerDown = false;
 let lastPX = world.W / 2;
@@ -90,8 +68,9 @@ window.addEventListener('pointerdown', (e) => {
 
 window.addEventListener('pointermove', (e) => {
   if (!isPointerDown || !world.player || !world.player.alive) return;
-  const dx = (e.clientX - lastPX) * 1.35;
-  const dy = (e.clientY - lastPY) * 1.35;
+  const sens = (world.meta && world.meta.sensitivity) || 1.35;
+  const dx = (e.clientX - lastPX) * sens;
+  const dy = (e.clientY - lastPY) * sens;
   lastPX = e.clientX;
   lastPY = e.clientY;
 
@@ -102,8 +81,6 @@ window.addEventListener('pointermove', (e) => {
 
 window.addEventListener('pointerup', () => { isPointerDown = false; });
 window.addEventListener('pointercancel', () => { isPointerDown = false; });
-
-import { doBomb, doSpecial } from './game/combat.js';
 
 window.addEventListener('keydown', (e) => {
   if (e.key === 'r' || e.key === 'R') {
@@ -117,7 +94,7 @@ window.addEventListener('keydown', (e) => {
 });
 
 /* ------------------------------------------------------------------
- * 4. Boucle principale rAF
+ * 3. Boucle principale rAF
  * ------------------------------------------------------------------ */
 let lastT = performance.now();
 
@@ -126,7 +103,7 @@ function frame(t) {
   lastT = t;
 
   update(dt);
-  updateMinimalHUD();
+  updateHUD(world);
   renderer.renderFrame(dt);
 
   requestAnimationFrame(frame);
