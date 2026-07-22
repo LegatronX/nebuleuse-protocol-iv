@@ -25,6 +25,43 @@ function STAR(s) {
   return p;
 }
 
+function makeGradientTexture(w, h, stops, direction = 'horizontal') {
+  const c = document.createElement('canvas');
+  c.width = Math.max(2, Math.round(w));
+  c.height = Math.max(2, Math.round(h));
+  const g = c.getContext('2d');
+  const grad = direction === 'horizontal'
+    ? g.createLinearGradient(0, 0, c.width, 0)
+    : g.createLinearGradient(0, 0, 0, c.height);
+  for (const s of stops) grad.addColorStop(s.offset, s.color);
+  g.fillStyle = grad;
+  g.fillRect(0, 0, c.width, c.height);
+  return Texture.from(c);
+}
+
+function makeShipTexture(c1, c2) {
+  const pad = 4, w = 28 + pad * 2, h = 40 + pad * 2;
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  const g = c.getContext('2d');
+  g.translate(w / 2, 22 + pad);
+  const body = g.createLinearGradient(0, -22, 0, 18);
+  body.addColorStop(0, c1); body.addColorStop(1, c2);
+  g.beginPath();
+  g.moveTo(0, -22); g.lineTo(14, 12); g.lineTo(6, 18); g.lineTo(-6, 18); g.lineTo(-14, 12);
+  g.closePath();
+  g.fillStyle = body; g.fill();
+  g.lineWidth = 1.5; g.strokeStyle = 'rgba(255,255,255,0.65)'; g.stroke();
+  g.beginPath(); g.ellipse(0, -4, 4, 7, 0, 0, Math.PI * 2);
+  g.fillStyle = 'rgba(8,47,73,0.9)'; g.fill();
+  return Texture.from(c);
+}
+
+function beamAlpha(t) {
+  if (t < 0.2) return 0.95 + (0.72 - 0.95) * (t / 0.2);
+  return 0.72 + (0.05 - 0.72) * ((t - 0.2) / 0.8);
+}
+
 /**
  * PixiRenderer — implémentation WebGL du contrat IRenderer (PixiJS v7).
  * Cible de la migration ; produit un rendu comparable à Canvas2DRenderer.
@@ -56,6 +93,12 @@ export class PixiRenderer extends IRenderer {
 
     this.glowTex = this._makeGlowTexture(64);
 
+    // Vaisseau pré-rendu (corps + cockpit en dégradé), affiché en Sprite
+    this.shipSprite = new Sprite();
+    this.shipSprite.anchor.set(0.5, 26 / 48);
+    this._shipTex = null;
+    this._shipTexKey = null;
+
     // Calques, dans l'ordre du z-order (hérité de draw()).
     this.bgLayer = new Container();
     this.worldLayer = new Container();      // reçoit la secousse
@@ -79,7 +122,7 @@ export class PixiRenderer extends IRenderer {
 
     this.worldLayer.addChild(
       this.starG, this.powerupGlowG, this.powerupG, this.powerupTextLayer,
-      this.bossHalo, this.enemyG, this.beamG, this.reactorSprite, this.playerG,
+      this.bossHalo, this.enemyG, this.beamG, this.reactorSprite, this.shipSprite, this.playerG,
       this.bulletG, this.particleG, this.shockG, this.textLayer
     );
 
@@ -215,33 +258,37 @@ export class PixiRenderer extends IRenderer {
   drawPlayer() {
     const g = this.playerG; g.clear();
     const p = this.world.player;
-    if (!p || !p.alive) { this.reactorSprite.visible = false; return; }
+    if (!p || !p.alive) {
+      this.shipSprite.visible = false;
+      this.reactorSprite.visible = false;
+      return;
+    }
     const gt = this.world.globalTime;
     const blink = p.invuln > 0 && Math.floor(gt * 12) % 2 === 0;
     const alpha = blink ? 0.35 : 1;
-    const rot = p.tilt * 0.4, cos = Math.cos(rot), sin = Math.sin(rot);
-    const T = (x, y) => [p.x + x * cos - y * sin, p.y + x * sin + y * cos];
+
+    // Texture du vaisseau, mise en cache par paire de couleurs (prépare les skins du Laboratoire)
+    const c1 = p.colors ? p.colors[0] : '#dffcff';
+    const c2 = p.colors ? p.colors[1] : '#2b7fff';
+    const key = c1 + '|' + c2;
+    if (this._shipTexKey !== key) {
+      if (this._shipTex) this._shipTex.destroy(true);
+      this._shipTex = makeShipTexture(c1, c2);
+      this._shipTexKey = key;
+      this.shipSprite.texture = this._shipTex;
+    }
+    this.shipSprite.visible = true;
+    this.shipSprite.x = p.x;
+    this.shipSprite.y = p.y;
+    this.shipSprite.rotation = p.tilt * 0.4;
+    this.shipSprite.alpha = alpha;
 
     // Réacteur (halo additif, derrière le corps)
+    const rot = p.tilt * 0.4, cos = Math.cos(rot), sin = Math.sin(rot);
     this.reactorSprite.visible = true;
     this.reactorSprite.x = p.x - 18 * sin;
     this.reactorSprite.y = p.y + 18 * cos;
     this.reactorSprite.alpha = 0.8 * alpha;
-
-    // Corps (couleur plate c1 — le dégradé linéaire est une approximation documentée)
-    const c1 = p.colors ? p.colors[0] : '#dffcff';
-    const body = [[0, -22], [14, 12], [6, 18], [-6, 18], [-14, 12]].map(([x, y]) => T(x, y));
-    g.lineStyle(1.5, 0xffffff, 0.65 * alpha);
-    g.beginFill(this._c(c1), alpha);
-    g.drawPolygon(body.flat());
-    g.endFill();
-
-    // Cockpit
-    const cock = T(0, -4);
-    g.lineStyle(0);
-    g.beginFill(0x082f49, 0.9 * alpha);
-    g.drawEllipse(cock[0], cock[1], 4, 7);
-    g.endFill();
 
     // Bouclier
     if (p.shield > 0) {
