@@ -119,3 +119,34 @@ Légende exécution : 🤖 automatisé · 🖐 manuel (visuel/ressenti)
 | TC-TOUR-001 | P1 | Overlay tournoi | Menu | Clic « Tournoi » | Semaine + mutateur affichés | 🤖 |
 | TC-TOUR-002 | P0 | Participation | Overlay | Clic « Participer » | Run démarre avec badge mutateur | 🤖 |
 | TC-TOUR-003 | P0 | Publication | Run tournoi terminé | Game over | Statut « Rang tournoi : #n » | 🤖 |
+
+---
+
+## 12. V5.10 — SECTEURS · PIÈCES · PORTAILS · QUANTIQUE (TC-V10-001 à 009)
+
+### TC-V10-001 — Assets v5.10 servis (P1)
+**Arrange** : serveur local. **Act** : HEAD sur 4 décors (bg-forge/alien/frozen/quantum.png) + 4 SFX (sfx-coin/coinburst/portal/overdrive.mp3). **Assert** : 8/8 HTTP 200.
+
+### TC-V10-002 — Pièces d'or : aimant + collecte + HUD (P0)
+**Arrange** : run campagne. **Act** : `__NP4.v10.dropCoins(8)` près du joueur, attente 2,6 s. **Assert** : `coinTotal() >= 5`, `#coinHud` visible avec compteur > 0.
+
+### TC-V10-003 — Surcharge quantique (P0)
+**Act** : `v10.overdrive()` puis `hurt(50)`. **Assert** : `od() > 6`, `player.fireMul === 0.35`, coque+bouclier inchangés (intangibilité).
+
+### TC-V10-004 — Qubit : superposition + décohérence (P1)
+**Act** : spawn qubit, `hp -= 10`. **Assert** : `baseX` téléporté (effondrement de la fonction d'onde).
+
+### TC-V10-005 — Intrication : mort simultanée (P0)
+**Act** : spawn paire `intrigue`, `v10.kill(a)`. **Assert** : même `linkId`, plus aucun ennemi intriqué vivant.
+
+### TC-V10-006 — Portail de secteur (P1)
+**Act** : `v10.portal('sector')` puis `v10.nextSector()`. **Assert** : portail ouvert, `sector() === 1` (thème Forge Solaire).
+
+### TC-V10-007 — Dimension secrète : pluie d'or (P1)
+**Act** : `v10.enterSecret()`, attente 1,3 s. **Assert** : `secret() === true`, pièces à l'écran > 0.
+
+### TC-V10-008 — Rapport : pièces + nanites bonus (P1)
+**Act** : fin de run (vies à 1, hit létal). **Assert** : `#finalStats` contient « pièces d'or » et « nanites bonus ».
+
+### TC-V10-009 — Décors de secteurs (P2, MANUEL)
+Vérifier visuellement les 5 thèmes (nébuleuse, forge solaire, abysse alien, abîme glacé, vide quantique) et la bannière auto-ajustée.

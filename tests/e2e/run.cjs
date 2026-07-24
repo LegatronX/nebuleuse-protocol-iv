@@ -1,4 +1,4 @@
-// Nébuleuse Protocol IV — Suite QA automatisée (v5.8)
+// Nébuleuse Protocol IV — Suite QA automatisée (v5.10)
 // Usage : NODE_PATH=/home/kimi/.npm-global/lib/node_modules node tests/e2e/run.cjs [appDir]
 // Produit : tests/docs/TEST-EXECUTION-TRACKING.csv + BUG-TRACKING-TEMPLATE.csv + artifacts/*.png
 const { spawn } = require('child_process');
@@ -630,8 +630,98 @@ async function main() {
     await ctxF.close();
   }
 
+
+  {
+    // ============ V5.10 : SECTEURS · PIÈCES · PORTAILS · QUANTIQUE ============
+    const ctxV = await browser.newContext({ viewport: { width: 430, height: 932 } });
+    const pv = await ctxV.newPage();
+    pv.on('pageerror', e => errors.push('PAGEERROR: ' + e.message));
+    await pv.goto(BASE);
+    await pv.waitForTimeout(1800);
+    const GV = (expr) => pv.evaluate(expr);
+    await T('TC-V10-001', 'V10', 'P1', 'Assets v5.10 servis (4 décors + 4 SFX)', async () => {
+      const r = await GV(async () => {
+        const urls = ['assets/bg-forge.png', 'assets/bg-alien.png', 'assets/bg-frozen.png', 'assets/bg-quantum.png', 'assets/sfx-coin.mp3', 'assets/sfx-coinburst.mp3', 'assets/sfx-portal.mp3', 'assets/sfx-overdrive.mp3'];
+        const res = await Promise.all(urls.map(u => fetch(u, { method: 'HEAD' }).then(x => x.ok).catch(() => false)));
+        return res.filter(Boolean).length;
+      });
+      assert(r === 8, 'assets OK: ' + r + '/8');
+    });
+    await pv.evaluate(() => { const b = [...document.querySelectorAll('button')].find(x => /campagne/i.test(x.textContent)); if (b) b.click(); });
+    await pv.waitForTimeout(2600);
+    await T('TC-V10-002', 'V10', 'P0', 'Pièces d\'or : drop → aimant → collecte + HUD', async () => {
+      await GV(() => window.__NP4.v10.dropCoins(8));
+      await pv.waitForTimeout(2600);
+      const r = await GV(() => ({
+        total: window.__NP4.v10.coinTotal(),
+        hud: document.getElementById('coinHud').style.display === 'block' && /[1-9]/.test(document.getElementById('coinHud').textContent)
+      }));
+      assert(r.total >= 5 && r.hud, JSON.stringify(r));
+    });
+    await T('TC-V10-003', 'V10', 'P0', 'Surcharge quantique (cadence ×2.8 + intangibilité)', async () => {
+      await GV(() => window.__NP4.v10.overdrive());
+      await pv.waitForTimeout(300);
+      const r = await GV(() => {
+        const N = window.__NP4;
+        const hp0 = N.player.hull + N.player.shield;
+        N.hurt(50);
+        return { od: N.v10.od(), mul: N.player.fireMul, same: (N.player.hull + N.player.shield) === hp0 };
+      });
+      assert(r.od > 6 && r.mul === 0.35 && r.same, JSON.stringify(r));
+    });
+    await pv.waitForFunction(() => window.__NP4.v10.od() <= 0, { timeout: 12000 });
+    await T('TC-V10-004', 'V10', 'P1', 'Qubit : superposition + décohérence au hit', async () => {
+      const r = await GV(async () => {
+        const N = window.__NP4;
+        const q = N.v10.spawnQ('qubit');
+        const x0 = q.baseX;
+        q.hp -= 10;
+        await new Promise(r2 => setTimeout(r2, 400));
+        return { moved: q.baseX !== x0, type: q.type };
+      });
+      assert(r.moved && r.type === 'qubit', JSON.stringify(r));
+    });
+    await T('TC-V10-005', 'V10', 'P0', 'Intrication : mort simultanée de la paire', async () => {
+      const r = await GV(async () => {
+        const N = window.__NP4;
+        const a = N.v10.spawnQ('intrigue');
+        const b = N.v10.spawnQ('intrigue');
+        await new Promise(r2 => setTimeout(r2, 80));
+        const linked = a.linkId != null && a.linkId === b.linkId;
+        N.v10.kill(a);
+        await new Promise(r2 => setTimeout(r2, 80));
+        return { linked, left: N.enemies.filter(e => e.linkId != null).length };
+      });
+      assert(r.linked && r.left === 0, JSON.stringify(r));
+    });
+    await T('TC-V10-006', 'V10', 'P1', 'Portail de secteur → transition Secteur II', async () => {
+      await GV(() => window.__NP4.v10.portal('sector'));
+      const opened = await GV(() => window.__NP4.v10.portals().some(p => p.kind === 'sector'));
+      await GV(() => window.__NP4.v10.nextSector());
+      const sector = await GV(() => window.__NP4.v10.sector());
+      assert(opened && sector === 1, `opened=${opened} sector=${sector}`);
+    });
+    await T('TC-V10-007', 'V10', 'P1', 'Dimension secrète : pluie d\'or', async () => {
+      await GV(() => window.__NP4.v10.enterSecret());
+      await pv.waitForTimeout(1300);
+      const r = await GV(() => ({ secret: window.__NP4.v10.secret(), coins: window.__NP4.v10.coins() }));
+      assert(r.secret && r.coins > 0, JSON.stringify(r));
+    });
+    await T('TC-V10-008', 'V10', 'P1', 'Rapport : pièces d\'or + nanites bonus', async () => {
+      await GV(() => { window.__NP4.player.lives = 1; });
+      await pv.waitForFunction(() => window.__NP4.player.invuln <= 0, { timeout: 9000 });
+      await GV(() => window.__NP4.hurt(9999));
+      await pv.waitForFunction(() => window.__NP4.state === 'gameover', { timeout: 12000 });
+      await pv.waitForTimeout(800);
+      const r = await GV(() => ({ st: window.__NP4.state, txt: (document.getElementById('finalStats') || {}).innerText || '' }));
+      assert(r.st === 'gameover' && /pièces d'or/.test(r.txt) && /nanites bonus/.test(r.txt), JSON.stringify(r).slice(0, 140));
+    });
+    await ctxV.close();
+  }
+
   // ============ MANQUANTS MANUELS ============
   manual('TC-DRAFT-005', 'DRAFT', 'P3', 'Capsules prototype (visuel)', 'Vérifier les capsules violettes après un boss en vague ≥ 3');
+  manual('TC-V10-009', 'V10', 'P2', 'Décors de secteurs (visuel)', 'Vérifier les 5 thèmes (nébuleuse, forge, abysse, glace, quantique) et la bannière auto-ajustée');
 
   // ============ CSV ============
   const track = ['Test Case ID,Category,Priority,Test Name,Estimated Time (min),Prerequisites,Status,Result,Bug ID,Execution Date,Executed By,Notes,Screenshot/Log'];
