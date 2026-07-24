@@ -559,6 +559,77 @@ async function main() {
     assert(!/service_role|sb_secret/i.test(src), 'secret trouvé dans le client');
   });
 
+  // ============ V5.9 : FTUE / RAPPORT / TOURNOI ============
+  {
+    const ctx9 = await browser.newContext({ viewport: { width: 430, height: 932 } });
+    const p9 = await ctx9.newPage();
+    p9.on('pageerror', e => errors.push('PAGEERROR: ' + e.message));
+    p9.on('console', m => { if (m.type() === 'error' && !/Failed to load resource|net::ERR/i.test(m.text())) errors.push('CONSOLE: ' + m.text().split('\n')[0]); });
+    await p9.goto(BASE);
+    await p9.waitForTimeout(1500);
+    const G9 = (expr) => p9.evaluate(expr);
+
+    await T('TC-TOUR-001', 'TOURNOI', 'P1', 'Bouton + overlay tournoi (semaine + mutateur)', async () => {
+      assert(await G9(() => !!document.getElementById('tourneyBtn')), 'bouton absent');
+      await G9(() => document.getElementById('tourneyBtn').click());
+      await p9.waitForTimeout(2500);
+      const info = await G9(() => document.getElementById('tourneyInfo').innerText);
+      assert(/-S\d{2}/.test(info) && /mutateur/i.test(info), info.slice(0, 80));
+      await G9(() => document.getElementById('tourneyClose').click());
+    });
+    await T('TC-TOUR-002', 'TOURNOI', 'P0', 'Participation = run mutateur', async () => {
+      await G9(() => localStorage.setItem('nebula4_alias', 'QA-TOURNOI'));
+      await G9(() => document.getElementById('tourneyBtn').click());
+      await p9.waitForTimeout(800);
+      await G9(() => document.getElementById('tourneyPlay').click());
+      await p9.waitForTimeout(3500);
+      const r = await G9(() => ({ st: window.__NP4.state, badge: (document.getElementById('mutatorBadge') || { innerText: '' }).innerText }));
+      assert((r.st === 'playing' || r.st === 'countdown') && r.badge.length > 0, JSON.stringify(r));
+    });
+    await T('TC-RR-001', 'RAPPORT', 'P1', 'Rapport de fin de run (grade + objectifs)', async () => {
+      await G9(() => { const g = window.__NP4; [...g.enemies].slice(0, 4).forEach(e => g.killEnemy(g.enemies.indexOf(e), true)); });
+      for (let i = 0; i < 40; i++) {
+        const st = await G9(() => window.__NP4.state);
+        if (st === 'gameover') break;
+        await G9(() => { const g = window.__NP4; if (g.state === 'playing' && g.player.alive) { g.player.invuln = 0; g.hurt(9999); } });
+        await p9.waitForTimeout(2300);
+      }
+      await p9.waitForTimeout(1200);
+      const r = await G9(() => {
+        const el = document.getElementById('finalStats');
+        return { txt: el.innerText, grade: !!el.querySelector('.rr-grade'), objs: el.querySelectorAll('.rr-obj').length };
+      });
+      assert(/Rapport de mission/.test(r.txt) && r.grade && r.objs === 3, JSON.stringify(r).slice(0, 120));
+    });
+    await T('TC-TOUR-003', 'TOURNOI', 'P0', 'Publication tournoi (rang)', async () => {
+      await p9.waitForTimeout(4200);
+      const txt = await G9(() => (document.getElementById('lbStatus') || {}).textContent || '');
+      assert(/tournoi/i.test(txt) && /#|publié/i.test(txt), 'statut: ' + txt);
+    });
+    await ctx9.close();
+  }
+  {
+    // FTUE : profil vierge sans meta.tuto
+    const ctxF = await browser.newContext({ viewport: { width: 430, height: 932 } });
+    const pf = await ctxF.newPage();
+    pf.on('pageerror', e => errors.push('PAGEERROR: ' + e.message));
+    await pf.goto(BASE);
+    await pf.waitForTimeout(1500);
+    await pf.evaluate(() => { const b = [...document.querySelectorAll('button')].find(x => /campagne/i.test(x.textContent)); if (b) b.click(); });
+    await pf.waitForTimeout(2200);
+    await T('TC-FTUE-001', 'FTUE', 'P1', 'Indice étape 1 affiché', async () => {
+      const r = await pf.evaluate(() => ({ vis: document.getElementById('tutoHint').classList.contains('show'), txt: document.getElementById('tutoHint').innerText }));
+      assert(r.vis && /Glisse/.test(r.txt), JSON.stringify(r).slice(0, 90));
+    });
+    await T('TC-FTUE-002', 'FTUE', 'P2', 'Progression après déplacement', async () => {
+      await pf.evaluate(() => { const g = window.__NP4; g.player.x += 120; g.player.y -= 80; });
+      await pf.waitForTimeout(2200);
+      const txt = await pf.evaluate(() => document.getElementById('tutoHint').innerText);
+      assert(!/Glisse/.test(txt), 'étape 1 non validée: ' + txt.slice(0, 60));
+    });
+    await ctxF.close();
+  }
+
   // ============ MANQUANTS MANUELS ============
   manual('TC-DRAFT-005', 'DRAFT', 'P3', 'Capsules prototype (visuel)', 'Vérifier les capsules violettes après un boss en vague ≥ 3');
 

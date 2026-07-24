@@ -98,3 +98,24 @@ Légende exécution : 🤖 automatisé · 🖐 manuel (visuel/ressenti)
 | TC-SEC-003 | P1 | Bornes CHECK (A03) | Clé anon | INSERT alias 30 car. / score < 0 | Rejet 400 | 🤖 |
 | TC-SEC-004 | P0 | XSS pseudo (A03) | = TC-LB-005 | — | Couvert par TC-LB-005 | 🤖 |
 | TC-SEC-005 | P2 | Pas de secret côté client (A05) | Code source | Grep clés | Seule la clé anon publique est présente (pas de service_role) | 🤖 |
+
+## 9. TC-FTUE — Première session (v5.9)
+
+| ID | P | Cas | Arrange | Act | Assert | Exéc |
+|---|---|---|---|---|---|---|
+| TC-FTUE-001 | P1 | Indice étape 1 | Profil vierge | Clic Campagne | Bulle « Glisse pour déplacer » visible | 🤖 |
+| TC-FTUE-002 | P2 | Progression tutoriel | Étape 1 affichée | Déplacer le vaisseau | Étape suivante | 🤖 |
+
+## 10. TC-RR — Rapport de fin de run (v5.9)
+
+| ID | P | Cas | Arrange | Act | Assert | Exéc |
+|---|---|---|---|---|---|---|
+| TC-RR-001 | P1 | Rapport complet | Run terminé | Game over | Grade + 3 objectifs + stats affichés | 🤖 |
+
+## 11. TC-TOUR — Tournoi hebdomadaire (v5.9)
+
+| ID | P | Cas | Arrange | Act | Assert | Exéc |
+|---|---|---|---|---|---|---|
+| TC-TOUR-001 | P1 | Overlay tournoi | Menu | Clic « Tournoi » | Semaine + mutateur affichés | 🤖 |
+| TC-TOUR-002 | P0 | Participation | Overlay | Clic « Participer » | Run démarre avec badge mutateur | 🤖 |
+| TC-TOUR-003 | P0 | Publication | Run tournoi terminé | Game over | Statut « Rang tournoi : #n » | 🤖 |

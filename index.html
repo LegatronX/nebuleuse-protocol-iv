@@ -2980,8 +2980,8 @@
             const b = eBullets[i];
 
             const d = dist2(b, player);
-            const hitRadius = b.r + player.r;
-            const grazeRadius = hitRadius + 22;
+            const hitRadius = b.r + player.r * 0.55; // hitbox danmaku : noyau réduit, morts plus « justes »
+            const grazeRadius = b.r + player.r + 22; // zone de frôlement préservée
 
             if (d < hitRadius * hitRadius) {
               eBullets.splice(i, 1);
@@ -10813,6 +10813,344 @@
           '.lb-meta{color:rgba(243,243,243,.45);font-size:12px}' +
           '.lb-score{font-weight:800;color:#c6d32d;font-variant-numeric:tabular-nums}';
         document.head.appendChild(st8);
+      })();
+
+      // ============ MODULE V5.9 — EXPÉRIENCE JOUEUR (FTUE · DANMAKU · RAPPORT · TOURNOI) ============
+      (function () {
+        const persistMeta = () => { if (typeof saveMeta === 'function') saveMeta(); else try { localStorage.setItem('nebula4_meta', JSON.stringify(meta)); } catch (e) {} };
+        const fnv = (s) => { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; };
+        const mulberry = (a) => () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+
+        // ================= A. TUTORIEL PREMIÈRE SESSION =================
+        const tutoHint = document.createElement('div');
+        tutoHint.id = 'tutoHint';
+        document.body.appendChild(tutoHint);
+        let tutoStep = -1, tutoTimer = 0, tutoStart = null, tutoShown = false;
+        const tutoActive = () => tutoStep >= 0 && !meta.tuto;
+        function tutoShow(text) {
+          tutoHint.innerHTML = text;
+          tutoHint.classList.add('show');
+          tutoTimer = 9;
+          tutoShown = true;
+        }
+        function tutoHide() { tutoHint.classList.remove('show'); }
+        const TUTO_STEPS = [
+          { text: '☝️ <b>Glisse</b> pour déplacer ton vaisseau — il tire tout seul !', when: () => true, done: () => tutoStart && (Math.abs(player.x - tutoStart.x) + Math.abs(player.y - tutoStart.y) > 60 || tutoTimer <= 0) },
+          { text: '💨 <b>Frôle</b> les balles ennemies (sans les toucher) pour charger la <b>NOVA</b>', when: () => eBullets.length > 0, done: () => grazes > 0 || tutoTimer <= 0 },
+          { text: '💣 <b>Double-tap</b> n\'importe où = BOMBE quand ça chauffe', when: () => wave >= 2, done: () => tutoTimer <= 0 },
+          { text: '🎁 Vole sur une <b>capsule</b> pour choisir ton bonus', when: () => (AudioSys.__choiceOrbs || []).length > 0, done: () => !(AudioSys.__choiceOrbs || []).length || tutoTimer <= 0 },
+          { text: '⚠️ <b>BOSS</b> — reste mobile, observe ses schémas d\'attaque !', when: () => !!boss, done: () => !boss || tutoTimer <= 0 }
+        ];
+        AudioSys.__tuto = () => ({ step: tutoStep, timer: Math.round(tutoTimer * 10) / 10, tuto: meta.tuto, start: tutoStart });
+        function tutoUpdate(dt) {
+          if (!tutoActive()) return;
+          const step = TUTO_STEPS[tutoStep];
+          if (!step) { tutoHide(); return; }
+          if (!tutoShown) {
+            if (step.when()) tutoShow(step.text);
+            return;
+          }
+          tutoTimer -= dt;
+          if (!step.done()) return;
+          // étape accomplie -> suivante
+          tutoStep++;
+          tutoShown = false;
+          tutoHide();
+          if (tutoStep >= TUTO_STEPS.length) {
+            meta.tuto = 1; persistMeta();
+            toast('🎓 Tutoriel terminé — bonne chasse, pilote !', 'gold');
+            if (AudioSys.jackpot) AudioSys.jackpot(false);
+            tutoStep = -1;
+          }
+        }
+
+        // ================= B. LISIBILITÉ DANMAKU =================
+        // Anneaux colorés autour des balles ennemies (identité couleur par type)
+        function drawDanmakuPass() {
+          if (state !== 'playing' && state !== 'paused') return;
+          // anneaux de balles
+          ctx.save();
+          for (const b of eBullets) {
+            ctx.strokeStyle = b.color;
+            ctx.globalAlpha = 0.85;
+            ctx.lineWidth = 1.8;
+            ctx.beginPath();
+            ctx.arc(b.x, b.y, b.r * 1.15, 0, TAU);
+            ctx.stroke();
+          }
+          ctx.restore();
+          // noyau de hitbox visible quand le danger approche (style Touhou)
+          if (player.alive) {
+            let danger = false;
+            for (const b of eBullets) {
+              if (dist2(b, player) < 150 * 150) { danger = true; break; }
+            }
+            if (danger) {
+              ctx.save();
+              const pulse = 0.75 + Math.sin(performance.now() / 90) * 0.25;
+              ctx.globalAlpha = pulse;
+              ctx.fillStyle = '#ffffff';
+              ctx.beginPath(); ctx.arc(player.x, player.y, 3.2, 0, TAU); ctx.fill();
+              ctx.strokeStyle = '#67e8f9';
+              ctx.lineWidth = 1.4;
+              ctx.beginPath(); ctx.arc(player.x, player.y, 7.5, 0, TAU); ctx.stroke();
+              ctx.restore();
+            }
+          }
+        }
+
+        // ================= C. RAPPORT DE FIN DE RUN =================
+        let runStats = null;
+        function resetRunStats() {
+          runStats = { kills: 0, bosses: 0, asteroids: 0, dmg: 0, t0: Date.now(), maxChain: 0, grazes0: grazes };
+        }
+        resetRunStats();
+        const baseKill9 = killEnemy;
+        killEnemy = function (index, award) {
+          const obj = (typeof index === 'number') ? enemies[index] : index;
+          if (obj && runStats) {
+            runStats.kills++;
+            if (obj.type === 'boss' || obj.type === 'miniboss') runStats.bosses++;
+            if (obj.type === 'asteroid') runStats.asteroids++;
+          }
+          baseKill9(index, award);
+        };
+        const baseDmg9 = damagePlayer;
+        damagePlayer = function (amount) { if (runStats) runStats.dmg += amount; baseDmg9(amount); };
+
+        const OBJECTIVES = [
+          { id: 'k60', t: 'Détruire 60 ennemis', c: (s) => s.kills >= 60 },
+          { id: 'g15', t: 'Frôler 15 balles', c: (s) => s.grazeCount >= 15 },
+          { id: 'w4', t: 'Atteindre la vague 4', c: (s) => s.wave >= 4 },
+          { id: 'b1', t: 'Vaincre 1 boss ou miniboss', c: (s) => s.bosses >= 1 },
+          { id: 'ch8', t: 'Chaîne de 8 frôlements', c: (s) => s.maxChain >= 8 },
+          { id: 'd200', t: 'Subir moins de 200 dégâts', c: (s) => s.dmg <= 200 },
+          { id: 'a5', t: 'Pulvériser 5 astéroïdes', c: (s) => s.asteroids >= 5 },
+          { id: 'w6', t: 'Atteindre la vague 6', c: (s) => s.wave >= 6 }
+        ];
+        function dailyObjectives() {
+          const rng = mulberry(fnv(new Date().toISOString().slice(0, 10)));
+          const pool = [...OBJECTIVES];
+          const out = [];
+          while (out.length < 3 && pool.length) out.push(pool.splice(Math.floor(rng() * pool.length), 1)[0]);
+          return out;
+        }
+        function runGrade(sc) {
+          if (sc >= 40000) return { g: 'S', color: '#fbbf24' };
+          if (sc >= 20000) return { g: 'A', color: '#34d399' };
+          if (sc >= 9000) return { g: 'B', color: '#67e8f9' };
+          return { g: 'C', color: '#a8a29e' };
+        }
+        function renderRunReport(statsEl, finalScore) {
+          if (!statsEl || !runStats) return;
+          const s = Object.assign({}, runStats, {
+            wave, grazeCount: Math.max(0, grazes - runStats.grazes0),
+            timeMin: (Date.now() - runStats.t0) / 60000
+          });
+          const grade = runGrade(finalScore);
+          const objs = dailyObjectives();
+          const doneCount = objs.filter(o => o.c(s)).length;
+          statsEl.innerHTML +=
+            `<div class="rr-card">` +
+            `<div class="rr-head"><span class="rr-grade" style="color:${grade.color};text-shadow:0 0 18px ${grade.color}">${grade.g}</span>` +
+            `<span class="rr-title">Rapport de mission</span>` +
+            `<span class="rr-objs">${doneCount}/3 objectifs</span></div>` +
+            `<div class="rr-objlist">` + objs.map(o =>
+              `<div class="rr-obj ${o.c(s) ? 'done' : ''}">${o.c(s) ? '✅' : '⬜'} ${o.t}</div>`).join('') + `</div>` +
+            `<div class="rr-grid">` +
+            `<div><b>${s.kills}</b><span>ennemis</span></div>` +
+            `<div><b>${s.grazeCount}</b><span>frôlements</span></div>` +
+            `<div><b>×${s.maxChain}</b><span>chaîne max</span></div>` +
+            `<div><b>${s.bosses}</b><span>boss</span></div>` +
+            `<div><b>${s.asteroids}</b><span>astéroïdes</span></div>` +
+            `<div><b>${Math.round(s.dmg)}</b><span>dégâts subis</span></div>` +
+            `</div></div>`;
+        }
+
+        // ================= D. TOURNOI HEBDOMADAIRE =================
+        function weekId() {
+          const d = new Date();
+          const onejan = new Date(d.getFullYear(), 0, 1);
+          const week = Math.ceil((((d - onejan) / 86400000) + onejan.getDay() + 1) / 7);
+          return d.getFullYear() + '-S' + String(week).padStart(2, '0');
+        }
+        // copie locale (la table d'origine est enfermée dans le module mutateurs)
+        const MUTATORS9 = {
+          blitz: { name: 'Blitz', desc: 'Ennemis plus rapides à tirer · Score ×1.5' },
+          fragile: { name: 'Coque fragile', desc: 'Une seule vie · Nanites ×1.8' },
+          ruee: { name: 'Ruée', desc: '+35% d’ennemis par vague · Nanites ×1.3' }
+        };
+        function weeklyMutator() {
+          const keys = Object.keys(MUTATORS9);
+          return keys[Math.floor(mulberry(fnv('tournoi-' + weekId()))() * keys.length)];
+        }
+        const SB_T = 'https://eynljxgjjhfvarjbnckf.supabase.co/rest/v1/nebuleuse_tournament';
+        const SB_K = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5bmxqeGdqamhmdmFyamJuY2tmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1NzM3MDksImV4cCI6MjA4MDE0OTcwOX0.GkIEuYNboTAxsRhGFf7kltgUdPVmBOnuj8jhMEK00n0';
+        const SBH = { 'apikey': SB_K, 'Authorization': 'Bearer ' + SB_K, 'Content-Type': 'application/json' };
+
+        async function tourneySubmit(alias, sc) {
+          const r = await fetch(SB_T, {
+            method: 'POST', headers: Object.assign({ 'Prefer': 'return=minimal' }, SBH),
+            body: JSON.stringify({ alias: alias.slice(0, 24), score: Math.round(sc), wave, week: weekId(), mutator: weeklyMutator() })
+          });
+          if (!r.ok) throw new Error('post');
+          const rc = await fetch(SB_T + '?select=id&week=eq.' + weekId() + '&score=gt.' + Math.round(sc), {
+            headers: Object.assign({ 'Prefer': 'count=exact', 'Range-Unit': 'items', 'Range': '0-0' }, SBH)
+          });
+          const cr = rc.headers.get('content-range') || '';
+          const n = parseInt((cr.split('/')[1] || '0'), 10);
+          return isNaN(n) ? null : n + 1;
+        }
+        async function tourneyTop() {
+          const r = await fetch(SB_T + '?select=alias,score,wave&week=eq.' + weekId() + '&order=score.desc&limit=10', { headers: SBH });
+          if (!r.ok) throw new Error('get');
+          return r.json();
+        }
+        async function tourneyPublish(alias) {
+          const st = document.getElementById('lbStatus');
+          if (st) st.textContent = '📡 Publication tournoi…';
+          try {
+            const rank = await tourneySubmit(alias, score);
+            if (st) st.textContent = rank ? `⚔️ Rang tournoi (${weekId()}) : #${rank}` : '⚔️ Score de tournoi publié !';
+            if (AudioSys.jackpot) AudioSys.jackpot(false);
+          } catch (e) {
+            if (st) st.textContent = '📴 Tournoi indisponible (hors ligne)';
+          }
+        }
+
+        // Overlay tournoi
+        const tOverlay = document.createElement('div');
+        tOverlay.id = 'tourneyOverlay';
+        tOverlay.className = 'overlay hidden';
+        tOverlay.innerHTML =
+          '<div class="card">' +
+          '  <div class="title small-title">⚔️ Tournoi de la semaine</div>' +
+          '  <div id="tourneyInfo" class="t-info"></div>' +
+          '  <div id="tourneyList" class="lb-list">Chargement…</div>' +
+          '  <div class="btn-row"><button id="tourneyPlay" class="btn">Participer</button>' +
+          '  <button id="tourneyClose" class="btn secondary">Fermer</button></div>' +
+          '</div>';
+        document.body.appendChild(tOverlay);
+        document.getElementById('tourneyClose').addEventListener('click', () => tOverlay.classList.add('hidden'));
+        document.getElementById('tourneyPlay').addEventListener('click', () => {
+          tOverlay.classList.add('hidden');
+          startGame('tournoi');
+        });
+        async function openTourney() {
+          tOverlay.classList.remove('hidden');
+          const m = MUTATORS9[weeklyMutator()];
+          document.getElementById('tourneyInfo').innerHTML =
+            `<b>${weekId()}</b> — mutateur imposé pour tous : <span class="t-mut">${m.name}</span><br><span class="t-desc">${m.desc}</span><br>Mode survie, une seule vie compte. Que le meilleur pilote gagne !`;
+          const list = document.getElementById('tourneyList');
+          list.textContent = 'Chargement…';
+          try {
+            const rows = await tourneyTop();
+            list.innerHTML = rows.length ? rows.map((r, i) => {
+              const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1) + '.';
+              const me = r.alias === (localStorage.getItem('nebula4_alias') || '') ? ' lb-me' : '';
+              return `<div class="lb-row${me}"><span class="lb-rank">${medal}</span><span class="lb-alias">${String(r.alias).replace(/[<>&]/g, '')}</span><span class="lb-meta">V.${r.wave}</span><span class="lb-score">${Number(r.score).toLocaleString('fr-FR')}</span></div>`;
+            }).join('') : 'Aucun participant cette semaine — sois le premier !';
+          } catch (e) { list.textContent = '📴 Tournoi indisponible (vérifie ta connexion)'; }
+        }
+        const menuCard9 = document.querySelector('#menu .card');
+        if (menuCard9) {
+          const tBtn = document.createElement('button');
+          tBtn.id = 'tourneyBtn';
+          tBtn.className = 'btn secondary lb-menu-btn';
+          tBtn.textContent = '⚔️ Tournoi de la semaine';
+          tBtn.addEventListener('click', openTourney);
+          const lbBtn = document.getElementById('leaderboardBtn');
+          menuCard9.insertBefore(tBtn, lbBtn || null);
+        }
+
+        // ================= WRAPS PRINCIPAUX =================
+        const baseStartGame9 = startGame;
+        startGame = function (selectedMode, mutatorChoice) {
+          resetRunStats();
+          if (selectedMode === 'tournoi') {
+            const mKey = weeklyMutator();
+            // réutilise le mécanisme ascension (mutateur imposé) mais en mode survie
+            baseStartGame9('ascension', mKey);
+            mode = 'tournoi';
+            toast(`⚔️ Tournoi ${weekId()} — ${MUTATORS9[mKey].name} : même défi pour tous !`, 'gold');
+            return;
+          }
+          baseStartGame9(selectedMode, mutatorChoice);
+          // tutoriel uniquement sur la toute première campagne
+          if (!meta.tuto && selectedMode === 'campagne') {
+            tutoStep = 0; tutoTimer = 0.4;
+            tutoStart = { x: player.x, y: player.y };
+            toast('🎓 Première sortie ? Suis les conseils en bas d\'écran', 'gold');
+          } else { tutoStep = -1; tutoHide(); }
+        };
+
+        const baseGameOver9 = gameOver;
+        gameOver = function () {
+          const isT = mode === 'tournoi';
+          let savedAlias = null;
+          if (isT) {
+            savedAlias = localStorage.getItem('nebula4_alias');
+            if (savedAlias) localStorage.removeItem('nebula4_alias'); // évite la publication ladder classique
+          }
+          baseGameOver9();
+          renderRunReport(document.getElementById('finalStats'), score);
+          if (isT) {
+            if (savedAlias) localStorage.setItem('nebula4_alias', savedAlias);
+            const form = document.getElementById('lbForm');
+            if (form) form.classList.add('hidden');
+            if (savedAlias) tourneyPublish(savedAlias);
+            else {
+              const st = document.getElementById('lbStatus');
+              if (st) st.textContent = '⚔️ Définis un pseudo dans Réglages pour publier au tournoi';
+            }
+          }
+        };
+        const baseShowVictory9 = showVictory;
+        showVictory = function () {
+          baseShowVictory9();
+          renderRunReport(document.getElementById('victoryStats'), score);
+        };
+
+        const baseUpdate9 = update;
+        update = function (dt) {
+          baseUpdate9(dt);
+          tutoUpdate(dt);
+          if (runStats) runStats.maxChain = Math.max(runStats.maxChain, grazeChain);
+        };
+        const baseReset9 = resetGame;
+        resetGame = function () { baseReset9(); tutoHide(); };
+        const baseDraw9 = draw;
+        draw = function () {
+          baseDraw9();
+          drawDanmakuPass();
+        };
+
+        // ================= STYLES =================
+        const st9 = document.createElement('style');
+        st9.textContent =
+          '#tutoHint{position:fixed;left:50%;bottom:118px;transform:translateX(-50%) translateY(16px);' +
+          'background:rgba(6,10,24,.92);border:1px solid rgba(103,232,249,.5);border-radius:14px;' +
+          'padding:11px 16px;font-size:14px;color:#f3f3f3;max-width:84%;text-align:center;z-index:60;' +
+          'opacity:0;pointer-events:none;transition:opacity .3s,transform .3s;' +
+          'box-shadow:0 0 24px rgba(56,52,255,.35)}' +
+          '#tutoHint.show{opacity:1;transform:translateX(-50%) translateY(0)}' +
+          '#tutoHint b{color:#67e8f9}' +
+          '.rr-card{margin:12px 0 4px;background:rgba(0,0,0,.32);border:1px solid rgba(243,243,243,.12);' +
+          'border-radius:14px;padding:12px;text-align:left}' +
+          '.rr-head{display:flex;align-items:center;gap:10px;margin-bottom:8px}' +
+          '.rr-grade{font-size:34px;font-weight:900;line-height:1}' +
+          '.rr-title{flex:1;font-weight:800;color:#f3f3f3;letter-spacing:.04em}' +
+          '.rr-objs{font-size:12px;color:#c6d32d;font-weight:700}' +
+          '.rr-objlist{margin-bottom:10px}' +
+          '.rr-obj{font-size:13px;color:rgba(243,243,243,.55);padding:2px 0}' +
+          '.rr-obj.done{color:#f3f3f3}' +
+          '.rr-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}' +
+          '.rr-grid b{display:block;font-size:17px;color:#67e8f9;font-variant-numeric:tabular-nums}' +
+          '.rr-grid span{font-size:10px;color:rgba(243,243,243,.45);text-transform:uppercase;letter-spacing:.06em}' +
+          '.t-info{font-size:13px;color:rgba(243,243,243,.75);margin:8px 0 4px;line-height:1.5}' +
+          '.t-mut{color:#f0abfc;font-weight:800}' +
+          '.t-desc{color:rgba(243,243,243,.5);font-size:12px}';
+        document.head.appendChild(st9);
       })();
 
       let last = performance.now();
