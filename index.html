@@ -10381,15 +10381,20 @@
         };
 
         // --- Récompenses sonores selon la cible détruite
+        // NB : killEnemy(index) est la signature d'origine ; on accepte aussi un objet ennemi.
         const baseKill2 = killEnemy;
-        killEnemy = function (e, award) {
-          if (e.type === 'boss') {
-            AudioSys.subHit(1.5);
-            if (award !== false) { AudioSys.jackpot(true); AudioSys.nextTrack(); }
-          } else if (e.type === 'miniboss') { AudioSys.subHit(1.1); }
-          else if (e.type === 'elite' || e.type === 'tank') { AudioSys.subHit(0.7); }
-          else if (e.type === 'asteroid') { AudioSys.subHit(0.45); }
-          baseKill2(e, award);
+        killEnemy = function (index, award) {
+          const obj = (typeof index === 'number') ? enemies[index] : index;
+          const realIdx = (typeof index === 'number') ? index : enemies.indexOf(index);
+          if (obj) {
+            if (obj.type === 'boss') {
+              AudioSys.subHit(1.5);
+              if (award !== false) { AudioSys.jackpot(true); AudioSys.nextTrack(); }
+            } else if (obj.type === 'miniboss') { AudioSys.subHit(1.1); }
+            else if (obj.elite || obj.type === 'elite' || obj.type === 'tank') { AudioSys.subHit(0.7); }
+            else if (obj.type === 'asteroid') { AudioSys.subHit(0.45); }
+          }
+          baseKill2(realIdx);
         };
         const baseDmgP2 = damagePlayer;
         damagePlayer = function (amount) { AudioSys.subHit(0.6); baseDmgP2(amount); };
