@@ -28,49 +28,28 @@ Petit shoot 'em up vertical en HTML/CSS/JS pur (aucune dépendance), jouable dir
   - carte d'intro de boss
   - récap combo/chaîne de frôlement en fin de run
   - écran de récupération anti-crash (plus de freeze silencieux en cas d'erreur moteur)
-  - retours haptiques élargis via la Gamepad Haptics API (manette physique appairée) —
-    `navigator.vibrate` reste sans effet sur iPhone (non supporté par Safari iOS, aucune
-    page web ne peut le contourner) ; sur iPhone sans manette, le hit-stop et le pulse
-    caméra servent de substitut sensoriel visuel
-- `build_v45.py` (appliqué sur `nebuleuse-v4.4.html`) → génère `nebuleuse-v4.5.html` — Phase 2 (contenu & profondeur)
-  - secteurs visuellement distincts (teinte de fond par tranche de vagues, avec sting audio
-    et vibration à chaque transition)
-  - 2 nouveaux ennemis : Sentinelle (tir balayant) et Essaim (petit, rapide, en nombre)
-  - vaisseaux à débloquer par score (VECTOR à 15 000, TITAN à 60 000) au lieu de tous
-    disponibles d'emblée
-  - mode Ascension : mutateur de run (Blitz / Coque fragile / Ruée), sélection aléatoire ou
-    "défi du jour" à choix déterministe par date
-- `build_v46.py` (appliqué sur `nebuleuse-v4.5.html`) → génère `nebuleuse-v4.6.html` — Phase 3 (progression & rétention)
-  - traînées de vaisseau cosmétiques (6, achetables avec les nanites)
-  - prestige "Surcharge" : une fois tous les talents maxés, réinitialise les talents contre
-    un multiplicateur de score permanent (+15 %/niveau)
-  - 8 succès avec écran dédié et notification à l'obtention
-  - sauvegarde exportable/importable (code texte copiable, indépendant du navigateur)
-- `build_v47.py` (appliqué sur `nebuleuse-v4.6.html`) → génère `nebuleuse-v4.7.html` — Phase 4 (production & distribution)
-  - manifest PWA + icônes (`icons/`) pour "Ajouter à l'écran d'accueil"
-  - menu Réglages unifié (son, difficulté, qualité graphique, sensibilité tactile,
-    assistance auto-bombe, palette daltonien) remplaçant les boutons épars du menu
-  - palette daltonien via filtre CSS sur le canvas (protanopie / deutéranopie / tritanopie)
-  - assistance auto-bombe optionnelle (bombe automatique à coque critique)
+- `build_v45.py` → `nebuleuse-v4.5.html` — Phase 2 (contenu & progression)
+- `build_v46.py` → `nebuleuse-v4.6.html` — Phase 3 (succès & sauvegarde exportable)
+- `build_v47.py` → `nebuleuse-v4.7.html` — Phase 4 (PWA, réglages unifiés, palette daltonien, auto-bombe)
 
-Ce build clôt les 4 phases du plan "jeu premium". La variété audio par secteur (item de la
-Phase 4) est couverte par le sting/vibration de transition ajouté en v4.5 plutôt que par une
-réécriture du moteur audio à stems de la v4.3, dont l'état est privé au patch qui l'a créé.
+## v5 — Édition Premium (nouvelle architecture)
 
-## Utilisation
+`index.html` + dossier `assets/` : le jeu n'est plus mono-fichier depuis la v5.7, afin d'utiliser une **bande-son studio** (vrais échantillons audio générés par IA) à la place du synthétiseur temps réel.
 
-Ouvrir `nebuleuse-v4.7.html` (dernière version) directement dans un navigateur — aucune
-installation requise. Pour bénéficier du manifest PWA ("Ajouter à l'écran d'accueil"),
-héberger le dossier entier (ex. GitHub Pages) plutôt que d'ouvrir le fichier isolément.
+### Nouveautés v5
 
-Pour régénérer les builds :
+- **Audio premium v5.1** : compresseur master, reverb à convolution, délai sync tempo, séquenceur à lookahead, voix supersaw/sub, couches adaptatives
+- **Pack addiction v5.3** : draft roguelite (12 upgrades), missions quotidiennes seedées, coffre quotidien à série, surcharge + bullet-time, XP vaisseaux, fantôme rival
+- **Musique V3 v5.4** : mélodies classiques libres de droits (Grieg, Beethoven, Dies Irae) — conservées en repli si les assets sont absents
+- **Boss & armes v5.5** : 4 archétypes de boss + boss final hybride, armes signature par vaisseau (pierce VECTOR, rail TITAN, homing MIRAGE, bonus PULSE), 6 prototypes
+- **Impacts & flow v5.6** : sub-hits graves, salves casino, astéroïdes à esquiver, draft en temps réel (capsules à survoler), HUD assombri pendant les boss
+- **Bande-son studio v5.7** : 4 boucles musicales échantillonnées (menu/combat/boss/final) avec fondus enchaînés pilotés par l'état du jeu, SFX premium échantillonnés, fond de menu + emblème générés par IA
+- **Classement mondial v5.8** : scores en ligne via Supabase (table `nebuleuse_scores`, RLS lecture/insertion publiques), publication auto en fin de run avec pseudo sauvegardé, écran Top 10 mondial, rang estimé après publication
 
-```bash
-python3 build_v41.py nebuleuse.html
-python3 build_v42.py nebuleuse-v4.1.html
-python3 build_v43.py nebuleuse-v4.2.html
-python3 build_v44.py nebuleuse-v4.3.html
-python3 build_v45.py nebuleuse-v4.4.html
-python3 build_v46.py nebuleuse-v4.5.html
-python3 build_v47.py nebuleuse-v4.6.html
-```
+### Fichiers v5
+
+- `index.html` — jeu complet (moteur + modules v5). **Binaires `assets/` non versionnés** (mp3/png/jpg) : distribués via le ZIP `nebuleuse-v5.8.zip` joint à la release. Sans eux, le jeu fonctionne en repli synthétique.
+
+### Utilisation (v5)
+
+Héberger le dossier complet (`index.html` + `assets/`) sur n'importe quel serveur statique (GitHub Pages, Netlify…). Dégradation gracieuse : sans `assets/`, le jeu reste jouable (audio synthétique, classement désactivé hors ligne).
