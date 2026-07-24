@@ -1,4 +1,4 @@
-// Nébuleuse Protocol IV — Suite QA automatisée (v5.10)
+// Nébuleuse Protocol IV — Suite QA automatisée (v5.11)
 // Usage : NODE_PATH=/home/kimi/.npm-global/lib/node_modules node tests/e2e/run.cjs [appDir]
 // Produit : tests/docs/TEST-EXECUTION-TRACKING.csv + BUG-TRACKING-TEMPLATE.csv + artifacts/*.png
 const { spawn } = require('child_process');
@@ -78,6 +78,9 @@ async function main() {
   await T('TC-BOOT-001', 'BOOT', 'P0', 'Chargement sans erreur', async () => {
     assert(await G(() => !!document.getElementById('menu')), 'menu absent');
   });
+  // v5.11 : le tir manuel est le défaut — on réactive l'auto sur la page principale
+  // pour préserver les hypothèses des tests historiques
+  await G(() => window.__NP4.v11 && window.__NP4.v11.setAutoFire(true));
   await T('TC-BOOT-002', 'BOOT', 'P1', 'Habillage menu (emblème + fond)', async () => {
     const r = await G(() => ({
       img: !!document.getElementById('menuEmblem'),
@@ -719,9 +722,85 @@ async function main() {
     await ctxV.close();
   }
 
+
+  {
+    // ============ V5.11 : COSMOS · GÂCHETTE · VITRINE VAISSEAUX ============
+    const ctxW = await browser.newContext({ viewport: { width: 430, height: 932 } });
+    const pw = await ctxW.newPage();
+    pw.on('pageerror', e => errors.push('PAGEERROR: ' + e.message));
+    await pw.goto(BASE);
+    await pw.waitForTimeout(1800);
+    const GW = (expr) => pw.evaluate(expr);
+    await T('TC-V11-001', 'V11', 'P1', 'Schémas vaisseaux servis (4 PNG transparents)', async () => {
+      const r = await GW(async () => {
+        const urls = ['assets/ship-pulse.png', 'assets/ship-vector.png', 'assets/ship-titan.png', 'assets/ship-mirage.png'];
+        const res = await Promise.all(urls.map(u => fetch(u, { method: 'HEAD' }).then(x => x.ok).catch(() => false)));
+        return res.filter(Boolean).length;
+      });
+      assert(r === 4, 'schémas OK: ' + r + '/4');
+    });
+    await T('TC-V11-002', 'V11', 'P1', 'Vitrine : 4 cartes, schémas uniques, silhouettes', async () => {
+      const r = await GW(() => {
+        document.querySelectorAll('.overlay').forEach(o => o.classList.add('hidden'));
+        window.__NP4.v11.openShips();
+        return {
+          cards: window.__NP4.v11.shipCards(),
+          imgs: new Set(window.__NP4.v11.shipImages()).size,
+          dials: document.querySelectorAll('.sc-dial').length,
+          locked: document.querySelectorAll('.sc-img.locked').length,
+          bars: document.querySelectorAll('.sc-bar').length
+        };
+      });
+      assert(r.cards === 4 && r.imgs === 4 && r.dials === 4 && r.locked === 3 && r.bars === 4, JSON.stringify(r));
+    });
+    await pw.evaluate(() => { document.querySelectorAll('.overlay').forEach(o => o.classList.add('hidden')); const b = [...document.querySelectorAll('button')].find(x => /campagne/i.test(x.textContent)); if (b) b.click(); });
+    await pw.waitForTimeout(2600);
+    await T('TC-V11-003', 'V11', 'P0', 'Tir manuel par défaut + bouton TIR visible', async () => {
+      const r = await GW(() => ({
+        st: window.__NP4.state,
+        af: window.__NP4.v11.autoFire(),
+        wanted: window.__fireWanted(),
+        btn: window.__NP4.v11.fireBtnVisible()
+      }));
+      assert(r.st === 'playing' && r.af === false && r.wanted === false && r.btn === true, JSON.stringify(r));
+    });
+    await T('TC-V11-004', 'V11', 'P0', 'Gâchette : presser/relâcher contrôle le tir', async () => {
+      await GW(() => window.__NP4.v11.pressFire(true));
+      await pw.waitForTimeout(500);
+      const on = await GW(() => ({ wanted: window.__fireWanted(), held: window.__NP4.v11.fireHeld() }));
+      await GW(() => window.__NP4.v11.pressFire(false));
+      await pw.waitForTimeout(200);
+      const off = await GW(() => ({ wanted: window.__fireWanted(), held: window.__NP4.v11.fireHeld() }));
+      assert(on.wanted === true && on.held === true && off.wanted === false && off.held === false, JSON.stringify({ on, off }));
+    });
+    await T('TC-V11-005', 'V11', 'P1', 'Réglage tir automatique persistant au rechargement', async () => {
+      await GW(() => window.__NP4.v11.setAutoFire(true));
+      await pw.reload({ waitUntil: 'load' });
+      await pw.waitForTimeout(1500);
+      const af = await GW(() => window.__NP4.v11.autoFire());
+      assert(af === true, 'autoFire après reload: ' + af);
+      await GW(() => window.__NP4.v11.setAutoFire(false)); // nettoyage pour la suite
+    });
+    await T('TC-V11-006', 'V11', 'P1', 'Cosmos vivant dans les 5 secteurs', async () => {
+      const counts = {};
+      for (let s = 0; s < 5; s++) {
+        await GW((sec) => { const N = window.__NP4; while (N.v10.sector() < sec) N.v10.nextSector(); }, s);
+        let mx = 0;
+        for (let k = 0; k < 3; k++) {
+          await pw.waitForTimeout(900);
+          mx = Math.max(mx, await GW(() => window.__NP4.v11.cosmos()));
+        }
+        counts[s] = mx;
+      }
+      assert(Object.values(counts).every(n => n > 0), JSON.stringify(counts));
+    });
+    await ctxW.close();
+  }
+
   // ============ MANQUANTS MANUELS ============
   manual('TC-DRAFT-005', 'DRAFT', 'P3', 'Capsules prototype (visuel)', 'Vérifier les capsules violettes après un boss en vague ≥ 3');
   manual('TC-V10-009', 'V10', 'P2', 'Décors de secteurs (visuel)', 'Vérifier les 5 thèmes (nébuleuse, forge, abysse, glace, quantique) et la bannière auto-ajustée');
+  manual('TC-V11-007', 'V11', 'P2', 'Cosmos & vitrine (visuel)', 'Volcans de la forge, trou noir du vide quantique, inclinaison 3D des schémas vaisseaux');
 
   // ============ CSV ============
   const track = ['Test Case ID,Category,Priority,Test Name,Estimated Time (min),Prerequisites,Status,Result,Bug ID,Execution Date,Executed By,Notes,Screenshot/Log'];

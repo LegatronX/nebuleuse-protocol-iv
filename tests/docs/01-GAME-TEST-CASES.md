@@ -150,3 +150,28 @@ Légende exécution : 🤖 automatisé · 🖐 manuel (visuel/ressenti)
 
 ### TC-V10-009 — Décors de secteurs (P2, MANUEL)
 Vérifier visuellement les 5 thèmes (nébuleuse, forge solaire, abysse alien, abîme glacé, vide quantique) et la bannière auto-ajustée.
+
+---
+
+## 13. V5.11 — COSMOS VIVANT · GÂCHETTE · VITRINE VAISSEAUX (TC-V11-001 à 007)
+
+### TC-V11-001 — Schémas vaisseaux servis (P1)
+**Act** : HEAD sur ship-pulse/vector/titan/mirage.png. **Assert** : 4/4 HTTP 200.
+
+### TC-V11-002 — Vitrine vaisseaux (P1)
+**Act** : ouverture du hangar. **Assert** : 4 cartes, 4 schémas uniques, 4 cadrans SVG, 3 silhouettes verrouillées (score 0), 4 barres de stats pour PULSE.
+
+### TC-V11-003 — Tir manuel par défaut (P0)
+**Assert** : en jeu, `autoFire === false`, `__fireWanted() === false`, bouton TIR visible.
+
+### TC-V11-004 — Gâchette (P0)
+**Act** : `pressFire(true)` puis `pressFire(false)`. **Assert** : `__fireWanted()` suit l'état de la gâchette.
+
+### TC-V11-005 — Réglage tir automatique persistant (P1)
+**Act** : activer l'auto-fire, recharger la page. **Assert** : `autoFire === true` après reload.
+
+### TC-V11-006 — Cosmos vivant (P1)
+**Act** : transitions secteurs 0→4, échantillonnage 3× par secteur. **Assert** : particules cosmos > 0 dans les 5 secteurs (étoiles filantes, volcans, méduses, givre, trou noir).
+
+### TC-V11-007 — Cosmos & vitrine (P2, MANUEL)
+Vérifier visuellement : volcans de la forge, trou noir du vide quantique, aurores de l'abîme glacé, inclinaison 3D des schémas au toucher.
