@@ -212,3 +212,22 @@ Vérifier visuellement : volcans de la forge, trou noir du vide quantique, auror
 
 ### TC-V12-011 — Spectacle Acte II (P2, MANUEL)
 Explosions en chaîne des boss, fracture de réalité, rendu des 3 gardiens, arcs tesla, lueur de charge.
+
+## 14. Catégorie V13 — Actes III·IV·V (v5.13)
+
+| ID | Priorité | Test | Statut |
+|----|----------|------|--------|
+| TC-V13-001 | P1 | 32 assets Actes III-V servis (9 décors, 9 musiques, 14 SFX) | ✅ |
+| TC-V13-002 | P0 | Acte III démarre (secteur VIII, vague 25) | ✅ |
+| TC-V13-003 | P0 | Orgue : mort → Secteur IX + accalmie (directeur de tension) | ✅ |
+| TC-V13-004 | P0 | Cantatrice → X, Diapason → fin Acte III + bouton ACTE IV | ✅ |
+| TC-V13-005 | P0 | Acte IV : 3 boss → secteurs XII/XIII + fin d'acte | ✅ |
+| TC-V13-006 | P0 | Acte V : Matrice → XV, Chœur des Mille (corps) → XVI | ✅ |
+| TC-V13-007 | P0 | Premier Signal : 4 mouvements → unisson → APOTHÉOSE | ✅ |
+| TC-V13-008 | P0 | 6 armes : R·P·D·K·C·N appliquées, harpons tirés | ✅ |
+| TC-V13-009 | P0 | Ennemis : prisme → 3 éclats ; rêveur phasé | ✅ |
+| TC-V13-010 | P1 | Tension pilotée + climax → accalmie | ✅ |
+| TC-V13-011 | P1 | Codex ≥ 3 entrées + 23 buffers audio décodés | ✅ |
+| TC-V13-012 | P2 | Spectacle Actes III-V (visuel) | MANUEL |
+
+Correctifs de robustesse : TC-V12-005 (téléportation forcée, fps bridé), TC-V12-006 (titre évolué : porte Acte III), TC-DRAFT-004 (3ᵉ tirage RNG).

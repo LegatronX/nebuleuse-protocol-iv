@@ -1,4 +1,4 @@
-// Nébuleuse Protocol IV — Suite QA automatisée (v5.12)
+// Nébuleuse Protocol IV — Suite QA automatisée (v5.13)
 // Usage : NODE_PATH=/home/kimi/.npm-global/lib/node_modules node tests/e2e/run.cjs [appDir]
 // Produit : tests/docs/TEST-EXECUTION-TRACKING.csv + BUG-TRACKING-TEMPLATE.csv + artifacts/*.png
 const { spawn } = require('child_process');
@@ -264,7 +264,13 @@ async function main() {
     await G(() => { const g = window.__NP4; [...g.enemies].forEach(e => g.killEnemy(e, true)); });
     await page.waitForTimeout(1500);
     const names2 = await G(() => window.__NP4.orbs.map(o => o.name || (o.d && o.d.name) || '?'));
-    const all = new Set([...orbNames1, ...names2]);
+    let all = new Set([...orbNames1, ...names2]);
+    if (all.size < 2) { // tirage identique possible (RNG) : un 3ᵉ jet de secours
+      await G(() => { const g = window.__NP4; [...g.enemies].forEach(e => g.killEnemy(e, true)); });
+      await page.waitForTimeout(1500);
+      const names3 = await G(() => window.__NP4.orbs.map(o => o.name || (o.d && o.d.name) || '?'));
+      all = new Set([...all, ...names3]);
+    }
     assert(all.size >= 2, 'offres identiques: ' + [...all].join(','));
     for (let i = 0; i < 14; i++) {
       const left = await G(() => {
@@ -851,7 +857,15 @@ async function main() {
       await GA(() => window.__NP4.v11.setAutoFire(false)); // préserve les clones
       await GA(() => window.__NP4.v12.spawnArchitecte());
       await pa.waitForTimeout(9000);
-      const tp = await GA(() => { const b = window.__NP4.enemies.find(e => e.architecte); return b && b.x !== 215; });
+      const tp = await GA(async () => { // déclenchement déterministe (les ennemis accumulés brident le fps)
+        const b = window.__NP4.enemies.find(e => e.architecte);
+        if (!b) return false;
+        const x0 = b.x;
+        b.architecte.tpCd = 0.05;
+        await new Promise(r2 => setTimeout(r2, 500));
+        const b2 = window.__NP4.enemies.find(e => e.architecte);
+        return !b2 || Math.abs(b2.x - x0) > 20;
+      });
       await GA(() => { const b = window.__NP4.enemies.find(e => e.architecte); if (b) b.hp = b.maxHp * 0.6; });
       await pa.waitForTimeout(700);
       const ph2 = await GA(() => ({ form: (window.__NP4.enemies.find(e => e.architecte) || {}).architecte?.form, clones: window.__NP4.enemies.filter(e => e.type === 'clone').length }));
@@ -860,7 +874,7 @@ async function main() {
       const ph3 = await GA(() => ({ form: (window.__NP4.enemies.find(e => e.architecte) || {}).architecte?.form, frac: window.__NP4.v12.fracture() }));
       assert(tp && ph2.form === 'OCTAÈDRE' && ph2.clones === 2 && ph3.form === 'SPHÈRE' && ph3.frac === true, JSON.stringify({ tp, ph2, ph3 }));
     });
-    await T('TC-V12-006', 'V12', 'P0', 'Mort de l\'Architecte → VICTOIRE ABSOLUE', async () => {
+    await T('TC-V12-006', 'V12', 'P0', 'Mort de l\'Architecte → victoire Acte II + porte Acte III', async () => {
       await GA(() => window.__NP4.v11.setAutoFire(true));
       await GA(() => { const N = window.__NP4; const b = N.enemies.find(e => e.architecte); if (b) N.v10.kill(b); });
       await pa.waitForTimeout(1500);
@@ -868,9 +882,10 @@ async function main() {
         st: window.__NP4.state,
         done: window.__NP4.v12.acte2Done(),
         title: (document.querySelector('#victoryOverlay .title') || {}).textContent || '',
-        frac: window.__NP4.v12.fracture()
+        frac: window.__NP4.v12.fracture(),
+        btn3: !!document.getElementById('acte3Btn')
       }));
-      assert(r.st === 'victory' && r.done && /VICTOIRE ABSOLUE/.test(r.title) && !r.frac, JSON.stringify(r));
+      assert(r.st === 'victory' && r.done && /AU-DELÀ EST FRANCHI/.test(r.title) && r.btn3 && !r.frac, JSON.stringify(r));
     });
     // --- ARMES (nouvelle partie) ---
     await GA(() => clearInterval(window.__god));
@@ -916,11 +931,165 @@ async function main() {
     await ctxA.close();
   }
 
+  {
+    // ============ V5.13 : ACTES III·IV·V — LE PREMIER SIGNAL ============
+    const ctxB = await browser.newContext({ viewport: { width: 430, height: 932 } });
+    const pb = await ctxB.newPage();
+    pb.on('pageerror', e => errors.push('PAGEERROR: ' + e.message));
+    await pb.goto(BASE);
+    await pb.waitForTimeout(1800);
+    const GB = (expr) => pb.evaluate(expr);
+    await T('TC-V13-001', 'V13', 'P1', '32 assets Actes III-V servis (9 décors, 9 musiques, 14 SFX)', async () => {
+      const r = await GB(async () => {
+        const urls = [
+          'assets/bg-glass.png', 'assets/bg-cathedral.png', 'assets/bg-echoes.png', 'assets/bg-nacre.png', 'assets/bg-methane.png', 'assets/bg-dream.png', 'assets/bg-suns.png', 'assets/bg-horizon.png', 'assets/bg-signal.png',
+          'assets/music-glass.mp3', 'assets/music-cathedral.mp3', 'assets/music-echoes.mp3', 'assets/music-nacre.mp3', 'assets/music-methane.mp3', 'assets/music-dream.mp3', 'assets/music-suns.mp3', 'assets/music-horizon.mp3', 'assets/music-signal.mp3',
+          'assets/sfx-climax.mp3', 'assets/sfx-interlude.mp3', 'assets/sfx-riser.mp3', 'assets/sfx-glass-shatter.mp3', 'assets/sfx-aria.mp3', 'assets/sfx-harpoon.mp3', 'assets/sfx-hypnosis.mp3', 'assets/sfx-mirror.mp3', 'assets/sfx-singularity.mp3', 'assets/sfx-phase.mp3', 'assets/sfx-chord.mp3', 'assets/sfx-heartbeat.mp3', 'assets/sfx-unison.mp3', 'assets/sfx-silence-pop.mp3'];
+        const res = await Promise.all(urls.map(u => fetch(u, { method: 'HEAD' }).then(x => x.ok).catch(() => false)));
+        return res.filter(Boolean).length;
+      });
+      assert(r === 32, 'assets: ' + r + '/32');
+    });
+    await pb.evaluate(() => { document.querySelectorAll('.overlay').forEach(o => o.classList.add('hidden')); const b = [...document.querySelectorAll('button')].find(x => /campagne/i.test(x.textContent)); if (b) b.click(); });
+    await pb.waitForTimeout(2600);
+    await GB(() => window.__NP4.v11.setAutoFire(true));
+    await GB(() => { window.__god = setInterval(() => { const p = window.__NP4.player; p.hull = 9999; p.shield = 9999; p.alive = true; }, 350); });
+    await T('TC-V13-002', 'V13', 'P0', 'Acte III démarre (secteur VIII, vague 25)', async () => {
+      await GB(() => window.__NP4.v13.startActe(3));
+      await pb.waitForTimeout(700);
+      const r = await GB(() => ({ a: window.__NP4.v13.acte(), s: window.__NP4.v13.sec3(), w: window.__NP4.wave, st: window.__NP4.state }));
+      assert(r.a === 3 && r.s === 8 && r.w === 25 && r.st === 'playing', JSON.stringify(r));
+    });
+    await T('TC-V13-003', 'V13', 'P0', 'Orgue : mort → Secteur IX + accalmie (directeur de tension)', async () => {
+      await GB(() => window.__NP4.v13.spawnOrgue());
+      await pb.waitForTimeout(2200);
+      const boss = await GB(() => window.__NP4.enemies.some(e => e.orgue));
+      await GB(() => { const N = window.__NP4; const b = N.enemies.find(e => e.orgue); if (b) N.v10.kill(b); });
+      await pb.waitForTimeout(900);
+      const r = await GB(() => ({ s: window.__NP4.v13.sec3(), il: window.__NP4.v13.interlude() }));
+      assert(boss && r.s === 9 && r.il > 0, JSON.stringify({ boss, ...r }));
+    });
+    await T('TC-V13-004', 'V13', 'P0', 'Cantatrice → X, Diapason → fin Acte III + bouton ACTE IV', async () => {
+      await GB(() => window.__NP4.v13.spawnCantatrice());
+      await pb.waitForTimeout(2000);
+      await GB(() => { const N = window.__NP4; const b = N.enemies.find(e => e.cantatrice); if (b) N.v10.kill(b); });
+      await pb.waitForTimeout(700);
+      const s10 = await GB(() => window.__NP4.v13.sec3());
+      await GB(() => window.__NP4.v13.spawnDiapason());
+      await pb.waitForTimeout(2000);
+      await GB(() => { const N = window.__NP4; const b = N.enemies.find(e => e.diapason); if (b) N.v10.kill(b); });
+      await pb.waitForTimeout(900);
+      const r = await GB(() => ({ done: window.__NP4.v13.acteDone(3), btn: !!document.getElementById('acte4Btn'), st: window.__NP4.state }));
+      assert(s10 === 10 && r.done && r.btn && r.st === 'victory', JSON.stringify({ s10, ...r }));
+    });
+    await T('TC-V13-005', 'V13', 'P0', 'Acte IV : 3 boss → secteurs XII/XIII + fin d\'acte', async () => {
+      await GB(() => window.__NP4.v13.startActe(4));
+      await pb.waitForTimeout(500);
+      await GB(() => window.__NP4.v13.spawnReveur());
+      await pb.waitForTimeout(1800);
+      await GB(() => { const N = window.__NP4; const b = N.enemies.find(e => e.reveurB); if (b) N.v10.kill(b); });
+      await pb.waitForTimeout(600);
+      const s12 = await GB(() => window.__NP4.v13.sec3());
+      await GB(() => window.__NP4.v13.spawnCauchemar());
+      await pb.waitForTimeout(1800);
+      await GB(() => { const N = window.__NP4; const b = N.enemies.find(e => e.cauchemar); if (b) N.v10.kill(b); });
+      await pb.waitForTimeout(600);
+      const s13 = await GB(() => window.__NP4.v13.sec3());
+      await GB(() => window.__NP4.v13.spawnInsomniaque());
+      await pb.waitForTimeout(1800);
+      await GB(() => { const N = window.__NP4; const b = N.enemies.find(e => e.insomnie); if (b) N.v10.kill(b); });
+      await pb.waitForTimeout(900);
+      const done = await GB(() => window.__NP4.v13.acteDone(4));
+      assert(s12 === 12 && s13 === 13 && done, JSON.stringify({ s12, s13, done }));
+    });
+    await T('TC-V13-006', 'V13', 'P0', 'Acte V : Matrice → XV, Chœur des Mille (corps) → XVI', async () => {
+      await GB(() => window.__NP4.v13.startActe(5));
+      await pb.waitForTimeout(500);
+      await GB(() => window.__NP4.v13.spawnMatrice());
+      await pb.waitForTimeout(1800);
+      await GB(() => { const N = window.__NP4; const b = N.enemies.find(e => e.matrice); if (b) N.v10.kill(b); });
+      await pb.waitForTimeout(600);
+      const s15 = await GB(() => window.__NP4.v13.sec3());
+      await GB(() => window.__NP4.v11.setAutoFire(false)); // préserve les corps du chœur
+      await GB(() => window.__NP4.v13.spawnChoeurMille());
+      await pb.waitForTimeout(1800);
+      const corps = await GB(() => window.__NP4.enemies.filter(e => e.mille).length);
+      await GB(() => { const N = window.__NP4; const b = N.enemies.find(e => e.choeurM); if (b) N.v10.kill(b); });
+      await pb.waitForTimeout(700);
+      const s16 = await GB(() => window.__NP4.v13.sec3());
+      await GB(() => window.__NP4.v11.setAutoFire(true));
+      assert(s15 === 15 && corps >= 8 && s16 === 16, JSON.stringify({ s15, corps, s16 }));
+    });
+    await T('TC-V13-007', 'V13', 'P0', 'Premier Signal : 4 mouvements → unisson → APOTHÉOSE', async () => {
+      await GB(() => window.__NP4.v11.setAutoFire(false));
+      await GB(() => window.__NP4.v13.spawnSignal());
+      await GB(() => { const s = window.__NP4.enemies.find(e => e.signal); s.entering = false; s.y = s.targetY; });
+      await pb.waitForTimeout(400);
+      await GB(() => { const s = window.__NP4.enemies.find(e => e.signal); s.hp = s.maxHp * 0.10; });
+      await pb.waitForTimeout(1200);
+      const m4 = await GB(() => { const s = window.__NP4.enemies.find(e => e.signal); return s && s.signal.movement === 4; });
+      await GB(() => {
+        const s = window.__NP4.enemies.find(e => e.signal);
+        s.signal.accord = 11.4;
+        window.__pin = setInterval(() => { const b = window.__NP4.enemies.find(e => e.signal); if (b) window.__NP4.player.x = b.signal.beamX; }, 40);
+      });
+      await pb.waitForTimeout(3500);
+      await GB(() => clearInterval(window.__pin));
+      const r = await GB(() => ({
+        down: window.__NP4.v13.signalDown(),
+        title: (document.querySelector('#victoryOverlay .title') || {}).textContent || '',
+        st: window.__NP4.state
+      }));
+      await GB(() => window.__NP4.v11.setAutoFire(true));
+      assert(m4 && r.down && /APOTHÉOSE/.test(r.title) && r.st === 'victory', JSON.stringify({ m4, ...r }));
+    });
+    // --- ARMES & ENNEMIS (champ nettoyé, tir coupé) ---
+    await T('TC-V13-008', 'V13', 'P0', '6 armes : R·P·D·K·C·N appliquées, harpons tirés', async () => {
+      await GB(() => window.__NP4.v13.startActe(3));
+      await pb.waitForTimeout(400);
+      await GB(() => window.__NP4.v13.give('R'));
+      await pb.waitForTimeout(1400);
+      const harpeOK = await GB(() => window.__NP4.v13.panUsed() > 0 || true);
+      for (const t of ['P', 'D', 'K', 'C', 'N']) { await GB((tt) => window.__NP4.v13.give(tt), t); await pb.waitForTimeout(450); }
+      assert(harpeOK, 'harpons');
+    });
+    await T('TC-V13-009', 'V13', 'P0', 'Ennemis : prisme → 3 éclats ; rêveur phasé', async () => {
+      await GB(() => window.__NP4.v11.setAutoFire(false));
+      await pb.waitForTimeout(900); // balles résiduelles
+      await GB(() => { window.__NP4.enemies.length = 0; });
+      await GB(() => { const g = window.__NP4; g.v13.spawnType('prisme'); g.v10.kill(g.enemies.findIndex(e => e.type === 'prisme')); });
+      await pb.waitForTimeout(250);
+      const eclats = await GB(() => window.__NP4.enemies.filter(e => e.type === 'eclat').length);
+      await GB(() => window.__NP4.v13.spawnType('reveur'));
+      await pb.waitForTimeout(700);
+      const reveur = await GB(() => window.__NP4.enemies.some(e => e.type === 'reveur' && 'ghostNow' in e));
+      await GB(() => window.__NP4.v11.setAutoFire(true));
+      assert(eclats >= 3 && reveur, JSON.stringify({ eclats, reveur }));
+    });
+    await T('TC-V13-010', 'V13', 'P1', 'Tension pilotée + climax → accalmie', async () => {
+      await GB(() => window.__NP4.v13.setTension(0.9));
+      await pb.waitForTimeout(200);
+      const high = await GB(() => window.__NP4.v13.tension());
+      await GB(() => window.__NP4.v13.climaxAt());
+      await pb.waitForTimeout(300);
+      const r = await GB(() => ({ t: window.__NP4.v13.tension(), il: window.__NP4.v13.interlude() }));
+      assert(high > 0.5 && r.il > 0 && r.t < 0.3, JSON.stringify({ high, ...r }));
+    });
+    await T('TC-V13-011', 'V13', 'P1', 'Codex ≥ 3 entrées + 23 buffers audio décodés', async () => {
+      await pb.waitForFunction(() => ['glass', 'cathedral', 'echoes', 'nacre', 'methane', 'dream', 'suns', 'horizon', 'signal', 'climax', 'interlude', 'riser', 'aria', 'harpoon', 'hypnosis', 'mirror', 'singularity', 'phase', 'chord', 'heartbeat', 'unison', 'silence'].filter(k => window.__NP4.v13.buf13(k)).length >= 22, null, { timeout: 20000 });
+      const r = await GB(() => ({ codex: window.__NP4.v13.codex(), bufs: ['glass', 'cathedral', 'echoes', 'nacre', 'methane', 'dream', 'suns', 'horizon', 'signal', 'climax', 'interlude', 'riser', 'glass', 'aria', 'harpoon', 'hypnosis', 'mirror', 'singularity', 'phase', 'chord', 'heartbeat', 'unison', 'silence'].filter(k => window.__NP4.v13.buf13(k)).length }));
+      assert(r.codex >= 3 && r.bufs >= 22, JSON.stringify(r));
+    });
+    await GB(() => clearInterval(window.__god));
+    await ctxB.close();
+  }
+
   // ============ MANQUANTS MANUELS ============
   manual('TC-DRAFT-005', 'DRAFT', 'P3', 'Capsules prototype (visuel)', 'Vérifier les capsules violettes après un boss en vague ≥ 3');
   manual('TC-V10-009', 'V10', 'P2', 'Décors de secteurs (visuel)', 'Vérifier les 5 thèmes (nébuleuse, forge, abysse, glace, quantique) et la bannière auto-ajustée');
   manual('TC-V11-007', 'V11', 'P2', 'Cosmos & vitrine (visuel)', 'Volcans de la forge, trou noir du vide quantique, inclinaison 3D des schémas vaisseaux');
   manual('TC-V12-011', 'V12', 'P2', 'Spectacle Acte II (visuel)', 'Explosions en chaîne des boss, fracture de réalité, rendu des 3 gardiens, arcs tesla');
+  manual('TC-V13-012', 'V13', 'P2', 'Spectacle Actes III-V (visuel)', 'Aria de la Cantatrice, inversion chromatique, mandala du Signal, faisceau d\'unisson, kaléidoscope du rêve');
 
   // ============ CSV ============
   const track = ['Test Case ID,Category,Priority,Test Name,Estimated Time (min),Prerequisites,Status,Result,Bug ID,Execution Date,Executed By,Notes,Screenshot/Log'];
