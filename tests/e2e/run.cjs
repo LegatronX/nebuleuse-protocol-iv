@@ -1,4 +1,4 @@
-// Nébuleuse Protocol IV — Suite QA automatisée (v5.11)
+// Nébuleuse Protocol IV — Suite QA automatisée (v5.12)
 // Usage : NODE_PATH=/home/kimi/.npm-global/lib/node_modules node tests/e2e/run.cjs [appDir]
 // Produit : tests/docs/TEST-EXECUTION-TRACKING.csv + BUG-TRACKING-TEMPLATE.csv + artifacts/*.png
 const { spawn } = require('child_process');
@@ -797,10 +797,130 @@ async function main() {
     await ctxW.close();
   }
 
+
+  {
+    // ============ V5.12 : ACTE II — 3 NIVEAUX · 3 BOSS · ARMES · AUDIO SPATIAL ============
+    const ctxA = await browser.newContext({ viewport: { width: 430, height: 932 } });
+    const pa = await ctxA.newPage();
+    pa.on('pageerror', e => errors.push('PAGEERROR: ' + e.message));
+    await pa.goto(BASE);
+    await pa.waitForTimeout(1800);
+    const GA = (expr) => pa.evaluate(expr);
+    await T('TC-V12-001', 'V12', 'P1', '10 assets Acte II servis (3 décors, 3 musiques, 4 SFX)', async () => {
+      const r = await GA(async () => {
+        const urls = ['assets/bg-graveyard.png', 'assets/bg-hive.png', 'assets/bg-singularity.png', 'assets/music-graveyard.mp3', 'assets/music-hive.mp3', 'assets/music-singularity.mp3', 'assets/sfx-tesla.mp3', 'assets/sfx-novacharge.mp3', 'assets/sfx-novablast.mp3', 'assets/sfx-hatch.mp3'];
+        const res = await Promise.all(urls.map(u => fetch(u, { method: 'HEAD' }).then(x => x.ok).catch(() => false)));
+        return res.filter(Boolean).length;
+      });
+      assert(r === 10, 'assets: ' + r + '/10');
+    });
+    await pa.evaluate(() => { document.querySelectorAll('.overlay').forEach(o => o.classList.add('hidden')); const b = [...document.querySelectorAll('button')].find(x => /campagne/i.test(x.textContent)); if (b) b.click(); });
+    await pa.waitForTimeout(2600);
+    await GA(() => window.__NP4.v11.setAutoFire(true));
+    // mode dieu : isole les mécaniques de boss de la survie du joueur
+    await GA(() => {
+      window.__NP4.v12.startActe2();
+      window.__god = setInterval(() => { const p = window.__NP4.player; p.hull = 9999; p.shield = 9999; }, 400);
+    });
+    await pa.waitForTimeout(2000);
+    await T('TC-V12-002', 'V12', 'P0', 'Acte II démarre (secteur V, vague 16)', async () => {
+      const r = await GA(() => ({ a2: window.__NP4.v12.acte2(), s2: window.__NP4.v12.sec2(), w: window.__NP4.wave, st: window.__NP4.state }));
+      assert(r.a2 && r.s2 === 5 && r.w === 16 && r.st === 'playing', JSON.stringify(r));
+    });
+    await T('TC-V12-003', 'V12', 'P0', 'Léviathan : boss custom → mort → Secteur VI', async () => {
+      await GA(() => window.__NP4.v12.spawnLeviathan());
+      await pa.waitForTimeout(2600);
+      const spawn = await GA(() => { const b = window.__NP4.enemies.find(e => e.leviathan); return b && b.custom && !b.entering; });
+      await GA(() => { const N = window.__NP4; const b = N.enemies.find(e => e.leviathan); if (b) N.v10.kill(b); });
+      await pa.waitForTimeout(1200);
+      const r = await GA(() => ({ s2: window.__NP4.v12.sec2(), st: window.__NP4.state }));
+      assert(spawn && r.s2 === 6 && r.st === 'playing', JSON.stringify({ spawn, ...r }));
+    });
+    await T('TC-V12-004', 'V12', 'P0', 'Matriarche : ponte/éclosion → mort → Secteur VII', async () => {
+      await GA(() => window.__NP4.v12.spawnMatriarche());
+      await pa.waitForTimeout(3200);
+      const boss = await GA(() => window.__NP4.enemies.some(e => e.matriarche));
+      await pa.waitForTimeout(4500);
+      const eggs = await GA(() => ({ oeufs: window.__NP4.enemies.filter(e => e.type === 'oeuf').length, zigs: window.__NP4.enemies.filter(e => e.type === 'zig').length }));
+      await GA(() => { const N = window.__NP4; const b = N.enemies.find(e => e.matriarche); if (b) N.v10.kill(b); });
+      await pa.waitForTimeout(1000);
+      const s2 = await GA(() => window.__NP4.v12.sec2());
+      assert(boss && (eggs.oeufs > 0 || eggs.zigs > 0) && s2 === 7, JSON.stringify({ boss, eggs, s2 }));
+    });
+    await T('TC-V12-005', 'V12', 'P0', 'Architecte : téléportation, phases, clones, fracture', async () => {
+      await GA(() => window.__NP4.v11.setAutoFire(false)); // préserve les clones
+      await GA(() => window.__NP4.v12.spawnArchitecte());
+      await pa.waitForTimeout(9000);
+      const tp = await GA(() => { const b = window.__NP4.enemies.find(e => e.architecte); return b && b.x !== 215; });
+      await GA(() => { const b = window.__NP4.enemies.find(e => e.architecte); if (b) b.hp = b.maxHp * 0.6; });
+      await pa.waitForTimeout(700);
+      const ph2 = await GA(() => ({ form: (window.__NP4.enemies.find(e => e.architecte) || {}).architecte?.form, clones: window.__NP4.enemies.filter(e => e.type === 'clone').length }));
+      await GA(() => { const b = window.__NP4.enemies.find(e => e.architecte); if (b) b.hp = b.maxHp * 0.3; });
+      await pa.waitForTimeout(700);
+      const ph3 = await GA(() => ({ form: (window.__NP4.enemies.find(e => e.architecte) || {}).architecte?.form, frac: window.__NP4.v12.fracture() }));
+      assert(tp && ph2.form === 'OCTAÈDRE' && ph2.clones === 2 && ph3.form === 'SPHÈRE' && ph3.frac === true, JSON.stringify({ tp, ph2, ph3 }));
+    });
+    await T('TC-V12-006', 'V12', 'P0', 'Mort de l\'Architecte → VICTOIRE ABSOLUE', async () => {
+      await GA(() => window.__NP4.v11.setAutoFire(true));
+      await GA(() => { const N = window.__NP4; const b = N.enemies.find(e => e.architecte); if (b) N.v10.kill(b); });
+      await pa.waitForTimeout(1500);
+      const r = await GA(() => ({
+        st: window.__NP4.state,
+        done: window.__NP4.v12.acte2Done(),
+        title: (document.querySelector('#victoryOverlay .title') || {}).textContent || '',
+        frac: window.__NP4.v12.fracture()
+      }));
+      assert(r.st === 'victory' && r.done && /VICTOIRE ABSOLUE/.test(r.title) && !r.frac, JSON.stringify(r));
+    });
+    // --- ARMES (nouvelle partie) ---
+    await GA(() => clearInterval(window.__god));
+    await pa.evaluate(() => { const b = [...document.querySelectorAll('button')].find(x => /menu/i.test(x.textContent)); if (b) b.click(); });
+    await pa.waitForTimeout(800);
+    await pa.evaluate(() => { document.querySelectorAll('.overlay').forEach(o => o.classList.add('hidden')); const b = [...document.querySelectorAll('button')].find(x => /campagne/i.test(x.textContent)); if (b) b.click(); });
+    await pa.waitForTimeout(2600);
+    await GA(() => window.__NP4.v11.setAutoFire(true));
+    await T('TC-V12-007', 'V12', 'P0', 'Nova-charge : lance automatique à pleine charge', async () => {
+      const r = await GA(async () => {
+        const N = window.__NP4;
+        const pan0 = N.v12.panUsed();
+        N.v11.pressFire(true);
+        await new Promise(r2 => setTimeout(r2, 3200));
+        N.v11.pressFire(false);
+        return { charge: N.v12.charge(), panDelta: N.v12.panUsed() - pan0 };
+      });
+      assert(r.charge < 0.5 && r.panDelta >= 1, JSON.stringify(r));
+    });
+    await T('TC-V12-008', 'V12', 'P1', 'Foudre en chaîne (panoramique stéréo)', async () => {
+      const r = await GA(async () => {
+        const N = window.__NP4;
+        N.v12.giveTesla();
+        const pan0 = N.v12.panUsed();
+        await new Promise(r2 => setTimeout(r2, 2200));
+        return { tesla: N.v12.tesla(), panDelta: N.v12.panUsed() - pan0 };
+      });
+      assert(r.tesla > 14 && r.tesla < 18 && r.panDelta >= 1, JSON.stringify(r));
+    });
+    await T('TC-V12-009', 'V12', 'P1', 'Lames orbitales actives', async () => {
+      const r = await GA(async () => {
+        const N = window.__NP4;
+        N.v12.giveBlades();
+        await new Promise(r2 => setTimeout(r2, 500));
+        return N.v12.blades();
+      });
+      assert(r > 20, 'blades=' + r);
+    });
+    await T('TC-V12-010', 'V12', 'P1', '7 buffers audio Acte II décodés', async () => {
+      const r = await GA(() => ['tesla', 'charge', 'blast', 'hatch', 'graveyard', 'hive', 'singularity'].filter(k => window.__NP4.v12.buf12(k)).length);
+      assert(r === 7, 'buffers: ' + r + '/7');
+    });
+    await ctxA.close();
+  }
+
   // ============ MANQUANTS MANUELS ============
   manual('TC-DRAFT-005', 'DRAFT', 'P3', 'Capsules prototype (visuel)', 'Vérifier les capsules violettes après un boss en vague ≥ 3');
   manual('TC-V10-009', 'V10', 'P2', 'Décors de secteurs (visuel)', 'Vérifier les 5 thèmes (nébuleuse, forge, abysse, glace, quantique) et la bannière auto-ajustée');
   manual('TC-V11-007', 'V11', 'P2', 'Cosmos & vitrine (visuel)', 'Volcans de la forge, trou noir du vide quantique, inclinaison 3D des schémas vaisseaux');
+  manual('TC-V12-011', 'V12', 'P2', 'Spectacle Acte II (visuel)', 'Explosions en chaîne des boss, fracture de réalité, rendu des 3 gardiens, arcs tesla');
 
   // ============ CSV ============
   const track = ['Test Case ID,Category,Priority,Test Name,Estimated Time (min),Prerequisites,Status,Result,Bug ID,Execution Date,Executed By,Notes,Screenshot/Log'];

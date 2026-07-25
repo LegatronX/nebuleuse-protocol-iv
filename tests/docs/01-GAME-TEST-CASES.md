@@ -175,3 +175,40 @@ Vérifier visuellement les 5 thèmes (nébuleuse, forge solaire, abysse alien, a
 
 ### TC-V11-007 — Cosmos & vitrine (P2, MANUEL)
 Vérifier visuellement : volcans de la forge, trou noir du vide quantique, aurores de l'abîme glacé, inclinaison 3D des schémas au toucher.
+
+---
+
+## 14. V5.12 — ACTE II : 3 NIVEAUX · 3 BOSS · ARMES · AUDIO SPATIAL (TC-V12-001 à 011)
+
+### TC-V12-001 — Assets Acte II (P1)
+**Act** : HEAD sur 3 décors + 3 musiques + 4 SFX. **Assert** : 10/10 HTTP 200.
+
+### TC-V12-002 — Démarrage Acte II (P0)
+**Act** : `v12.startActe2()`. **Assert** : `acte2`, `sec2=5`, `wave=16`, état playing.
+
+### TC-V12-003 — Léviathan (P0)
+**Act** : spawn, entrée, kill via chaîne complète. **Assert** : boss custom actif, mort → `sec2=6` (Ruche), état playing (pas de victoire parasite).
+
+### TC-V12-004 — Matriarche (P0)
+**Act** : spawn, attente 7,7 s, kill. **Assert** : ponte d'œufs et/ou éclosions en guêpes, mort → `sec2=7` (Singularité).
+
+### TC-V12-005 — Architecte : mécaniques quantiques (P0)
+**Act** : spawn (tir coupé), 9 s, hp→60 % puis 30 %. **Assert** : téléportation, OCTAÈDRE + 2 clones, SPHÈRE + fracture de réalité.
+
+### TC-V12-006 — Victoire absolue (P0)
+**Act** : kill de l'Architecte. **Assert** : état victory, `acte2Done`, titre « VICTOIRE ABSOLUE », fracture désactivée.
+
+### TC-V12-007 — Nova-charge (P0)
+**Act** : gâchette maintenue 3,2 s. **Assert** : charge retombée (lance partie), son blast émis (pan compté).
+
+### TC-V12-008 — Foudre en chaîne (P1)
+**Act** : `giveTesla()`, 2,2 s. **Assert** : durée active décrémentée, arcs émis avec panoramique stéréo (≥1).
+
+### TC-V12-009 — Lames orbitales (P1)
+**Act** : `giveBlades()`. **Assert** : `blades > 20`.
+
+### TC-V12-010 — Buffers audio (P1)
+**Assert** : 7/7 buffers Acte II décodés (4 SFX + 3 musiques).
+
+### TC-V12-011 — Spectacle Acte II (P2, MANUEL)
+Explosions en chaîne des boss, fracture de réalité, rendu des 3 gardiens, arcs tesla, lueur de charge.
