@@ -15750,22 +15750,22 @@
         // ---------- ROUTES ----------
         const ROUTES = {
           forge: {
-            icon: '🔥', name: 'Forge solaire', sector: 1, accent: '#fbbf24', risk: 2,
+            icon: '🔥', name: 'Forge solaire', sector: 1, img: 'assets/bg-forge.webp', accent: '#fbbf24', risk: 2,
             risk_: 'Ennemis agressifs : cadence de tir +35 %, vitesse +20 %',
             reward: 'Pièces d’or ×2 · score +25 %'
           },
           quantum: {
-            icon: '⚛️', name: 'Anomalie quantique', sector: 4, accent: '#c084fc', risk: 2,
+            icon: '⚛️', name: 'Anomalie quantique', sector: 4, img: 'assets/bg-quantum.webp', accent: '#c084fc', risk: 2,
             risk_: 'Projectiles ennemis à trajectoire ondulante',
             reward: 'Mini-boss : 45 % de prototype rare · surcharge Q plus fréquente'
           },
           void: {
-            icon: '🌑', name: 'Vide profond', sector: 3, accent: '#7dd3fc', risk: 2,
+            icon: '🌑', name: 'Vide profond', sector: 3, img: 'assets/bg-frozen.webp', accent: '#7dd3fc', risk: 2,
             risk_: 'Visibilité réduite : seul l’espace proche du vaisseau est éclairé',
             reward: 'Réparation complète immédiate · en sortie : +1 vie, bouclier max +20'
           },
           signal: {
-            icon: '📡', name: 'Signal inconnu', sector: 5, accent: '#fef3c7', risk: 3, rare: true,
+            icon: '📡', name: 'Signal inconnu', sector: 5, img: 'assets/bg-signal.webp', accent: '#fef3c7', risk: 3, rare: true,
             risk_: 'Boss alternatif : l’Écho de la Prime (3 phases, PV +35 %)',
             reward: 'Butin massif : +40 pièces, prototype garanti, score du boss ×2 · archive narrative'
           }
@@ -15828,16 +15828,42 @@
         // ---------- INTERFACE : BIFURCATION ----------
         const st15 = document.createElement('style');
         st15.textContent =
-          '#routeOverlay{z-index:45;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);background:rgba(2,4,9,.78)}' +
+          // halo d'ambiance : les couleurs des routes proposées (--g1..3) teintent le fond, la sélection (--acc) domine
+          '#routeOverlay{--acc:#67e8f9;--g1:#67e8f9;--g2:#c084fc;--g3:#fbbf24;z-index:45;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);' +
+          'background:radial-gradient(ellipse at 50% 0%,color-mix(in srgb,var(--acc) 26%,transparent),transparent 55%),' +
+          'radial-gradient(circle at 0% 60%,color-mix(in srgb,var(--g1) 16%,transparent),transparent 45%),' +
+          'radial-gradient(circle at 100% 40%,color-mix(in srgb,var(--g2) 16%,transparent),transparent 45%),' +
+          'radial-gradient(circle at 50% 100%,color-mix(in srgb,var(--g3) 14%,transparent),transparent 50%),rgba(2,4,9,.8);transition:background .4s ease}' +
+          '#routeTitle{background:linear-gradient(90deg,#a5f3fc,var(--acc),#f0abfc,#a5f3fc);background-size:300% 100%;-webkit-background-clip:text;background-clip:text;' +
+          'color:transparent;animation:rtShine 6s linear infinite;letter-spacing:.14em;text-transform:uppercase}' +
+          '#routeTitle::after{content:"";display:block;height:1px;margin:6px auto 0;width:60%;background:linear-gradient(90deg,transparent,var(--acc),transparent)}' +
           '#routeOverlay .card{padding:18px 14px calc(14px + env(safe-area-inset-bottom));border-radius:26px;width:min(94vw,520px)}' +
           '#routeOverlay .title{font-size:clamp(20px,6vw,28px);margin-bottom:2px}' +
           '#routeOverlay .subtitle{font-size:12px;margin-bottom:10px}' +
           '.route-list{display:flex;flex-direction:column;gap:10px;margin:8px 0 12px}' +
-          '.route-opt{--acc:#67e8f9;display:block;width:100%;min-height:92px;text-align:left;padding:12px 14px;border-radius:18px;' +
-          'background:rgba(255,255,255,.05);border:2px solid color-mix(in srgb,var(--acc) 38%,transparent);color:#eaf6ff;' +
-          'font:inherit;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}' +
-          '.route-opt.sel{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 16%,rgba(6,12,24,.9));box-shadow:0 0 22px color-mix(in srgb,var(--acc) 40%,transparent)}' +
+          '.route-opt{--acc:#67e8f9;position:relative;overflow:hidden;isolation:isolate;display:block;width:100%;min-height:92px;text-align:left;padding:12px 14px;border-radius:18px;' +
+          'background:rgba(6,12,24,.6);border:2px solid color-mix(in srgb,var(--acc) 38%,transparent);color:#eaf6ff;' +
+          'font:inherit;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;' +
+          'animation:rtIn .55s cubic-bezier(.2,.9,.25,1.15) backwards;animation-delay:calc(var(--i,0) * 90ms);transition:border-color .2s ease,box-shadow .25s ease,transform .12s ease}' +
+          // décor du secteur de destination en fond de carte, lent travelling (transform seul = composité GPU)
+          '.route-bg{position:absolute;inset:-8%;z-index:-2;background-size:cover;background-position:center;opacity:.62;will-change:transform;' +
+          'animation:rtKen 16s ease-in-out infinite alternate;animation-delay:calc(var(--i,0) * -5s)}' +
+          '.route-opt::before{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(100deg,rgba(4,8,18,.93) 0%,rgba(4,8,18,.72) 48%,rgba(4,8,18,.18) 100%)}' +
+          '.route-opt::after{content:"";position:absolute;top:0;bottom:0;left:-60%;width:45%;z-index:0;pointer-events:none;opacity:0;' +
+          'background:linear-gradient(100deg,transparent,rgba(255,255,255,.22),transparent);transform:skewX(-18deg)}' +
+          '.route-opt>:not(.route-bg){position:relative;z-index:1}' +
+          '.route-opt.sel{border-color:var(--acc);box-shadow:0 0 24px color-mix(in srgb,var(--acc) 45%,transparent),inset 0 0 30px color-mix(in srgb,var(--acc) 18%,transparent)}' +
+          '.route-opt.sel .route-bg{opacity:.9}' +
+          '.route-opt.sel::after{animation:rtSheen .7s ease-out}' +
           '.route-opt:active{transform:scale(.985)}' +
+          '.route-opt.rare{border-style:solid;border-image:none}' +
+          '.route-opt.rare .route-name{text-shadow:0 0 12px rgba(254,243,199,.6)}' +
+          '@keyframes rtIn{from{opacity:0;transform:translateY(22px) scale(.95)}to{opacity:1;transform:none}}' +
+          '@keyframes rtKen{from{transform:scale(1) translate3d(0,0,0)}to{transform:scale(1.12) translate3d(-3%,-4%,0)}}' +
+          '@keyframes rtSheen{0%{opacity:1;left:-60%}100%{opacity:0;left:120%}}' +
+          '@keyframes rtShine{to{background-position:300% 0}}' +
+          '@keyframes rtShim{to{background-position:-200% 0}}' +
+          '@media (prefers-reduced-motion:reduce){#routeTitle,.route-opt,.route-bg,.route-opt.sel::after,#routeBadge,#routeResumeBtn{animation:none!important}}' +
           '.route-head{display:flex;align-items:center;gap:10px;margin-bottom:6px}' +
           '.route-ic{font-size:28px;line-height:1}' +
           '.route-name{font-weight:900;font-size:16px;color:var(--acc);letter-spacing:.02em}' +
@@ -15853,10 +15879,13 @@
           // sous le panneau de barres (coque/bouclier/énergie), aligné à gauche : ne masque ni le score ni le vaisseau
           '#routeBadge{position:fixed;top:calc(env(safe-area-inset-top) + 236px);left:calc(env(safe-area-inset-left) + 14px);z-index:30;' +
           'pointer-events:none;font-size:11px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;padding:3px 10px;border-radius:999px;' +
-          'background:rgba(6,12,24,.6);border:1px solid currentColor;opacity:0;transition:opacity .25s ease;white-space:nowrap}' +
+          'background:linear-gradient(90deg,rgba(6,12,24,.65) 30%,color-mix(in srgb,currentColor 24%,rgba(6,12,24,.65)) 50%,rgba(6,12,24,.65) 70%);' +
+          'background-size:200% 100%;animation:rtShim 3.5s linear infinite;text-shadow:0 0 10px currentColor;' +
+          'border:1px solid currentColor;opacity:0;transition:opacity .25s ease;white-space:nowrap}' +
           '#routeBadge.show{opacity:.9}' +
           'body:not(.playing) #routeBadge{opacity:0}' +
-          '#routeResumeBtn{width:100%;margin:10px 0 2px;background:linear-gradient(135deg,#0e7490,#6d28d9);min-height:48px}' +
+          '#routeResumeBtn{width:100%;margin:10px 0 2px;min-height:48px;background:linear-gradient(110deg,#0e7490 20%,#22d3ee 40%,#6d28d9 60%,#0e7490 80%);' +
+          'background-size:250% 100%;animation:rtShim 5s linear infinite;box-shadow:0 0 22px rgba(34,211,238,.35)}' +
           '#routeResumeBtn small{display:block;font-size:11px;opacity:.8;font-weight:600}' +
           '.rr-routes{margin-top:6px;font-size:13px;color:#c4b5fd;font-weight:800;text-align:center}';
         document.head.appendChild(st15);
@@ -15912,11 +15941,13 @@
             const R = ROUTES[id];
             const b = document.createElement('button');
             b.type = 'button';
-            b.className = 'route-opt';
+            b.className = 'route-opt' + (R.rare ? ' rare' : '');
             b.dataset.route = id;
             b.setAttribute('aria-pressed', 'false');
             b.style.setProperty('--acc', R.accent);
+            b.style.setProperty('--i', i);
             b.innerHTML =
+              `<span class="route-bg" aria-hidden="true" style="background-image:url('${R.img}')"></span>` +
               `<div class="route-head"><span class="route-ic">${R.icon}</span>` +
               `<span><span class="route-name">${R.name}</span>${R.rare ? '<span class="route-rare">RARE</span>' : ''}` +
               `<br><span class="route-sec">Destination : ${sectorLabel(R)}</span></span>` +
@@ -15925,7 +15956,9 @@
               `<div class="route-line route-rew"><b>✦ RÉCOMPENSE</b> ${R.reward}</div>`;
             b.addEventListener('click', () => select(i));
             listEl.appendChild(b);
+            overlay.style.setProperty('--g' + (i + 1), R.accent);
           });
+          overlay.style.setProperty('--acc', '#67e8f9');
           select(-1);
         }
 
@@ -15937,6 +15970,7 @@
           });
           if (selected >= 0) {
             const R = ROUTES[offer[selected]];
+            overlay.style.setProperty('--acc', R.accent);
             goBtn.disabled = false;
             goBtn.textContent = `Engager : ${R.name} ▸`;
             AudioSys.ui();
@@ -16012,6 +16046,7 @@
             addText(player.x, player.y - 40, 'RÉPARATION COMPLÈTE', '#7dd3fc');
           }
           toast(`${R.icon} ${R.name} — ${R.reward}`, 'gold');
+          startWarp(R.accent);
           refreshBadge();
           updateHUD();
           vibrate([30, 30, 60]);
@@ -16048,6 +16083,276 @@
           active = null;
           echoPending = false;
           refreshBadge();
+        }
+
+        // ---------- VISUELS (coût borné, sans Math.random) ----------
+        // PRNG visuel séparé : les effets n'altèrent jamais le flux seedé de l'Opération du jour.
+        const vr = mulberry(0x9e3779b9);
+        const lite = () => lowQuality || reducedMotion;
+        const fxLight = (x, y, c, r, i, life) => {
+          const fx = window.__NP4 && window.__NP4.fx;
+          if (fx && fx.light) fx.light(x, y, c, r, i, life);
+        };
+        let warpT = 0;
+        let warpCol = '#67e8f9';
+        const WARP_DUR = 1.1;
+        const embers = [];     // Forge : braises montantes
+        let emberAcc = 0;
+        let heatGrad = null;
+        let heatH = 0;
+        let sonarT = 0;        // Vide : impulsion sonar
+        let sonarLit = false;
+        const glints = [];     // Vide : étoiles lointaines scintillantes
+        let qFlickT = 0;       // Quantique : éclairs de superposition
+        let glitchT = 3;       // Signal : interférences
+        let glitchOn = 0;
+        let glitchY = 0;
+        let scanPat = null;
+
+        function startWarp(col) {
+          warpCol = col;
+          warpT = reducedMotion ? 0 : WARP_DUR;
+          fxLight(W / 2, H * 0.42, col, Math.max(W, H) * 0.7, 1.5, 0.9);
+          embers.length = 0;
+          glints.length = 0;
+          for (let i = 0; i < (lowQuality ? 8 : 16); i++) glints.push({ x: vr() * W, y: vr() * H * 0.9, p: vr() * TAU, s: 0.6 + vr() * 1.2 });
+          sonarT = 0.6;
+        }
+
+        function updateVisuals(dt) {
+          if (warpT > 0) warpT = Math.max(0, warpT - dt);
+          if (!active) return;
+          if (active === 'forge') {
+            emberAcc += dt * (lite() ? 7 : 18);
+            while (emberAcc >= 1 && embers.length < 40) {
+              emberAcc -= 1;
+              embers.push({ x: vr() * W, y: H + 6, vx: (vr() - 0.5) * 30, vy: -(70 + vr() * 110), life: 0, max: 2.4 + vr() * 2, s: 0.8 + vr() * 1.8, ph: vr() * TAU });
+            }
+            if (emberAcc >= 1) emberAcc = 0;
+            for (let i = embers.length - 1; i >= 0; i--) {
+              const e = embers[i];
+              e.life += dt;
+              e.x += (e.vx + Math.sin(e.life * 3 + e.ph) * 22) * dt;
+              e.y += e.vy * dt;
+              if (e.life >= e.max || e.y < -10) embers.splice(i, 1);
+            }
+          } else if (active === 'void') {
+            sonarT -= dt;
+            if (sonarT <= -1.7) { sonarT = 0.9; sonarLit = false; } // cycle 2,6 s : 0,9 s d'onde + 1,7 s de silence
+            if (sonarT > 0 && !sonarLit) {
+              sonarLit = true;
+              fxLight(player.x, player.y, '#7dd3fc', Math.min(W, H) * 0.9, 0.55, 0.9);
+            }
+          } else if (active === 'quantum') {
+            qFlickT -= dt;
+            if (qFlickT <= 0) {
+              qFlickT = 0.3 + vr() * 0.35;
+              for (let k = 0, n = eBullets.length; k < 6 && n; k++) {
+                const b = eBullets[Math.floor(vr() * n)];
+                if (b && b.qp !== undefined) { fxLight(b.x, b.y, '#c084fc', 70, 0.55, 0.22); break; }
+              }
+            }
+          } else if (active === 'signal') {
+            if (glitchOn > 0) glitchOn -= dt;
+            glitchT -= dt;
+            if (glitchT <= 0) {
+              glitchT = 2.2 + vr() * 3.5;
+              glitchOn = 0.16;
+              glitchY = vr();
+              if (!lite()) fxLight(W / 2, glitchY * H, '#fef3c7', W * 0.6, 0.45, 0.2);
+            }
+          }
+        }
+
+        function drawWarp() {
+          const p = 1 - warpT / WARP_DUR;
+          const a = Math.sin(p * Math.PI);
+          const cx = W / 2;
+          const cy = H * 0.42;
+          const maxR = Math.hypot(W, H) * 0.62;
+          const n = lowQuality ? 26 : 56;
+          ctx.save();
+          ctx.globalCompositeOperation = 'lighter';
+          ctx.strokeStyle = warpCol;
+          ctx.globalAlpha = a * 0.85;
+          ctx.lineCap = 'round';
+          for (let pass = 0; pass < 2; pass++) {
+            ctx.lineWidth = pass ? 1 : 2.4;
+            if (pass) { ctx.strokeStyle = '#ffffff'; ctx.globalAlpha = a * 0.6; }
+            ctx.beginPath();
+            for (let i = pass; i < n; i += 2) {
+              const ang = i * 2.39996;
+              const k = (i * 0.61803) % 1;
+              const r1 = maxR * Math.min(1.1, p * p * (0.7 + k) * 1.8 + 0.04);
+              const r0 = r1 * (0.35 + 0.45 * p * (1 - k * 0.5));
+              const c = Math.cos(ang), sn = Math.sin(ang);
+              ctx.moveTo(cx + c * r0, cy + sn * r0);
+              ctx.lineTo(cx + c * r1, cy + sn * r1);
+            }
+            ctx.stroke();
+          }
+          // cœur du saut : lueur centrale qui s'ouvre puis se referme
+          const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, 40 + p * 160);
+          g.addColorStop(0, 'rgba(255,255,255,' + (a * 0.55).toFixed(3) + ')');
+          g.addColorStop(1, 'rgba(255,255,255,0)');
+          ctx.globalAlpha = 1;
+          ctx.fillStyle = g;
+          ctx.fillRect(cx - 200, cy - 200, 400, 400);
+          ctx.restore();
+        }
+
+        function drawForge() {
+          if (heatH !== H || !heatGrad) {
+            heatH = H;
+            heatGrad = ctx.createLinearGradient(0, H, 0, H * 0.55);
+            heatGrad.addColorStop(0, 'rgba(251,113,33,0.22)');
+            heatGrad.addColorStop(1, 'rgba(251,113,33,0)');
+          }
+          ctx.save();
+          ctx.globalCompositeOperation = 'lighter';
+          ctx.fillStyle = heatGrad;
+          ctx.fillRect(0, H * 0.55, W, H * 0.45);
+          // braises : un seul chemin par teinte
+          ctx.fillStyle = '#fdba74';
+          ctx.beginPath();
+          for (const e of embers) {
+            const t = e.life / e.max;
+            const r = e.s * (1 - t * 0.6);
+            ctx.moveTo(e.x + r, e.y);
+            ctx.arc(e.x, e.y, r, 0, TAU);
+          }
+          ctx.globalAlpha = 0.85;
+          ctx.fill();
+          // ennemis « chauffés à blanc » : liseré incandescent (lisibilité du risque)
+          ctx.strokeStyle = '#fb923c';
+          ctx.lineWidth = 1.5;
+          ctx.globalAlpha = 0.35 + 0.25 * Math.sin(globalTime * 9);
+          ctx.beginPath();
+          for (let i = 0; i < enemies.length; i++) {
+            const e = enemies[i];
+            if (e.type === 'boss' || e.y < -20) continue;
+            const r = (e.r || 14) + 5;
+            ctx.moveTo(e.x + r, e.y);
+            ctx.arc(e.x, e.y, r, 0, TAU);
+          }
+          ctx.stroke();
+          ctx.restore();
+        }
+
+        function drawQuantum() {
+          // superposition : un fantôme de chaque projectile marqué, décalé sur sa normale
+          // (rend l'ondulation lisible avant qu'elle n'arrive)
+          ctx.save();
+          ctx.globalCompositeOperation = 'lighter';
+          ctx.fillStyle = '#c084fc';
+          ctx.globalAlpha = 0.32;
+          ctx.beginPath();
+          let n = 0;
+          const cap = lite() ? 60 : 160;
+          for (let i = 0; i < eBullets.length && n < cap; i++) {
+            const b = eBullets[i];
+            if (b.qp === undefined) continue;
+            n++;
+            const sp = Math.hypot(b.vx, b.vy) || 1;
+            const off = Math.sin(b.qt * 3.2 + b.qp + 1.57) * 9;
+            const x = b.x - (b.vy / sp) * off;
+            const y = b.y + (b.vx / sp) * off;
+            const r = (b.r || 5) * 0.85;
+            ctx.moveTo(x + r, y);
+            ctx.arc(x, y, r, 0, TAU);
+          }
+          ctx.fill();
+          ctx.restore();
+        }
+
+        function drawVoid() {
+          const R = Math.min(W, H) * 0.42;
+          // l'onde sonar repousse brièvement l'obscurité
+          const sp = sonarT > 0 ? 1 - sonarT / 0.9 : -1;
+          const boost = sp >= 0 ? Math.sin(sp * Math.PI) * 0.35 : 0;
+          ctx.save();
+          const g = ctx.createRadialGradient(player.x, player.y, R * (0.5 + boost * 0.6), player.x, player.y, R * (1.4 + boost));
+          g.addColorStop(0, 'rgba(0,3,10,0)');
+          g.addColorStop(1, 'rgba(0,3,10,0.82)');
+          ctx.fillStyle = g;
+          ctx.fillRect(0, 0, W, H);
+          ctx.globalCompositeOperation = 'lighter';
+          // étoiles lointaines qui scintillent dans le noir (décor, aucune info de jeu)
+          ctx.fillStyle = '#cfe8ff';
+          for (const s of glints) {
+            const tw = 0.5 + 0.5 * Math.sin(globalTime * (1.3 + s.s) + s.p);
+            ctx.globalAlpha = tw * 0.7;
+            const L = s.s * (2 + tw * 3);
+            ctx.fillRect(s.x - L, s.y - 0.5, L * 2, 1);
+            ctx.fillRect(s.x - 0.5, s.y - L, 1, L * 2);
+          }
+          if (sp >= 0) {
+            ctx.globalAlpha = (1 - sp) * 0.7;
+            ctx.strokeStyle = '#7dd3fc';
+            ctx.lineWidth = 2 + (1 - sp) * 2;
+            ctx.beginPath();
+            ctx.arc(player.x, player.y, R * (0.25 + sp * 1.7), 0, TAU);
+            ctx.stroke();
+            ctx.globalAlpha = (1 - sp) * 0.3;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.arc(player.x, player.y, R * (0.15 + sp * 1.2), 0, TAU);
+            ctx.stroke();
+          }
+          ctx.restore();
+        }
+
+        function drawSignal() {
+          if (!scanPat) {
+            const c = document.createElement('canvas');
+            c.width = 1; c.height = 4;
+            const x = c.getContext('2d');
+            x.fillStyle = 'rgba(254,243,199,0.07)';
+            x.fillRect(0, 0, 1, 1);
+            scanPat = ctx.createPattern(c, 'repeat');
+          }
+          ctx.save();
+          ctx.fillStyle = scanPat;
+          ctx.fillRect(0, 0, W, H);
+          if (glitchOn > 0) {
+            ctx.globalCompositeOperation = 'lighter';
+            const y = glitchY * H;
+            const a = glitchOn / 0.16;
+            ctx.fillStyle = 'rgba(254,243,199,' + (0.16 * a).toFixed(3) + ')';
+            ctx.fillRect(0, y, W, 3);
+            ctx.fillStyle = 'rgba(244,114,182,' + (0.12 * a).toFixed(3) + ')';
+            ctx.fillRect(-6, y + 7, W, 2);
+            ctx.fillStyle = 'rgba(103,232,249,' + (0.12 * a).toFixed(3) + ')';
+            ctx.fillRect(6, y - 6, W, 2);
+          }
+          ctx.restore();
+        }
+
+        function drawEchoHalo(b) {
+          // l'Écho de la Prime : trois arcs dorés en contre-rotation
+          ctx.save();
+          ctx.translate(b.x, b.y);
+          ctx.globalCompositeOperation = 'lighter';
+          ctx.strokeStyle = '#fde68a';
+          ctx.lineWidth = 2;
+          for (let i = 0; i < 3; i++) {
+            const r = (b.r || 60) + 14 + i * 11;
+            const a0 = globalTime * (0.9 + i * 0.4) * (i % 2 ? -1 : 1);
+            ctx.globalAlpha = 0.55 - i * 0.14;
+            ctx.beginPath();
+            ctx.arc(0, 0, r, a0, a0 + TAU * 0.62);
+            ctx.stroke();
+          }
+          ctx.restore();
+        }
+
+        function drawVisuals() {
+          if (active === 'forge') drawForge();
+          else if (active === 'quantum') drawQuantum();
+          else if (active === 'signal') drawSignal();
+          if (boss && boss.echo && boss.hp > 0) drawEchoHalo(boss);
+          if (active === 'void') drawVoid();
+          if (warpT > 0) drawWarp();
         }
 
         // ---------- EFFETS EN JEU ----------
@@ -16121,6 +16426,7 @@
           baseUpdate15(dt);
           if (state !== 'playing' || !player) return;
           syncBadge();
+          updateVisuals(dt);
           if (pending) {
             pending.t -= dt;
             if (pending.t <= 0 && player.alive) openFork();
@@ -16159,16 +16465,8 @@
         const baseDraw15 = draw;
         draw = function () {
           baseDraw15();
-          if (active !== 'void' || !player || (state !== 'playing' && state !== 'route')) return;
-          // obscurité : un seul dégradé radial par frame, centré sur le vaisseau
-          const R = Math.min(W, H) * 0.42;
-          ctx.save();
-          const g = ctx.createRadialGradient(player.x, player.y, R * 0.5, player.x, player.y, R * 1.4);
-          g.addColorStop(0, 'rgba(0,3,10,0)');
-          g.addColorStop(1, 'rgba(0,3,10,0.82)');
-          ctx.fillStyle = g;
-          ctx.fillRect(0, 0, W, H);
-          ctx.restore();
+          if (!player || (state !== 'playing' && state !== 'route')) return;
+          drawVisuals();
         };
 
         // ---------- SAUVEGARDE : POINT DE REPRISE ----------
@@ -16354,6 +16652,17 @@
             clearBullets: () => { eBullets.length = 0; },
             // chaîne complète (le pont v5.6 garde des références antérieures aux wraps v5.10+)
             spawnBoss: (isFinal) => spawnBoss(!!isFinal),
+            fx: () => ({ warp: warpT, embers: embers.length, glints: glints.length, sonar: sonarT, glitch: glitchT }),
+            // coût moyen (ms) de la couche visuelle d'une route, rendu de base exclu
+            bench: (id, n) => {
+              const prev = active;
+              active = id;
+              const t0 = performance.now();
+              for (let i = 0; i < n; i++) { updateVisuals(1 / 60); drawVisuals(); }
+              const ms = (performance.now() - t0) / n;
+              active = prev;
+              return ms;
+            },
             kill: (i) => killEnemy(i, true)
           };
         }
@@ -16898,6 +17207,8 @@
             broken: () => broken,
             ms: () => emaMs,
             lights: () => lights.length,
+            // v5.15 : lumière dynamique ponctuelle (ignorée si le pipeline est désactivé)
+            light: (x, y, color, radius, intensity, life) => { if (tier > 0 && gl) addLight(x, y, color, radius, intensity, life); },
             set: (mode) => { meta.gpuFx = mode; autoCap = 2; applyTier(); return tier; }
           };
         }

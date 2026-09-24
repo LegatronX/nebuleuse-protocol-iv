@@ -355,6 +355,76 @@ async function main() {
 
   await ctx.close();
 
+  // --- visuels v5.15 : saut, ambiances, coût, captures ---
+  {
+    const c = await browser.newContext(IPHONE);
+    const p = await c.newPage();
+    wire(p);
+    const GV = (fn, arg) => p.evaluate(fn, arg);
+    await p.goto(BASE + '?seed=visuels');
+    await p.waitForTimeout(1500);
+    await GV(() => { localStorage.setItem('nebula4_meta', JSON.stringify({ tuto: true })); document.querySelectorAll('.overlay:not(#menu)').forEach((o) => o.classList.add('hidden')); });
+    await p.tap('#modeCampagne');
+    await p.waitForTimeout(2500);
+    const snap = (n) => p.screenshot({ path: path.join(ART_DIR, n + '.png') }).catch(() => {});
+    await T('visuels : cartes illustrées (décor du secteur chargé), entrée échelonnée, halo teinté par la sélection', async () => {
+      await GV(() => window.__NP4.routes.open());
+      await p.waitForTimeout(900);
+      const r = await GV(() => Promise.all([...document.querySelectorAll('#routeOverlay .route-bg')].map((el) => new Promise((res) => {
+        const url = (getComputedStyle(el).backgroundImage.match(/url\("?(.*?)"?\)/) || [])[1];
+        const im = new Image();
+        im.onload = () => res({ url, ok: im.naturalWidth > 0 });
+        im.onerror = () => res({ url, ok: false });
+        im.src = url;
+      }))));
+      A(r.length >= 2 && r.every((x) => x.ok && /\.webp$/.test(x.url)), JSON.stringify(r));
+      const delays = await GV(() => [...document.querySelectorAll('#routeOverlay .route-opt')].map((b) => getComputedStyle(b).animationDelay));
+      A(new Set(delays).size === delays.length, 'entrée non échelonnée ' + delays);
+      await p.tap('#routeOverlay .route-opt >> nth=0');
+      await p.waitForTimeout(450);
+      const acc = await GV(() => ({ o: document.getElementById('routeOverlay').style.getPropertyValue('--acc'), c: document.querySelector('.route-opt.sel').style.getPropertyValue('--acc') }));
+      A(acc.o === acc.c, JSON.stringify(acc));
+      await snap('v515-4-cartes');
+    });
+    await T('visuels : saut hyperspatial à l’engagement (≈1,1 s) puis ambiance Forge (braises)', async () => {
+      await GV(() => { const R = window.__NP4.routes; if (window.__NP4.state === 'route') R.choose('forge'); });
+      await p.waitForTimeout(250);
+      const w = await GV(() => window.__NP4.routes.fx().warp);
+      A(w > 0.3, 'saut absent ' + w);
+      await snap('v515-5-saut');
+      await p.waitForTimeout(1500);
+      const f = await GV(() => window.__NP4.routes.fx());
+      A(f.warp === 0 && f.embers > 5 && f.embers <= 40, JSON.stringify(f));
+      await snap('v515-6-forge');
+    });
+    await T('visuels : Anomalie quantique (fantômes de superposition), Vide (sonar + étoiles), Signal (interférences, halo d’Écho)', async () => {
+      const R = 'window.__NP4.routes';
+      await GV(() => { const g = window.__NP4; g.routes.open(); g.routes.choose('quantum'); for (let i = 0; i < 14; i++) g.routes.fireProbe(); });
+      await p.waitForTimeout(1600);
+      await snap('v515-7-quantique');
+      await GV(() => { const g = window.__NP4; g.routes.open(); g.routes.choose('void'); });
+      await p.waitForTimeout(1500);
+      const v = await GV(() => window.__NP4.routes.fx());
+      A(v.glints >= 8, 'étoiles ' + JSON.stringify(v));
+      await snap('v515-8-vide');
+      await GV(() => { const g = window.__NP4; g.routes.open(); g.routes.choose('signal'); g.player.invuln = 99; g.routes.spawnBoss(false); });
+      await p.waitForTimeout(3200);
+      const b = await GV(() => !!(window.__NP4.boss && window.__NP4.boss.echo));
+      A(b, 'écho absent');
+      await snap('v515-9-signal');
+    });
+    await T('performance : couche visuelle < 1,5 ms / frame par route (SwiftShader, rendu de base exclu)', async () => {
+      const r = await GV(() => { const R = window.__NP4.routes; const out = {}; for (const id of ['forge', 'quantum', 'void', 'signal']) out[id] = +R.bench(id, 120).toFixed(3); return out; });
+      console.log('      coût visuel (ms/frame) : ' + JSON.stringify(r));
+      A(Object.values(r).every((ms) => ms < 1.5), JSON.stringify(r));
+    });
+    await c.close();
+  }
+  await T('déterminisme : le module v5.15 ne consomme jamais Math.random (ni rand/pick)', async () => {
+    const src = fs.readFileSync(path.join(APP_DIR, 'v515.js'), 'utf8').replace(/\/\/.*$/gm, '');
+    A(!/Math\.random\s*\(|\brand\(|\bpick\(/.test(src), 'appel aléatoire global trouvé');
+  });
+
   // --- petit écran : iPhone SE (375×667) ---
   await T('iPhone SE : bifurcation utilisable au tactile (bouton visible sans défilement), badge hors HUD', async () => {
     const c = await browser.newContext({ viewport: { width: 375, height: 667 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });

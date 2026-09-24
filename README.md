@@ -58,6 +58,7 @@ Petit shoot 'em up vertical en HTML/CSS/JS pur (aucune dépendance), jouable dir
   - Déterministe : offres tirées d'un PRNG dédié (seed de l'Opération du jour, du Tournoi ou `?seed=…`), sans consommer `Math.random`.
   - Sauvegarde : statistiques additives dans `meta.routes` ; point de reprise à chaque bifurcation (`nebula4_route`, Campagne/Survie, consommé à la reprise) → bouton « ⏯ Reprendre la route » au menu.
   - Tests : `tests/e2e/routes15.cjs` (parcours complet sur contexte tactile iPhone).
+  - Visuels : cartes illustrées par le décor du secteur de destination (travelling lent, entrée échelonnée, reflet à la sélection, halo teinté), saut hyperspatial à l'engagement, ambiances par route (braises et ennemis incandescents dans la Forge, fantômes de superposition des projectiles quantiques, sonar et étoiles scintillantes dans le Vide, lignes de balayage et interférences du Signal, halo doré de l'Écho), éclairs de lumière GPU via `__NP4.fx.light`. Coût mesuré < 0,05 ms/frame ; désactivé ou allégé avec « réduire les animations » / qualité basse ; aucun appel à `Math.random`.
 
 ### Fichiers v5
 

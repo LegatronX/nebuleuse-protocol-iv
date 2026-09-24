@@ -537,6 +537,8 @@
             broken: () => broken,
             ms: () => emaMs,
             lights: () => lights.length,
+            // v5.15 : lumière dynamique ponctuelle (ignorée si le pipeline est désactivé)
+            light: (x, y, color, radius, intensity, life) => { if (tier > 0 && gl) addLight(x, y, color, radius, intensity, life); },
             set: (mode) => { meta.gpuFx = mode; autoCap = 2; applyTier(); return tier; }
           };
         }
