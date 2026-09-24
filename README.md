@@ -50,6 +50,15 @@ Petit shoot 'em up vertical en HTML/CSS/JS pur (aucune dépendance), jouable dir
 
 - **Rendu GPU v5.14** : pipeline de post-traitement WebGL2 superposé au canvas 2D (`v514.js`, intégré à `index.html`) — bloom HDR multi-échelles (seuil doux, moyenne de Karis, chaîne dual-filter), halos anamorphiques, réfraction des ondes de choc avec dispersion chromatique, éclairage dynamique (explosions, réacteur, boss éclairent le décor), aberration à l'impact, flou radial en bullet-time, adaptation d'exposition automatique, épaule filmique et dithering. Réglage *Effets GPU* (Auto / Cinéma / Désactivés) ; le mode Auto rétrograde seul si la frame dépasse le budget, respecte « réduire les animations » et se replie sur le canvas 2D si WebGL2 est absent ou le contexte perdu.
 
+- **Routes ramifiées v5.15** : après chaque boss non final (Acte I, Survie, Opération du jour, Tournoi), le portail linéaire laisse place à une **bifurcation** de 2 ou 3 destinations, chacune annonçant son risque et sa récompense avant le choix ; la route reste active jusqu'au boss suivant (`v515.js`, intégré à `index.html`).
+  - 🔥 *Forge solaire* — ennemis agressifs (cadence +35 %, vitesse +20 %) → pièces ×2, score +25 %
+  - ⚛️ *Anomalie quantique* — projectiles ennemis ondulants → prototypes rares sur les mini-boss, surcharge Q
+  - 🌑 *Vide profond* — visibilité réduite → réparation complète, +1 vie et bouclier max +20 en sortie
+  - 📡 *Signal inconnu* (rare, jamais avant le boss final) — boss alternatif « Écho de la Prime » → butin massif, prototype garanti, archive narrative
+  - Déterministe : offres tirées d'un PRNG dédié (seed de l'Opération du jour, du Tournoi ou `?seed=…`), sans consommer `Math.random`.
+  - Sauvegarde : statistiques additives dans `meta.routes` ; point de reprise à chaque bifurcation (`nebula4_route`, Campagne/Survie, consommé à la reprise) → bouton « ⏯ Reprendre la route » au menu.
+  - Tests : `tests/e2e/routes15.cjs` (parcours complet sur contexte tactile iPhone).
+
 ### Fichiers v5
 
 - `index.html` — jeu complet (moteur + modules v5). **Binaires `assets/` non versionnés** (mp3/png/jpg) : distribués via le ZIP `nebuleuse-v5.8.zip` joint à la release. Sans eux, le jeu fonctionne en repli synthétique.
