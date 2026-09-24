@@ -2,6 +2,8 @@
 
 Petit shoot 'em up vertical en HTML/CSS/JS pur (aucune dépendance), jouable directement dans un navigateur.
 
+**▶ Jouer : https://legatronx.github.io/nebuleuse-protocol-iv/** — installable sur l'écran d'accueil (iPhone : Partager → « Sur l'écran d'accueil »), jouable hors ligne après la première visite.
+
 ## Fichiers
 
 - `nebuleuse.html` — version source d'origine
