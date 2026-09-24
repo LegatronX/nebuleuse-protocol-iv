@@ -48,6 +48,8 @@ Petit shoot 'em up vertical en HTML/CSS/JS pur (aucune dépendance), jouable dir
 - **Bande-son studio v5.7** : 4 boucles musicales échantillonnées (menu/combat/boss/final) avec fondus enchaînés pilotés par l'état du jeu, SFX premium échantillonnés, fond de menu + emblème générés par IA
 - **Classement mondial v5.8** : scores en ligne via Supabase (table `nebuleuse_scores`, RLS lecture/insertion publiques), publication auto en fin de run avec pseudo sauvegardé, écran Top 10 mondial, rang estimé après publication
 
+- **Rendu GPU v5.14** : pipeline de post-traitement WebGL2 superposé au canvas 2D (`v514.js`, intégré à `index.html`) — bloom HDR multi-échelles (seuil doux, moyenne de Karis, chaîne dual-filter), halos anamorphiques, réfraction des ondes de choc avec dispersion chromatique, éclairage dynamique (explosions, réacteur, boss éclairent le décor), aberration à l'impact, flou radial en bullet-time, adaptation d'exposition automatique, épaule filmique et dithering. Réglage *Effets GPU* (Auto / Cinéma / Désactivés) ; le mode Auto rétrograde seul si la frame dépasse le budget, respecte « réduire les animations » et se replie sur le canvas 2D si WebGL2 est absent ou le contexte perdu.
+
 ### Fichiers v5
 
 - `index.html` — jeu complet (moteur + modules v5). **Binaires `assets/` non versionnés** (mp3/png/jpg) : distribués via le ZIP `nebuleuse-v5.8.zip` joint à la release. Sans eux, le jeu fonctionne en repli synthétique.
