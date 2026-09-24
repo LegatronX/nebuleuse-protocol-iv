@@ -9,23 +9,23 @@
         let cosmo13T = 0;
 
         const SECTORS3 = [
-          { name: 'Mer de Verre', img: 'assets/bg-glass.png', accent: '#7dd3fc', tint: 'rgba(4,14,22,.42)', music: 'glass',
+          { name: 'Mer de Verre', img: 'assets/bg-glass.webp', accent: '#7dd3fc', tint: 'rgba(4,14,22,.42)', music: 'glass',
             codex: "IX — Sous le verre, quelque chose résonne. Les machines ne dorment pas : elles écoutent." },
-          { name: 'Cathédrale Fractale', img: 'assets/bg-cathedral.png', accent: '#fbbf24', tint: 'rgba(20,12,2,.40)', music: 'cathedral',
+          { name: 'Cathédrale Fractale', img: 'assets/bg-cathedral.webp', accent: '#fbbf24', tint: 'rgba(20,12,2,.40)', music: 'cathedral',
             codex: "X — Chaque arche est une note. Chaque vitrail, une mémoire. Le Chœur t'a entendu arriver." },
-          { name: 'Jardin des Échos', img: 'assets/bg-echoes.png', accent: '#c4b5fd', tint: 'rgba(10,8,20,.42)', music: 'echoes',
+          { name: 'Jardin des Échos', img: 'assets/bg-echoes.webp', accent: '#c4b5fd', tint: 'rgba(10,8,20,.42)', music: 'echoes',
             codex: "XI — Ici, tes propres tirs te reviennent en chanson. Le Signal apprend ta voix." },
-          { name: 'Labyrinthe de Nacre', img: 'assets/bg-nacre.png', accent: '#f9a8d4', tint: 'rgba(16,6,14,.42)', music: 'nacre',
+          { name: 'Labyrinthe de Nacre', img: 'assets/bg-nacre.webp', accent: '#f9a8d4', tint: 'rgba(16,6,14,.42)', music: 'nacre',
             codex: "XII — Tu n'es plus dans l'espace. Tu es dans ce qu'il rêve." },
-          { name: 'Mer de Méthane', img: 'assets/bg-methane.png', accent: '#2dd4bf', tint: 'rgba(2,14,16,.44)', music: 'methane',
+          { name: 'Mer de Méthane', img: 'assets/bg-methane.webp', accent: '#2dd4bf', tint: 'rgba(2,14,16,.44)', music: 'methane',
             codex: "XIII — Le rêve a des profondeurs. Ce qui y nage porte ton visage." },
-          { name: "L'Œil du Rêve", img: 'assets/bg-dream.png', accent: '#a5b4fc', tint: 'rgba(8,6,24,.42)', music: 'dream',
+          { name: "L'Œil du Rêve", img: 'assets/bg-dream.webp', accent: '#a5b4fc', tint: 'rgba(8,6,24,.42)', music: 'dream',
             codex: "XIV — Ne te fie plus aux couleurs. Le rêve les mélange pour te désorienter." },
-          { name: 'Nurserie de Soleils', img: 'assets/bg-suns.png', accent: '#fdba74', tint: 'rgba(20,10,2,.40)', music: 'suns',
+          { name: 'Nurserie de Soleils', img: 'assets/bg-suns.webp', accent: '#fdba74', tint: 'rgba(20,10,2,.40)', music: 'suns',
             codex: "XV — Chaque soleil naissant est une note tenue depuis des milliards d'années." },
-          { name: "L'Horizon des Événements", img: 'assets/bg-horizon.png', accent: '#94a3b8', tint: 'rgba(4,4,8,.46)', music: 'horizon',
+          { name: "L'Horizon des Événements", img: 'assets/bg-horizon.webp', accent: '#94a3b8', tint: 'rgba(4,4,8,.46)', music: 'horizon',
             codex: "XVI — Au bord du gouffre, la lumière elle-même ralentit pour écouter." },
-          { name: 'Cœur du Premier Signal', img: 'assets/bg-signal.png', accent: '#fef3c7', tint: 'rgba(14,10,2,.36)', music: 'signal',
+          { name: 'Cœur du Premier Signal', img: 'assets/bg-signal.webp', accent: '#fef3c7', tint: 'rgba(14,10,2,.36)', music: 'signal',
             codex: "XVII — Tu n'es pas venu détruire. Tu es venu t'accorder." }
         ];
         const ROMANS3 = ['IX', 'X', 'XI', 'XII', 'XIII', 'XIV', 'XV', 'XVI', 'XVII'];

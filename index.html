@@ -10662,7 +10662,7 @@
         if (titleEl && !document.getElementById('menuEmblem')) {
           const img = document.createElement('img');
           img.id = 'menuEmblem';
-          img.src = 'assets/emblem.png';
+          img.src = 'assets/emblem.webp';
           img.alt = '';
           titleEl.parentNode.insertBefore(img, titleEl);
         }
@@ -11197,10 +11197,10 @@
         // ================= A. SECTEURS THÉMATIQUES =================
         const SECTORS = [
           { name: 'Ceinture de Débris', img: 'assets/menu-bg.jpg', accent: '#67e8f9', tint: 'rgba(4,10,24,.34)' },
-          { name: 'Forge Solaire', img: 'assets/bg-forge.png', accent: '#fbbf24', tint: 'rgba(28,12,0,.38)' },
-          { name: 'Abysse Alien', img: 'assets/bg-alien.png', accent: '#34d399', tint: 'rgba(0,22,16,.40)' },
-          { name: 'Abîme Glacé', img: 'assets/bg-frozen.png', accent: '#7dd3fc', tint: 'rgba(2,10,30,.38)' },
-          { name: 'Vide Quantique', img: 'assets/bg-quantum.png', accent: '#c084fc', tint: 'rgba(16,2,30,.42)' }
+          { name: 'Forge Solaire', img: 'assets/bg-forge.webp', accent: '#fbbf24', tint: 'rgba(28,12,0,.38)' },
+          { name: 'Abysse Alien', img: 'assets/bg-alien.webp', accent: '#34d399', tint: 'rgba(0,22,16,.40)' },
+          { name: 'Abîme Glacé', img: 'assets/bg-frozen.webp', accent: '#7dd3fc', tint: 'rgba(2,10,30,.38)' },
+          { name: 'Vide Quantique', img: 'assets/bg-quantum.webp', accent: '#c084fc', tint: 'rgba(16,2,30,.42)' }
         ];
         const ROMANS = ['I', 'II', 'III', 'IV', 'V'];
         let sectorIdx = 0;
@@ -12141,10 +12141,10 @@
 
         // ================= C. VITRINE VAISSEAUX (schémas Hadid) =================
         const SHIP_META = [
-          { img: 'assets/ship-pulse.png', role: 'ÉQUILIBRÉ', tag: 'La courbe maîtresse — harmonie parfaite des flux.', accent: '#38bdf8' },
-          { img: 'assets/ship-vector.png', role: 'INTERCEPTEUR', tag: 'Une lame jetée dans le vide.', accent: '#e879f9' },
-          { img: 'assets/ship-titan.png', role: 'FORTERESSE', tag: 'La montagne qui avance.', accent: '#34d399' },
-          { img: 'assets/ship-mirage.png', role: 'FANTÔME', tag: 'Jamais là où on le touche.', accent: '#a78bfa' }
+          { img: 'assets/ship-pulse.webp', role: 'ÉQUILIBRÉ', tag: 'La courbe maîtresse — harmonie parfaite des flux.', accent: '#38bdf8' },
+          { img: 'assets/ship-vector.webp', role: 'INTERCEPTEUR', tag: 'Une lame jetée dans le vide.', accent: '#e879f9' },
+          { img: 'assets/ship-titan.webp', role: 'FORTERESSE', tag: 'La montagne qui avance.', accent: '#34d399' },
+          { img: 'assets/ship-mirage.webp', role: 'FANTÔME', tag: 'Jamais là où on le touche.', accent: '#a78bfa' }
         ];
         const SHIP_UNLOCK11 = [0, 15000, 60000, 120000]; // copie locale (l'originale est enfermée dans le module vaisseau)
 
@@ -12273,9 +12273,9 @@
         let acte2 = false, acte2Done = false, acte2Deaths = 0, architecteDown = false;
         let sec2 = 4; // 5/6/7 en Acte II
         const SECTORS2 = [
-          { name: 'Cimetière des Titans', img: 'assets/bg-graveyard.png', accent: '#5eead4', tint: 'rgba(4,18,16,.40)', music: 'graveyard' },
-          { name: 'Ruche Écarlate', img: 'assets/bg-hive.png', accent: '#fb7185', tint: 'rgba(28,4,8,.42)', music: 'hive' },
-          { name: 'Cœur de la Singularité', img: 'assets/bg-singularity.png', accent: '#e2e8f0', tint: 'rgba(6,6,10,.38)', music: 'singularity' }
+          { name: 'Cimetière des Titans', img: 'assets/bg-graveyard.webp', accent: '#5eead4', tint: 'rgba(4,18,16,.40)', music: 'graveyard' },
+          { name: 'Ruche Écarlate', img: 'assets/bg-hive.webp', accent: '#fb7185', tint: 'rgba(28,4,8,.42)', music: 'hive' },
+          { name: 'Cœur de la Singularité', img: 'assets/bg-singularity.webp', accent: '#e2e8f0', tint: 'rgba(6,6,10,.38)', music: 'singularity' }
         ];
         const ROMANS2 = ['VI', 'VII', 'VIII'];
         const bgImgs2 = [];
@@ -13465,23 +13465,23 @@
         let cosmo13T = 0;
 
         const SECTORS3 = [
-          { name: 'Mer de Verre', img: 'assets/bg-glass.png', accent: '#7dd3fc', tint: 'rgba(4,14,22,.42)', music: 'glass',
+          { name: 'Mer de Verre', img: 'assets/bg-glass.webp', accent: '#7dd3fc', tint: 'rgba(4,14,22,.42)', music: 'glass',
             codex: "IX — Sous le verre, quelque chose résonne. Les machines ne dorment pas : elles écoutent." },
-          { name: 'Cathédrale Fractale', img: 'assets/bg-cathedral.png', accent: '#fbbf24', tint: 'rgba(20,12,2,.40)', music: 'cathedral',
+          { name: 'Cathédrale Fractale', img: 'assets/bg-cathedral.webp', accent: '#fbbf24', tint: 'rgba(20,12,2,.40)', music: 'cathedral',
             codex: "X — Chaque arche est une note. Chaque vitrail, une mémoire. Le Chœur t'a entendu arriver." },
-          { name: 'Jardin des Échos', img: 'assets/bg-echoes.png', accent: '#c4b5fd', tint: 'rgba(10,8,20,.42)', music: 'echoes',
+          { name: 'Jardin des Échos', img: 'assets/bg-echoes.webp', accent: '#c4b5fd', tint: 'rgba(10,8,20,.42)', music: 'echoes',
             codex: "XI — Ici, tes propres tirs te reviennent en chanson. Le Signal apprend ta voix." },
-          { name: 'Labyrinthe de Nacre', img: 'assets/bg-nacre.png', accent: '#f9a8d4', tint: 'rgba(16,6,14,.42)', music: 'nacre',
+          { name: 'Labyrinthe de Nacre', img: 'assets/bg-nacre.webp', accent: '#f9a8d4', tint: 'rgba(16,6,14,.42)', music: 'nacre',
             codex: "XII — Tu n'es plus dans l'espace. Tu es dans ce qu'il rêve." },
-          { name: 'Mer de Méthane', img: 'assets/bg-methane.png', accent: '#2dd4bf', tint: 'rgba(2,14,16,.44)', music: 'methane',
+          { name: 'Mer de Méthane', img: 'assets/bg-methane.webp', accent: '#2dd4bf', tint: 'rgba(2,14,16,.44)', music: 'methane',
             codex: "XIII — Le rêve a des profondeurs. Ce qui y nage porte ton visage." },
-          { name: "L'Œil du Rêve", img: 'assets/bg-dream.png', accent: '#a5b4fc', tint: 'rgba(8,6,24,.42)', music: 'dream',
+          { name: "L'Œil du Rêve", img: 'assets/bg-dream.webp', accent: '#a5b4fc', tint: 'rgba(8,6,24,.42)', music: 'dream',
             codex: "XIV — Ne te fie plus aux couleurs. Le rêve les mélange pour te désorienter." },
-          { name: 'Nurserie de Soleils', img: 'assets/bg-suns.png', accent: '#fdba74', tint: 'rgba(20,10,2,.40)', music: 'suns',
+          { name: 'Nurserie de Soleils', img: 'assets/bg-suns.webp', accent: '#fdba74', tint: 'rgba(20,10,2,.40)', music: 'suns',
             codex: "XV — Chaque soleil naissant est une note tenue depuis des milliards d'années." },
-          { name: "L'Horizon des Événements", img: 'assets/bg-horizon.png', accent: '#94a3b8', tint: 'rgba(4,4,8,.46)', music: 'horizon',
+          { name: "L'Horizon des Événements", img: 'assets/bg-horizon.webp', accent: '#94a3b8', tint: 'rgba(4,4,8,.46)', music: 'horizon',
             codex: "XVI — Au bord du gouffre, la lumière elle-même ralentit pour écouter." },
-          { name: 'Cœur du Premier Signal', img: 'assets/bg-signal.png', accent: '#fef3c7', tint: 'rgba(14,10,2,.36)', music: 'signal',
+          { name: 'Cœur du Premier Signal', img: 'assets/bg-signal.webp', accent: '#fef3c7', tint: 'rgba(14,10,2,.36)', music: 'signal',
             codex: "XVII — Tu n'es pas venu détruire. Tu es venu t'accorder." }
         ];
         const ROMANS3 = ['IX', 'X', 'XI', 'XII', 'XIII', 'XIV', 'XV', 'XVI', 'XVII'];
@@ -15662,5 +15662,10 @@
       requestAnimationFrame(frame);
     })();
   </script>
+<script>
+  if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+    window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+  }
+</script>
 </body>
 </html>

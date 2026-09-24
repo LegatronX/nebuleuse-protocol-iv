@@ -650,7 +650,7 @@ async function main() {
     const GV = (expr) => pv.evaluate(expr);
     await T('TC-V10-001', 'V10', 'P1', 'Assets v5.10 servis (4 décors + 4 SFX)', async () => {
       const r = await GV(async () => {
-        const urls = ['assets/bg-forge.png', 'assets/bg-alien.png', 'assets/bg-frozen.png', 'assets/bg-quantum.png', 'assets/sfx-coin.mp3', 'assets/sfx-coinburst.mp3', 'assets/sfx-portal.mp3', 'assets/sfx-overdrive.mp3'];
+        const urls = ['assets/bg-forge.webp', 'assets/bg-alien.webp', 'assets/bg-frozen.webp', 'assets/bg-quantum.webp', 'assets/sfx-coin.mp3', 'assets/sfx-coinburst.mp3', 'assets/sfx-portal.mp3', 'assets/sfx-overdrive.mp3'];
         const res = await Promise.all(urls.map(u => fetch(u, { method: 'HEAD' }).then(x => x.ok).catch(() => false)));
         return res.filter(Boolean).length;
       });
@@ -739,7 +739,7 @@ async function main() {
     const GW = (expr) => pw.evaluate(expr);
     await T('TC-V11-001', 'V11', 'P1', 'Schémas vaisseaux servis (4 PNG transparents)', async () => {
       const r = await GW(async () => {
-        const urls = ['assets/ship-pulse.png', 'assets/ship-vector.png', 'assets/ship-titan.png', 'assets/ship-mirage.png'];
+        const urls = ['assets/ship-pulse.webp', 'assets/ship-vector.webp', 'assets/ship-titan.webp', 'assets/ship-mirage.webp'];
         const res = await Promise.all(urls.map(u => fetch(u, { method: 'HEAD' }).then(x => x.ok).catch(() => false)));
         return res.filter(Boolean).length;
       });
@@ -814,7 +814,7 @@ async function main() {
     const GA = (expr) => pa.evaluate(expr);
     await T('TC-V12-001', 'V12', 'P1', '10 assets Acte II servis (3 décors, 3 musiques, 4 SFX)', async () => {
       const r = await GA(async () => {
-        const urls = ['assets/bg-graveyard.png', 'assets/bg-hive.png', 'assets/bg-singularity.png', 'assets/music-graveyard.mp3', 'assets/music-hive.mp3', 'assets/music-singularity.mp3', 'assets/sfx-tesla.mp3', 'assets/sfx-novacharge.mp3', 'assets/sfx-novablast.mp3', 'assets/sfx-hatch.mp3'];
+        const urls = ['assets/bg-graveyard.webp', 'assets/bg-hive.webp', 'assets/bg-singularity.webp', 'assets/music-graveyard.mp3', 'assets/music-hive.mp3', 'assets/music-singularity.mp3', 'assets/sfx-tesla.mp3', 'assets/sfx-novacharge.mp3', 'assets/sfx-novablast.mp3', 'assets/sfx-hatch.mp3'];
         const res = await Promise.all(urls.map(u => fetch(u, { method: 'HEAD' }).then(x => x.ok).catch(() => false)));
         return res.filter(Boolean).length;
       });
@@ -942,7 +942,7 @@ async function main() {
     await T('TC-V13-001', 'V13', 'P1', '32 assets Actes III-V servis (9 décors, 9 musiques, 14 SFX)', async () => {
       const r = await GB(async () => {
         const urls = [
-          'assets/bg-glass.png', 'assets/bg-cathedral.png', 'assets/bg-echoes.png', 'assets/bg-nacre.png', 'assets/bg-methane.png', 'assets/bg-dream.png', 'assets/bg-suns.png', 'assets/bg-horizon.png', 'assets/bg-signal.png',
+          'assets/bg-glass.webp', 'assets/bg-cathedral.webp', 'assets/bg-echoes.webp', 'assets/bg-nacre.webp', 'assets/bg-methane.webp', 'assets/bg-dream.webp', 'assets/bg-suns.webp', 'assets/bg-horizon.webp', 'assets/bg-signal.webp',
           'assets/music-glass.mp3', 'assets/music-cathedral.mp3', 'assets/music-echoes.mp3', 'assets/music-nacre.mp3', 'assets/music-methane.mp3', 'assets/music-dream.mp3', 'assets/music-suns.mp3', 'assets/music-horizon.mp3', 'assets/music-signal.mp3',
           'assets/sfx-climax.mp3', 'assets/sfx-interlude.mp3', 'assets/sfx-riser.mp3', 'assets/sfx-glass-shatter.mp3', 'assets/sfx-aria.mp3', 'assets/sfx-harpoon.mp3', 'assets/sfx-hypnosis.mp3', 'assets/sfx-mirror.mp3', 'assets/sfx-singularity.mp3', 'assets/sfx-phase.mp3', 'assets/sfx-chord.mp3', 'assets/sfx-heartbeat.mp3', 'assets/sfx-unison.mp3', 'assets/sfx-silence-pop.mp3'];
         const res = await Promise.all(urls.map(u => fetch(u, { method: 'HEAD' }).then(x => x.ok).catch(() => false)));

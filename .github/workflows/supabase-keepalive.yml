@@ -1,0 +1,25 @@
+# Empêche la mise en pause automatique du projet Supabase gratuit (après 7 jours sans activité),
+# qui rend le classement mondial indisponible pour tous les joueurs.
+# L'URL et la clé publique "anon" sont lues dans index.html (aucune copie dans ce fichier).
+name: Supabase keep-alive
+
+on:
+  schedule:
+    - cron: '17 6 * * 1,4'   # lundi et jeudi, 06:17 UTC
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Lecture du classement
+        run: |
+          SB_URL=$(grep -o "const SB_URL = '[^']*'" index.html | head -1 | cut -d"'" -f2)
+          SB_KEY=$(grep -o "const SB_KEY = '[^']*'" index.html | head -1 | cut -d"'" -f2)
+          echo "::add-mask::$SB_KEY"
+          code=$(curl -s -o /dev/null -w '%{http_code}' \
+            -H "apikey: $SB_KEY" -H "Authorization: Bearer $SB_KEY" \
+            "$SB_URL/rest/v1/nebuleuse_scores?select=id&limit=1")
+          echo "HTTP $code"
+          test "$code" = "200"

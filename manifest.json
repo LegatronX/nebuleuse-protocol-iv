@@ -1,15 +1,25 @@
 {
   "name": "Nébuleuse Protocol IV",
   "short_name": "Nébuleuse IV",
-  "description": "Shoot 'em up vertical avec progression permanente, mini-boss, élites et boss final.",
-  "start_url": "./nebuleuse-v4.7.html",
+  "description": "Shoot 'em up vertical — Le Premier Signal : 51 vagues, 5 actes, 12 boss, classement mondial.",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#020409",
   "theme_color": "#020409",
   "icons": [
-    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
   ]
 }
