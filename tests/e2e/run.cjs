@@ -4,7 +4,7 @@
 const { spawn } = require('child_process');
 const fs = require('fs');
 const path = require('path');
-const { chromium } = require('/home/kimi/.npm-global/lib/node_modules/playwright');
+const { chromium } = (() => { try { return require('playwright'); } catch (e) { return require('/home/kimi/.npm-global/lib/node_modules/playwright'); } })();
 
 const APP_DIR = process.argv[2] || '/mnt/agents/output/app';
 const PORT = 8124;
@@ -38,6 +38,15 @@ async function main() {
   const server = spawn('python3', ['-m', 'http.server', String(PORT)], { cwd: APP_DIR, stdio: 'ignore' });
   await new Promise(r => setTimeout(r, 1200));
   const browser = await chromium.launch({ args: ['--use-gl=swiftshader', '--autoplay-policy=no-user-gesture-required'] });
+  // v5.15 : cette suite ne teste pas les bifurcations de routes (voir routes15.cjs) — un « pilote »
+  // choisit la première destination proposée, comme un joueur, pour que les parcours historiques continuent.
+  const AUTO_ROUTE = () => setInterval(() => {
+    const g = window.__NP4;
+    if (g && g.state === 'route' && g.routes && g.routes.offer()) g.routes.choose(g.routes.offer()[0]);
+  }, 150);
+  const newContext0 = browser.newContext.bind(browser);
+  browser.newContext = async (o) => { const c = await newContext0(o); await c.addInitScript(AUTO_ROUTE); return c; };
+  browser.newPage = async (o) => (await browser.newContext(o)).newPage();
   const errors = [];
   let errMark = 0;
   const newErrors = () => { const e = errors.slice(errMark); errMark = errors.length; return e; };
@@ -84,14 +93,16 @@ async function main() {
   await T('TC-BOOT-002', 'BOOT', 'P1', 'Habillage menu (emblème + fond)', async () => {
     const r = await G(() => ({
       img: !!document.getElementById('menuEmblem'),
-      bg: getComputedStyle(document.getElementById('menu')).backgroundImage.includes('menu-bg')
+      // v5.18 : le poste de pilotage habille le menu d'un décor de secteur (bg-horizon) au lieu de menu-bg
+      bg: /assets\/(menu-bg|bg-[a-z]+)\./.test(getComputedStyle(document.getElementById('menu')).backgroundImage)
     }));
     assert(r.img && r.bg, JSON.stringify(r));
   });
   await T('TC-BOOT-004', 'BOOT', 'P1', 'Boutons du menu', async () => {
     const need = ['Campagne', 'Survie', 'Missions', 'Laboratoire', 'Vaisseaux', 'Réglages', 'Classement'];
     const labels = await G(() => [...document.querySelectorAll('#menu button')].map(b => b.textContent));
-    const missing = need.filter(n => !labels.some(l => l.includes(n)));
+    // v5.18 : « Lancer la campagne » — comparaison insensible à la casse
+    const missing = need.filter(n => !labels.some(l => l.toLowerCase().includes(n.toLowerCase())));
     assert(!missing.length, 'manquants: ' + missing.join(','));
   });
   // Coffre quotidien (peut apparaître au démarrage)
@@ -513,7 +524,8 @@ async function main() {
   }
   // TC-BOOT-005 / TC-AUDIO-005 : repli sans assets
   {
-    const ctx = await browser.newContext({ viewport: { width: 430, height: 932 } });
+    // serviceWorkers: 'block' — sinon le SW (v5.13.2) pré-charge les assets hors de portée de ctx.route
+    const ctx = await browser.newContext({ viewport: { width: 430, height: 932 }, serviceWorkers: 'block' });
     await ctx.route('**/assets/**', r => r.abort());
     const p4 = await ctx.newPage();
     p4.on('pageerror', e => errors.push('PAGEERROR: ' + e.message));
@@ -539,26 +551,32 @@ async function main() {
   const H = { 'apikey': KEY, 'Authorization': 'Bearer ' + KEY, 'Content-Type': 'application/json' };
   // Canari : RLS renvoie 204 même sans droit (0 ligne affectée) — il faut vérifier l'absence d'effet réel
   let canaryId = null;
-  {
+  let sbReachable = true;
+  try {
     const r = await fetch(SB, { method: 'POST', headers: Object.assign({ 'Prefer': 'return=representation' }, H), body: JSON.stringify({ alias: 'QA-CANARY', score: 777, wave: 1, ship: '', mode: 'campagne' }) });
     const body = await r.json();
     canaryId = body && body[0] && body[0].id;
+  } catch (e) {
+    // harnais hors ligne (bac à sable sans DNS) : les tests d'API directe deviennent manuels au lieu d'être fatals
+    sbReachable = false;
+    console.log('SKIP TC-SEC-001..003 — Supabase injoignable (' + (e.cause && e.cause.code || e.message) + ')');
+    ['TC-SEC-001', 'TC-SEC-002', 'TC-SEC-003'].forEach(id => manual(id, 'SEC', 'P0', 'API directe (réseau requis)', 'Supabase injoignable'));
   }
-  await T('TC-SEC-001', 'SEC', 'P0', 'UPDATE sans effet (RLS)', async () => {
+  if (sbReachable) await T('TC-SEC-001', 'SEC', 'P0', 'UPDATE sans effet (RLS)', async () => {
     assert(canaryId, 'canari absent');
     await fetch(SB + '?id=eq.' + canaryId, { method: 'PATCH', headers: H, body: '{"score":1}' });
     const r = await fetch(SB + '?id=eq.' + canaryId + '&select=score', { headers: H });
     const rows2 = await r.json();
     assert(rows2[0] && rows2[0].score === 777, 'score modifié: ' + JSON.stringify(rows2));
   });
-  await T('TC-SEC-002', 'SEC', 'P0', 'DELETE sans effet (RLS)', async () => {
+  if (sbReachable) await T('TC-SEC-002', 'SEC', 'P0', 'DELETE sans effet (RLS)', async () => {
     assert(canaryId, 'canari absent');
     await fetch(SB + '?id=eq.' + canaryId, { method: 'DELETE', headers: H });
     const r = await fetch(SB + '?id=eq.' + canaryId + '&select=id', { headers: H });
     const rows2 = await r.json();
     assert(rows2.length === 1, 'ligne supprimée !');
   });
-  await T('TC-SEC-003', 'SEC', 'P1', 'Contraintes CHECK (bornes)', async () => {
+  if (sbReachable) await T('TC-SEC-003', 'SEC', 'P1', 'Contraintes CHECK (bornes)', async () => {
     const r1 = await fetch(SB, { method: 'POST', headers: H, body: JSON.stringify({ alias: 'X'.repeat(30), score: 10, wave: 1, ship: '', mode: 'campagne' }) });
     const r2 = await fetch(SB, { method: 'POST', headers: H, body: JSON.stringify({ alias: 'QA', score: -5, wave: 1, ship: '', mode: 'campagne' }) });
     assert(r1.status === 400 && r2.status === 400, `alias=${r1.status} score=${r2.status}`);

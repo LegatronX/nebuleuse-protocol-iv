@@ -3,8 +3,8 @@
 // assets (décors, musiques, SFX) chargés en arrière-plan puis servis depuis le cache.
 // Changer VERSION à chaque release pour purger l'ancien cache.
 // Liste ASSETS à régénérer si des fichiers sont ajoutés dans assets/.
-const VERSION = 'np4-v5.14';
-const CORE = ['./', 'index.html', 'manifest.json', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png', 'icons/favicon-32.png'];
+const VERSION = 'np4-v5.19';
+const CORE = ['experience/score.js', 'experience/bridge.css', './', 'index.html', 'manifest.json', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png', 'icons/favicon-32.png'];
 const ASSETS = [
 "assets/bg-alien.webp",
 "assets/bg-cathedral.webp",

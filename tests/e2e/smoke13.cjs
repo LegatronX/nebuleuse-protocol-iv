@@ -1,6 +1,6 @@
 // Smoke V5.13 — Actes III·IV·V
 const { spawn } = require('child_process');
-const { chromium } = require('/home/kimi/.npm-global/lib/node_modules/playwright');
+const { chromium } = (() => { try { return require('playwright'); } catch (e) { return require('/home/kimi/.npm-global/lib/node_modules/playwright'); } })();
 const APP_DIR = process.argv[2] || '/mnt/agents/output/app';
 const PORT = 8137;
 const BASE = `http://localhost:${PORT}/index.html`;

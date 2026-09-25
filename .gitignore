@@ -1,3 +1,6 @@
 .DS_Store
 dist/
 node_modules/
+tests/e2e/artifacts/v515-*.png
+tests/e2e/artifacts/v516-*.png
+tests/e2e/artifacts/v517-*.png
