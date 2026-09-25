@@ -2,6 +2,33 @@
 
 Petit shoot 'em up vertical en HTML/CSS/JS pur (aucune dépendance), jouable directement dans un navigateur.
 
+## v5.18 — Poste de pilotage (aperçu)
+
+Cette branche part de la **v5.17** (`5ed5fbf`, branche `claude/nebuleuse-branching-routes-vpzs4u`). Les routes, phénomènes, collections et le mode photo sont conservés.
+
+- **Accueil repensé** : lancement prioritaire, aperçu du vaisseau équipé, accès aux cinq actes, modes accompagnés d'une description, journal de bord repliable. Mise en page adaptée au mobile et au bureau, sans police externe.
+- **Partition évolutive originale** : cinq palettes harmoniques, quatre sections, phrases mélodiques avec silences, variation de l'orchestration, tension du combat et tempo des boss. Changements à la mesure, voix limitées et nettoyage des nœuds. Aucune modification du hasard du gameplay.
+- **Choix audio** : bande-son évolutive ou studio, tirs feutrés propres à chaque vaisseau ou tirs arcade. Réglages sauvegardés et aucune ressource audio supplémentaire à télécharger pour la nouvelle partition.
+- **Mixage corrigé** : une seule bande musicale audible, volume musique appliqué aux actes II–V et à leurs ambiances, reprise du chargement lors d'un accès direct à un acte, coupure du son respectée même pendant un climax et dans un onglet masqué.
+- **Confort** : manuel de vol accessible avant la partie et depuis la pause, résumé de la situation en pause, bascule du tir automatique, charge NOVA et stock de bombes lisibles, Échap pour mettre en pause. Les touches utilisées dans les réglages ne démarrent plus une partie par inadvertance.
+
+### Essayer et vérifier
+
+Le jeu livré reste statique, sans dépendance JavaScript à installer pour jouer. Servir le dossier avec `python3 -m http.server 8178 --bind 127.0.0.1`, puis ouvrir `http://127.0.0.1:8178`.
+
+Pour le développement (Node 20+, Python 3) :
+
+```sh
+npm ci
+npm run build
+npm test
+node tools/render-score.cjs /tmp/nebuleuse-extrait.wav
+```
+
+`experience/score.js` contient le compositeur indépendant ; `experience/bridge.css` l'habillage ; `v518.js` l'intégration dans le jeu. Après modification de `v518.js`, `npm run build` synchronise son bloc dans `index.html`. Les nouveaux fichiers sont préchargés par le service worker v5.18.
+
+Les tests couvrent le son, les transitions et les commandes avec un DOM et des interfaces audio simulés. Le rendu audio hors navigateur vérifie également des échantillons réels. **Le rendu graphique, WebGL, les gestes tactiles et le mixage final sur appareils restent à vérifier avant publication.** Voir `verifier/runs/2026-09-25-v518-preview.md`.
+
 **▶ Jouer : https://legatronx.github.io/nebuleuse-protocol-iv/** — installable sur l'écran d'accueil (iPhone : Partager → « Sur l'écran d'accueil »), jouable hors ligne après la première visite.
 
 ## Fichiers

@@ -1,0 +1,120 @@
+/* v5.18 — flight deck. Scoped to avoid changing route and photo screens. */
+body #menu {
+  background: linear-gradient(90deg, rgba(3,9,17,.96) 8%, rgba(3,9,17,.74) 65%, rgba(3,9,17,.4)),
+    url('../assets/bg-horizon.webp') center/cover, #030911;
+  padding: max(20px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left));
+}
+body #menu .bridge {
+  width: min(1140px, 100%); max-height: 94dvh; padding: 0;
+  border: 0; border-radius: 0; background: none; box-shadow: none;
+  overflow: auto; text-align: left; scrollbar-width: thin;
+  color: #e9f2f4; --bridge-muted: #a8bac6;
+}
+.bridge *, .flight-help * { box-sizing: border-box; }
+.bridge-topline { display:flex; align-items:center; justify-content:space-between; gap:16px;
+  padding: 0 0 24px; border-bottom:1px solid #d9f3ff24; }
+.bridge-brand { font-size:11px; letter-spacing:.23em; font-weight:800; color:#c7dce5; }
+.bridge-version { font:11px ui-monospace, monospace; color:#95b7c0; white-space:nowrap; }
+.bridge-main { display:grid; grid-template-columns:minmax(0,1.22fr) minmax(240px,.78fr); gap:52px; padding:40px 0 28px; }
+.bridge-eyebrow { font:10px ui-monospace, monospace; letter-spacing:.21em; text-transform:uppercase; color:#80d4cf; margin:0 0 16px; }
+body #menu .bridge .title { font-size:clamp(42px,6.6vw,82px); line-height:.99; letter-spacing:-.045em;
+  font-weight:850; color:#f0f4ed; background:none; filter:none; text-shadow:none; animation:none; margin:0; }
+.bridge-title-sub { display:block; font-size:.29em; font-weight:500; letter-spacing:.28em; color:#aac8cf; margin-top:15px; }
+.bridge-intro { max-width:440px; color:var(--bridge-muted); font-size:15px; line-height:1.7; margin:24px 0; }
+.bridge-launch { display:grid; gap:10px; }
+body #menu .bridge #modeCampagne { display:flex; align-items:center; justify-content:space-between;
+  width:100%; padding:19px 22px; min-height:66px; border:1px solid #bfeee4; border-radius:7px;
+  background:#c8eee2; color:#102521; font-size:16px; font-weight:800; box-shadow:0 6px 30px #0003; letter-spacing:.01em; }
+body #menu .bridge #modeCampagne:hover { background:#e0fff3; transform:translateY(-2px); }
+.bridge-launch small { display:block; font:10px ui-monospace,monospace; letter-spacing:.08em; opacity:.7; margin-top:5px; }
+body #menu .bridge #routeResumeBtn { width:100%; margin:0; background:#143e3b; border:1px solid #83b7a9; border-radius:7px; }
+.bridge-arrow { font-size:27px; font-weight:400; }
+.bridge-loadout { position:relative; min-width:0; display:flex; flex-direction:column; justify-content:center;
+  background:radial-gradient(ellipse at 50% 42%,#2b7a8626,transparent 65%); }
+.bridge-radar { position:absolute; width:94%; aspect-ratio:1; border:1px solid #bde1e51a; border-radius:50%;
+  top:50%; left:50%; transform:translate(-50%,-58%); pointer-events:none; }
+.bridge-radar::before { content:''; position:absolute; inset:15%; border:1px dashed #bde1e522; border-radius:50%; }
+.bridge-ship { width:100%; height:220px; object-fit:contain; position:relative; filter:drop-shadow(0 16px 40px #71c4d328); }
+.bridge-ship-label { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:16px; position:relative; }
+.bridge-ship-label strong { font-size:25px; font-weight:650; letter-spacing:.13em; }
+.bridge-ship-label span { font:10px ui-monospace,monospace; color:var(--bridge-muted); text-transform:uppercase; }
+.bridge-ship-desc { color:var(--bridge-muted); font-size:12px; line-height:1.6; margin:10px 0 0; min-height:38px; }
+.bridge-stats { display:flex; flex-wrap:wrap; gap:22px; padding:17px 0; border-top:1px solid #d9f3ff24; }
+body #menu .bridge .high-line { margin:0; font:10px ui-monospace,monospace; color:#94aebc; text-transform:uppercase; }
+body #menu .bridge .high-line strong { display:block; font:600 20px ui-monospace,monospace; color:#f2eee1; margin-top:6px; }
+.bridge-section-label { font:10px ui-monospace,monospace; text-transform:uppercase; letter-spacing:.15em; color:#91a8b6; margin:18px 0 10px; }
+.bridge-modes { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:9px; }
+body #menu .bridge .bridge-modes .btn { width:100%; border-radius:7px; padding:13px 15px;
+  border:1px solid #adc7d42b; background:#152330a8; box-shadow:none; text-align:left; font-size:12px; margin:0; min-height:64px; }
+.bridge-modes .btn::after { content:attr(data-hint); display:block; color:#a3b7c3; font-size:10px; font-weight:400; margin-top:7px; line-height:1.4; }
+body #menu .bridge .btn:hover { border-color:#bde6df; }
+.bridge-nav { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:14px; }
+body #menu .bridge .bridge-nav .btn, body #menu .bridge .bridge-tools .btn {
+  border:1px solid #9bb8c328; border-radius:6px; background:#06121db3; box-shadow:none;
+  font-size:12px; padding:11px 14px; min-height:44px; margin:0; width:auto; color:#d5e2e8; }
+.bridge-tools { display:flex; flex-wrap:wrap; gap:8px; }
+.bridge-collection { margin-top:18px; border-top:1px solid #d9f3ff24; padding:4px 0 8px; }
+.bridge-collection summary { cursor:pointer; color:#b5c9d3; font-size:12px; padding:14px 2px; min-height:44px; }
+.bridge-footer { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px; padding-top:15px; border-top:1px solid #d9f3ff24;
+  font:10px ui-monospace,monospace; color:#90a8b5; }
+.bridge-music { color:#a6dace; display:flex; align-items:center; gap:8px; }
+.bridge-music::before { content:''; width:5px; height:5px; border-radius:50%; background:#9ad6c6; }
+body #menu .bridge #acteSelect { border:0!important; margin:16px 0 0!important; padding:0!important; }
+body #menu .bridge #acteSelect > div:first-child { text-align:left; color:#91a8b6!important; }
+body #menu .bridge #acteSelect > div:last-child { justify-content:flex-start!important; gap:7px!important; }
+body #menu .bridge #acteSelect .btn { border-radius:5px; min-height:44px; background:#10233280; flex:1; }
+body #menu .bridge .bridge-legacy:empty { display:none; }
+body #menu .bridge .bridge-legacy { margin:0; }
+.bridge button:focus-visible, .bridge summary:focus-visible, .flight-help button:focus-visible {
+  outline:2px solid #e5f9b5; outline-offset:4px; }
+/* New controls have explicit labels and use the existing settings screen. */
+.experience-select { max-width:180px; }
+.flight-help { position:fixed; inset:0; z-index:100; background:#020911e8; display:grid; place-items:center; padding:20px;
+  backdrop-filter:blur(14px); touch-action:pan-y; }
+.flight-help[hidden] { display:none; }
+.flight-help article { width:min(560px,100%); max-height:90dvh; overflow:auto; background:#0b1723;
+  border:1px solid #8bc8d333; border-radius:16px; padding:28px; box-shadow:0 30px 100px #0009; }
+.flight-help h2 { font-size:27px; margin:8px 0 12px; }
+.flight-help p { color:#b6c9d3; font-size:14px; line-height:1.65; }
+.flight-help dl { margin:22px 0; }
+.flight-help dl div { display:flex; justify-content:space-between; gap:20px; padding:11px 0; border-bottom:1px solid #d9f3ff18; font-size:13px; }
+.flight-help dd { margin:0; color:#b0d9d5; text-align:right; }
+.flight-help kbd, .flight-shortcuts kbd { font:11px ui-monospace,monospace; background:#c1e5e112; padding:3px 6px; border:1px solid #c1e5e130; border-radius:4px; }
+.flight-shortcuts { color:#aac3d0; font-size:12px; line-height:2.1; margin:18px 0 8px; }
+.flight-readout { font:12px ui-monospace,monospace; color:#bfd8d9; padding:12px; background:#09121e; border:1px solid #9bc4d522; border-radius:8px; margin:15px 0; line-height:1.7; }
+#hud #specialBtn::after { content:attr(data-status); display:block; font:10px ui-monospace,monospace; margin-top:5px; }
+#hud #bombBtn::after { content:attr(data-status); display:block; font:10px ui-monospace,monospace; margin-top:5px; }
+#hud button[aria-disabled="true"] { filter:saturate(.45); }
+body #hud .panel { border-radius:10px; border-color:#c4e5e51f; background:#03101ac2; box-shadow:0 6px 24px #0003; }
+@media(min-width:800px) and (min-height:760px) { .bridge-main { padding-top:48px; } .bridge-ship { height:265px; } }
+@media(max-width:760px) {
+  body #menu { padding: max(16px,env(safe-area-inset-top)) 20px max(16px,env(safe-area-inset-bottom)); }
+  .bridge-topline { padding-bottom:16px; }
+  .bridge-main { grid-template-columns:minmax(0,1fr) minmax(120px,.55fr); gap:15px; padding:26px 0 18px; }
+  body #menu .bridge .title { font-size:clamp(34px,8vw,54px); }
+  .bridge-intro { font-size:12px; line-height:1.6; margin:16px 0; }
+  .bridge-ship { height:160px; }
+  .bridge-ship-label { flex-direction:column; align-items:flex-start; gap:5px; }
+  .bridge-ship-label strong { font-size:17px; }
+  .bridge-ship-desc { font-size:10px; }
+  .bridge-modes { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  body #menu .bridge #modeCampagne { padding:14px; font-size:13px; min-height:62px; }
+  .bridge-launch small { font-size:9px; letter-spacing:0; }
+  .bridge-nav { gap:6px; }
+  body #menu .bridge .bridge-nav .btn { flex:1; padding:10px 8px; font-size:11px; }
+  .bridge-brand { letter-spacing:.12em; font-size:9px; }
+  .bridge-version { font-size:9px; }
+}
+@media(max-width:400px) {
+  .bridge-main { grid-template-columns:1fr; }
+  .bridge-loadout { display:none; }
+  body #menu .bridge .title { font-size:43px; }
+  .bridge-intro { margin:12px 0; }
+}
+@media(max-height:650px) and (min-width:761px) {
+  .bridge-main { padding:20px 0 16px; }
+  body #menu .bridge .title { font-size:48px; }
+  .bridge-intro { margin:14px 0; }
+  .bridge-ship { height:140px; }
+}
+@media(prefers-reduced-motion:reduce) { body #menu .bridge .btn:hover { transform:none!important; } }

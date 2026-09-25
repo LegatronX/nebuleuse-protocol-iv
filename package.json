@@ -1,0 +1,14 @@
+{
+  "name": "nebuleuse-protocol-iv",
+  "private": true,
+  "version": "5.18.0-preview",
+  "scripts": {
+    "build": "python3 tools/build-experience.py",
+    "test": "node --test tests/unit/*.test.cjs",
+    "start": "python3 -m http.server 8178 --bind 127.0.0.1"
+  },
+  "devDependencies": {
+    "jsdom": "26.1.0",
+    "web-audio-engine": "^0.13.4"
+  }
+}

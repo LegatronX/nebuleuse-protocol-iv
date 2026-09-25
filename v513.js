@@ -101,7 +101,7 @@
             fetch(url)
               .then(r => { if (!r.ok) throw new Error('http'); return r.arrayBuffer(); })
               .then(ab => ctx.decodeAudioData(ab))
-              .then(b => { buf13[k] = b; })
+              .then(b => { buf13[k] = b; if (mus13Name === k && !mus13) playMusic13(k); })
               .catch(() => {})));
         }
         let panUsed13 = 0;
@@ -123,14 +123,16 @@
             panUsed13++;
           }
           src.connect(g);
-          node.connect(AudioSys.sfxBus || AudioSys.master);
+          node.connect(loop ? (AudioSys.actMusicBus || AudioSys.musicGain) : (AudioSys.sfxBus || AudioSys.master));
           src.start(ctx.currentTime);
           return { src, g };
         }
 
         let mus13 = null, mus13Name = null, mus13GainNode = null;
+        AudioSys.__act13Music = () => !!mus13;
         function playMusic13(name) {
-          if (!AudioSys.ctx || !buf13[name]) return;
+          if (!AudioSys.ctx) return;
+          if (!buf13[name]) { mus13Name = name; return; }
           stopMusic13();
           if (window.__NP4 && window.__NP4.v12 && window.__NP4.v12.stop12) window.__NP4.v12.stop12();
           AudioSys.stopMusic();
@@ -143,7 +145,7 @@
           g.gain.setValueAtTime(0.0001, ctx.currentTime);
           g.gain.exponentialRampToValueAtTime(0.72, ctx.currentTime + 1.8);
           src.connect(g);
-          g.connect(AudioSys.master);
+          g.connect(AudioSys.actMusicBus || AudioSys.musicGain);
           src.start(ctx.currentTime);
           mus13 = { src, g };
           mus13GainNode = g;
@@ -208,7 +210,7 @@
             return o;
           });
           flt.connect(g);
-          g.connect(AudioSys.master);
+          g.connect(AudioSys.actMusicBus || AudioSys.musicGain);
           lfo.start(ctx.currentTime);
           pad = { g, oscs, lfo };
         }
@@ -247,8 +249,8 @@
             g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 1.8);
             const pan = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
             o.connect(g);
-            if (pan) { pan.pan.value = rand(-0.7, 0.7); g.connect(pan); pan.connect(AudioSys.master); panUsed13++; }
-            else g.connect(AudioSys.master);
+            if (pan) { pan.pan.value = rand(-0.7, 0.7); g.connect(pan); pan.connect(AudioSys.actMusicBus || AudioSys.musicGain); panUsed13++; }
+            else g.connect(AudioSys.actMusicBus || AudioSys.musicGain);
             o.start(ctx.currentTime);
             o.stop(ctx.currentTime + 2);
           }

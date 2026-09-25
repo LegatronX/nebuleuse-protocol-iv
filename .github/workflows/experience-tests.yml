@@ -1,0 +1,29 @@
+name: Experience regression tests
+on:
+  push:
+    branches: [codex/v5.18-experience]
+  pull_request:
+    paths:
+      - index.html
+      - v518.js
+      - experience/**
+      - tests/unit/**
+      - tools/**
+      - package*.json
+      - sw.js
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm run build
+      - run: git diff --exit-code -- index.html
+      - run: npm test
+      - run: node tools/render-score.cjs /tmp/nebuleuse-extrait.wav
