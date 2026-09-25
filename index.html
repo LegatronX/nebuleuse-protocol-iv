@@ -18533,6 +18533,12 @@
         let zoom = 1, cx = 0.5, cy = 0.5;
         let lastBlob = null, lastUrl = null, lastName = '';
         let composeQueued = false;
+        // capacité « downloads » de la visionneuse d'artifacts (null hors visionneuse : sans effet)
+        // résolue paresseusement (au premier passage en mode photo) : window.claude peut arriver après le chargement
+        let dlP = null;
+        const dlNs = () => dlP || (dlP = (window.claude && typeof window.claude.use === 'function')
+          ? Promise.race([Promise.resolve(window.claude.use('downloads')).catch(() => null), new Promise((r) => setTimeout(() => r(null), 12000))])
+          : Promise.resolve(null));
 
         // ---------- B. interface ----------
         const style = document.createElement('style');
@@ -18789,6 +18795,7 @@
           activePointer = null;
           for (const k in keys) keys[k] = false;
           document.body.classList.add('photo-mode');
+          dlNs();
           grabReq = true; // prélevé à la prochaine frame, après le pipeline GPU
           AudioSys.ui();
           return true;
@@ -18905,6 +18912,22 @@
             lastBlob = new Blob([u8], { type: 'image/jpeg' });
             lastUrl = URL.createObjectURL(lastBlob);
           }
+          const txt = ov.querySelector('#photoResultTxt');
+          // page hébergée dans la visionneuse claude.ai : enregistrement via la capacité « downloads »
+          // (feuille de partage native dans l'app iOS) — ailleurs (PWA, navigateur) : Web Share, puis lien
+          const dl = await dlNs();
+          if (dl) {
+            try {
+              await dl.save({ filename: lastName, data: lastBlob });
+              txt.textContent = 'Image enregistrée.';
+              return;
+            } catch (err) {
+              const c = err && err.code;
+              if (c === 'declined') { txt.textContent = 'Enregistrement annulé.'; return; }
+              if (c === 'rate_limited') { txt.textContent = 'Une demande est déjà ouverte.'; return; }
+              // indisponible : on retombe sur le partage du navigateur
+            }
+          }
           const file = typeof File === 'function' ? new File([lastBlob], lastName, { type: 'image/jpeg' }) : null;
           try {
             if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
@@ -18920,7 +18943,7 @@
           document.body.appendChild(a);
           a.click();
           a.remove();
-          ov.querySelector('#photoResultTxt').textContent = 'Image enregistrée dans les téléchargements.';
+          txt.textContent = 'Image enregistrée dans les téléchargements.';
         }
 
         ov.querySelector('#photoBack').addEventListener('click', leave);
