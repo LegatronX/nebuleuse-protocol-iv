@@ -93,14 +93,16 @@ async function main() {
   await T('TC-BOOT-002', 'BOOT', 'P1', 'Habillage menu (emblème + fond)', async () => {
     const r = await G(() => ({
       img: !!document.getElementById('menuEmblem'),
-      bg: getComputedStyle(document.getElementById('menu')).backgroundImage.includes('menu-bg')
+      // v5.18 : le poste de pilotage habille le menu d'un décor de secteur (bg-horizon) au lieu de menu-bg
+      bg: /assets\/(menu-bg|bg-[a-z]+)\./.test(getComputedStyle(document.getElementById('menu')).backgroundImage)
     }));
     assert(r.img && r.bg, JSON.stringify(r));
   });
   await T('TC-BOOT-004', 'BOOT', 'P1', 'Boutons du menu', async () => {
     const need = ['Campagne', 'Survie', 'Missions', 'Laboratoire', 'Vaisseaux', 'Réglages', 'Classement'];
     const labels = await G(() => [...document.querySelectorAll('#menu button')].map(b => b.textContent));
-    const missing = need.filter(n => !labels.some(l => l.includes(n)));
+    // v5.18 : « Lancer la campagne » — comparaison insensible à la casse
+    const missing = need.filter(n => !labels.some(l => l.toLowerCase().includes(n.toLowerCase())));
     assert(!missing.length, 'manquants: ' + missing.join(','));
   });
   // Coffre quotidien (peut apparaître au démarrage)

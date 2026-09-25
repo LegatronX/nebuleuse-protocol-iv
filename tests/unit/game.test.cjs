@@ -11,7 +11,7 @@ test('whole game boots and all original controls retain their IDs and handlers',
  }
  d.getElementById('shipBtn').click();assert.ok(!d.getElementById('shipOverlay').classList.contains('hidden'));
  d.getElementById('closeShipBtn').click();d.getElementById('modeCampagne').click();h.advance(500);
- assert.equal(h.g.state,'playing');assert.equal(h.g.experience.style(),'evolving');assert.ok(h.g.experience.audio().scheduled>0);
+ assert.equal(h.g.state,'playing');assert.equal(h.g.experience.style(),'studio');assert.equal(h.g.experience.audio().active,false);
  assert.match(d.getElementById('specialBtn').getAttribute('aria-label'),/NOVA/);checkErrors(h);
  }finally{h.close();}
 });
@@ -48,7 +48,7 @@ test('studio music has one owner and later-act music obeys its volume slider',as
  }finally{h.close();}
 });
 test('cold-cache act selection retries music after decoding and mute survives a climax',async()=>{
- const h=boot({assets:true});try{h.w.document.getElementById('modeCampagne').click();h.g.v13.startActe(3);
+ const h=boot({assets:true,meta:{musicStyle:'evolving',musicPick:true}});try{h.w.document.getElementById('modeCampagne').click();h.g.v13.startActe(3);
  await h.flush();h.advance(100);assert.ok(h.g.audio.__act13Music());
  h.g.audio.setMuted(true);h.g.v13.climaxAt(200);h.advance(100);
  assert.equal(h.g.audio.muteGate18.gain.value,0);assert.equal(h.g.experience.audio().active,false);
@@ -56,14 +56,14 @@ test('cold-cache act selection retries music after decoding and mute survives a 
  }finally{h.close();}
 });
 test('missing audio assets and absent AudioContext leave gameplay working',async()=>{
- for(const audio of [true,false]){const h=boot({assets:false,audio});try{h.w.document.getElementById('modeCampagne').click();await h.flush();h.advance(1000);
+ for(const audio of [true,false]){const h=boot({assets:false,audio,meta:{musicStyle:'evolving',musicPick:true}});try{h.w.document.getElementById('modeCampagne').click();await h.flush();h.advance(1000);
  assert.equal(h.g.state,'playing');if(audio)assert.ok(h.g.experience.audio().scheduled>0);checkErrors(h);
  }finally{h.close();}}
 });
 test('new source module equals embedded artifact and PWA precaches every new dependency',()=>{
  const html=fs.readFileSync(path.join(root,'index.html'),'utf8');const mod=fs.readFileSync(path.join(root,'v518.js'),'utf8');
  assert.ok(html.includes('// BEGIN EXPERIENCE V5.18\n'+mod+'\n      // END EXPERIENCE V5.18'));
- const sw=fs.readFileSync(path.join(root,'sw.js'),'utf8');assert.ok(sw.includes("'np4-v5.18'"));
+ const sw=fs.readFileSync(path.join(root,'sw.js'),'utf8');assert.match(sw,/'np4-v5\.(1[89]|[2-9]\d)'/);
  for(const f of ['experience/score.js','experience/bridge.css']){assert.ok(html.includes(f));assert.ok(sw.includes(f));assert.ok(fs.statSync(path.join(root,f)).size>0);}
  const scripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)];scripts.forEach(s=>new vm.Script(s[1]));
 });
@@ -91,4 +91,43 @@ test('keyboard fire is not swallowed when an in-game action button has focus',()
  const action=h.w.document.getElementById('specialBtn');action.focus();h.key('KeyF',action);
  assert.equal(h.g.v11.fireHeld(),true);checkErrors(h);
  }finally{h.close();}
+});
+test('studio soundtrack is the default; previews saved as evolving return to studio; an explicit pick sticks',()=>{
+ for(const [meta,want] of [[{},'studio'],[{musicStyle:'evolving'},'studio'],[{musicStyle:'evolving',musicPick:true},'evolving'],[{musicStyle:'studio',musicPick:true},'studio']]){
+  const h=boot({meta});try{assert.equal(h.g.experience.style(),want,JSON.stringify(meta));
+  assert.equal(h.w.document.getElementById('scoreStyle18').value,want);checkErrors(h);}finally{h.close();}
+ }
+ const h=boot();try{const sel=h.w.document.getElementById('scoreStyle18');assert.equal(sel.options[0].value,'studio');
+  sel.value='evolving';sel.dispatchEvent(new h.w.Event('change',{bubbles:true}));
+  const m=JSON.parse(h.w.localStorage.getItem('nebula4_meta'));assert.equal(m.musicStyle,'evolving');assert.equal(m.musicPick,true);checkErrors(h);
+ }finally{h.close();}
+});
+test('studio default: recorded loops own the music bus in act I, act music in later acts',async()=>{
+ const h=boot({assets:true});try{h.w.document.getElementById('modeCampagne').click();await h.flush();h.advance(200);
+ assert.equal(h.g.audio.studioBus.gain.value,1);assert.equal(h.g.audio.actMusicBus.gain.value,0);assert.equal(h.g.experience.audio().active,false);
+ h.g.v13.startActe(3);await h.flush();h.advance(200);assert.equal(h.g.audio.actMusicBus.gain.value,1);assert.equal(h.g.audio.studioBus.gain.value,0);checkErrors(h);
+ }finally{h.close();}
+});
+test('v5.19 squadrons: wings queued on light enemies, escorts during a boss disband when it falls, Classique restores the old waves',()=>{
+ const h=boot();try{const d=h.w.document;assert.equal(h.g.density.level(),'intense');assert.ok(d.getElementById('stDensity19'));
+ d.getElementById('modeCampagne').click();h.advance(100);
+ let queued=0;for(let n=1;n<=8;n++){if(n%3===0)continue;h.g.density.startWave(n);queued+=h.g.density.queueWings();}
+ assert.ok(queued>=8,'ailiers en file : '+queued);
+ h.g.density.startWave(3);h.advance(3000);assert.ok(h.g.boss,'boss présent');h.g.player.invuln=999;
+ h.g.density.escortIn(0);h.advance(100);const esc=h.g.enemies.filter(e=>e.escort).length;assert.ok(esc>=3,'escorte '+esc);
+ assert.ok(h.g.enemies.filter(e=>e.escort&&e.wing).length>=2);
+ h.g.routes.kill(h.g.boss);h.advance(100);assert.equal(h.g.enemies.filter(e=>e.escort).length,0,'escorte dissoute');
+ h.g.density.set('classique');h.g.density.startWave(4);assert.equal(h.g.density.queueWings(),0);
+ assert.equal(JSON.parse(h.w.localStorage.getItem('nebula4_meta')).density,'classique');checkErrors(h);
+ }finally{h.close();}
+});
+test('v5.19 fairness: daily operation and tournament ignore the density preference',()=>{
+ const h=boot({meta:{density:'dechaine'}});try{assert.equal(h.g.density.level(),'dechaine');
+ h.g.density.setMode('operation');assert.equal(h.g.density.level(),'intense');h.g.density.setMode('tournoi');assert.equal(h.g.density.level(),'intense');checkErrors(h);
+ }finally{h.close();}
+});
+test('v5.19 module is embedded by the build tool, after v5.18',()=>{
+ const html=fs.readFileSync(path.join(root,'index.html'),'utf8');const mod=fs.readFileSync(path.join(root,'v519.js'),'utf8');
+ const i=html.indexOf('// BEGIN ESCADRILLES V5.19\n'+mod+'\n      // END ESCADRILLES V5.19');assert.ok(i>0);assert.ok(i>html.indexOf('// END EXPERIENCE V5.18'));
+ assert.doesNotMatch(mod.replace(/\/\/.*$/gm,''),/Math\.random\(\)\s*\*\s*1e|localStorage/);
 });

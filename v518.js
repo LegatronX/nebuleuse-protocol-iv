@@ -3,7 +3,10 @@
       (() => {
         'use strict';
         const G = window.__NP4;
-        if (!['evolving', 'studio'].includes(meta.musicStyle)) meta.musicStyle = 'evolving';
+        // v5.19 : la bande-son studio (pistes enregistrées) est la référence. La partition
+        // évolutive synthétisée reste proposée ; seul un choix explicite du joueur la garde
+        // (les sauvegardes passées en « evolving » par le défaut de l'aperçu v5.18 reviennent au studio).
+        if (meta.musicPick !== true || !['evolving', 'studio'].includes(meta.musicStyle)) meta.musicStyle = 'studio';
         if (typeof meta.softShots !== 'boolean') meta.softShots = true;
         let score18 = null, musicTimer = null, mixKey = '';
         const aliveScene = () => ['playing', 'paused', 'photo', 'countdown', 'route'].includes(state);
@@ -79,7 +82,7 @@
         window.addEventListener('pageshow', () => { if (score18 && !musicTimer) musicTimer = setInterval(syncMix, 25); });
 
         function setMusicStyle(style) {
-          meta.musicStyle = style === 'studio' ? 'studio' : 'evolving'; saveMeta();
+          meta.musicStyle = style === 'evolving' ? 'evolving' : 'studio'; meta.musicPick = true; saveMeta();
           AudioSys.init();
           if (AudioSys.ctx) AudioSys.ctx.resume().catch(() => {});
           if (AudioSys.__stopSequencer) AudioSys.__stopSequencer();
@@ -88,9 +91,9 @@
         const settings = $('settingsOverlay');
         const audioOptions = document.createElement('div');
         audioOptions.innerHTML = `<div class="settings-row"><label for="scoreStyle18">Bande-son
-          <span class="settings-desc">Une partition originale qui suit le danger et les accalmies</span></label>
+          <span class="settings-desc">Studio : les pistes enregistrées de chaque acte · Évolutive : partition synthétisée qui suit le danger</span></label>
           <div class="settings-control"><select id="scoreStyle18" class="experience-select">
-          <option value="evolving">Évolutive · nouvelle</option><option value="studio">Studio · originale</option></select></div></div>
+          <option value="studio">Studio · pistes enregistrées</option><option value="evolving">Évolutive · synthèse</option></select></div></div>
           <div class="settings-row"><label for="shotsStyle18">Signature des tirs
           <span class="settings-desc">Timbres distincts par vaisseau, aigus adoucis</span></label>
           <div class="settings-control"><select id="shotsStyle18"><option value="soft">Feutrée</option><option value="arcade">Arcade</option></select></div></div>`;
@@ -114,7 +117,7 @@
         $('menuEmblem').hidden = true; $('menuEmblem').style.display = 'none';
         const oldRow = card.querySelector('.btn-row'); oldRow.classList.add('bridge-legacy');
         const layout = document.createElement('div');
-        layout.innerHTML = `<header class="bridge-topline"><span class="bridge-brand">NP / IV &nbsp; · &nbsp; EXPLORATION & COMBAT</span><span class="bridge-version">5.18 · APERÇU</span></header>
+        layout.innerHTML = `<header class="bridge-topline"><span class="bridge-brand">NP / IV &nbsp; · &nbsp; EXPLORATION & COMBAT</span><span class="bridge-version">5.19</span></header>
           <div class="bridge-main"><section><p class="bridge-eyebrow">Aux frontières du signal</p><div id="bridgeTitle18"></div>
           <p class="bridge-intro">Cinq actes. Des routes à choisir.<br>Et quelque chose, dans le vide, qui vous attend.</p>
           <div class="bridge-launch" id="bridgeLaunch18"></div><div id="bridgeActs18"></div></section>

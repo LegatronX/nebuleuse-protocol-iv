@@ -172,6 +172,8 @@ async function main() {
     await G(() => document.querySelectorAll('.overlay:not(#menu)').forEach((o) => o.classList.add('hidden')));
     const btn = await G(() => document.getElementById('carnetBtn').textContent);
     A(/10\/10/.test(btn), btn);
+    // v5.18 : le carnet est rangé dans le « Journal de bord » repliable du menu
+    await G(() => { const d = document.getElementById('carnetBtn').closest('details'); if (d) d.open = true; });
     await page.tap('#carnetBtn');
     await wait(400);
     const r = await G(() => ({ tiles: document.querySelectorAll('#carnetOverlay .carnet-tile').length, unseen: document.querySelectorAll('#carnetOverlay .carnet-tile.unseen').length, vis: !document.getElementById('carnetOverlay').classList.contains('hidden') }));
@@ -242,7 +244,8 @@ async function main() {
     const on = await G(() => ({ cls: document.querySelector('#hud .score-panel').classList.contains('np-ghost'), op: getComputedStyle(document.querySelector('#hud .score-panel')).opacity }));
     await shot('v516-hud-fantome');
     await G(() => { const g = window.__NP4; g.enemies.length = 0; g.v11.setAutoFire(true); });
-    await wait(900);
+    // v5.19 : les vagues sont plus denses — on garde le ciel vide sous le panneau pendant la mesure
+    for (let i = 0; i < 6; i++) { await G(FREEZE); await wait(150); }
     const off = await G(() => document.querySelector('#hud .score-panel').classList.contains('np-ghost'));
     A(on.cls && parseFloat(on.op) < 0.3 && !off, JSON.stringify({ on, off }));
   });

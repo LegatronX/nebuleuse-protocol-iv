@@ -2,6 +2,18 @@
 
 Petit shoot 'em up vertical en HTML/CSS/JS pur (aucune dépendance), jouable directement dans un navigateur.
 
+## v5.19 — Escadrilles et bande-son studio
+
+- **Plus d'ennemis** (`v519.js`). Mesuré sur 70 s d'Acte I avec la même seed : 2,9 ennemis à l'écran hors boss en mode Classique, 6,6 en Intense (défaut), 7,8 en Déchaînée. Le jeu était clairsemé depuis la v5.14, pas seulement depuis la v5.18.
+  - Les ennemis légers (drone, zig, speeder) arrivent avec 1 à 3 ailiers en formation. Leurs tirs sont décalés pour éviter les rafales synchronisées.
+  - La cadence des vagues est resserrée.
+  - Les Actes II à V, déjà plus denses, reçoivent un renfort modéré.
+  - Pendant un boss (hors boss final), des escortes entrent régulièrement. Elles se désintègrent quand le boss tombe, sans retarder la fin de vague ni la bifurcation.
+  - Réglage « Densité des vagues » : Classique (comportement d'avant), Intense ou Déchaînée. L'Opération du jour et le Tournoi restent en Intense, pour que les scores restent comparables.
+  - Pendant un phénomène v5.16, aucun ailier n'est ajouté.
+- **Musique** : la bande-son **studio**, c'est-à-dire les pistes enregistrées de chaque acte, redevient la bande-son par défaut. L'aperçu v5.18 imposait la partition synthétisée « Évolutive » et coupait aussi les musiques des Actes II à V. La partition évolutive reste disponible dans les Réglages. Une sauvegarde passée en « Évolutive » par défaut revient au studio ; un choix fait explicitement par le joueur est conservé.
+- `tools/build-experience.py` synchronise maintenant `v518.js` et `v519.js`.
+
 ## v5.18 — Poste de pilotage (aperçu)
 
 Cette branche part de la **v5.17** (`5ed5fbf`, branche `claude/nebuleuse-branching-routes-vpzs4u`). Les routes, phénomènes, collections et le mode photo sont conservés.
