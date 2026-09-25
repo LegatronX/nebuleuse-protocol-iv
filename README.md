@@ -60,6 +60,10 @@ Petit shoot 'em up vertical en HTML/CSS/JS pur (aucune dépendance), jouable dir
   - Tests : `tests/e2e/routes15.cjs` (parcours complet sur contexte tactile iPhone).
   - Visuels : cartes illustrées par le décor du secteur de destination (travelling lent, entrée échelonnée, reflet à la sélection, halo teinté), saut hyperspatial à l'engagement, ambiances par route (braises et ennemis incandescents dans la Forge, fantômes de superposition des projectiles quantiques, sonar et étoiles scintillantes dans le Vide, lignes de balayage et interférences du Signal, halo doré de l'Écho), éclairs de lumière GPU via `__NP4.fx.light`. Coût mesuré < 0,05 ms/frame ; désactivé ou allégé avec « réduire les animations » / qualité basse ; aucun appel à `Math.random`.
 
+- **Phénomènes cosmiques v5.16** (`v516.js`) : un *directeur de l'imprévu* déclenche, pendant les accalmies (sans boss, peu d'ennemis), des scènes rares à contempler — 🐋 Baleine stellaire, 🌀 Trou de ver (lentille sur un secteur lointain), 💥 Supernova, 🛸 Armada fantôme, 💎 Cathédrale de cristal, 🌌 Tempête d'aurores, 👁️ Le Regard, 🌑 Éclipse (totalité : score ×1,5), ⏳ Faille temporelle (frôler son passé charge la NOVA), 🤍 Le Silence (légendaire). Raretés commun / rare / légendaire, pondérées par la route v5.15 ; tirages déterministes (seed de run), jamais `Math.random`. **Carnet des phénomènes** au menu (silhouettes « ??? », nanites à la découverte, `meta.phen` additif).
+  - Confort : notifications en file (une seule pastille fine à la fois en jeu, doublons fusionnés, messages périmés abandonnés) ; **HUD fantôme** (score, vague, barres, pièces, badges s'effacent quand un ennemi, une balle ou le vaisseau passe dessous) ; panneau de barres compact.
+  - Tests : `tests/e2e/phenomena16.cjs` (20 tests, captures de chaque scène).
+
 ### Fichiers v5
 
 - `index.html` — jeu complet (moteur + modules v5). **Binaires `assets/` non versionnés** (mp3/png/jpg) : distribués via le ZIP `nebuleuse-v5.8.zip` joint à la release. Sans eux, le jeu fonctionne en repli synthétique.

@@ -505,7 +505,7 @@ async function main() {
   // --- PWA / hors ligne ---
   await T('PWA : service worker v5.15 (purge du cache v5.14), index.html dans le cœur hors ligne', async () => {
     const sw = fs.readFileSync(path.join(APP_DIR, 'sw.js'), 'utf8');
-    A(/VERSION = 'np4-v5\.15'/.test(sw) && /'index.html'/.test(sw), 'sw.js');
+    A(/VERSION = 'np4-v5\.1[5-9]'/.test(sw) && /'index.html'/.test(sw), 'sw.js');
     A(!fs.existsSync(path.join(APP_DIR, 'v515.js')) || /MODULE V5\.15/.test(fs.readFileSync(path.join(APP_DIR, 'index.html'), 'utf8')), 'module non intégré dans index.html');
   });
 
