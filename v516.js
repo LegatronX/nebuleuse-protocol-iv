@@ -947,9 +947,9 @@
         const baseDraw16 = draw;
         draw = function () {
           baseDraw16();
-          if (!active || (state !== 'playing' && state !== 'route' && state !== 'paused')) return;
+          if (!active || (state !== 'playing' && state !== 'route' && state !== 'paused' && state !== 'photo')) return;
           if (FRONT[active.id]) FRONT[active.id](active);
-          drawCaption(active);
+          if (state !== 'photo') drawCaption(active); // v5.17 : le mode photo pose son propre cartouche
         };
 
         const baseUpdate16 = update;
@@ -1158,8 +1158,10 @@
             const P = PHEN[id];
             const R = RARITY[P.rar];
             const e = m[id];
+            // v5.17 : le cliché du joueur devient le fond de la tuile
+            const ph = e && typeof e.photo === 'string' && e.photo.startsWith('data:image/') ? e.photo : null;
             return e
-              ? `<div class="carnet-tile" style="--c:${P.col}"><div class="carnet-ic">${P.icon}</div><div class="carnet-name">${P.name}</div>` +
+              ? `<div class="carnet-tile${ph ? ' has-photo' : ''}" style="--c:${P.col}${ph ? `;background:url('${ph}')` : ''}">${ph ? `<div class="carnet-shot" title="${e.shots || 1} cliché(s)">📷</div>` : ''}<div class="carnet-ic">${P.icon}</div><div class="carnet-name">${P.name}</div>` +
                 `<div class="carnet-rar" style="color:${R.col}">${R.label}</div><div class="carnet-meta">vu ${e.n}× · 1ʳᵉ fois le ${e.first.slice(8, 10)}/${e.first.slice(5, 7)}</div></div>`
               : `<div class="carnet-tile unseen"><div class="carnet-ic">${P.icon}</div><div class="carnet-name">???</div>` +
                 `<div class="carnet-rar" style="color:${R.col}">${R.label}</div><div class="carnet-meta">${P.hint}</div></div>`;
@@ -1184,6 +1186,7 @@
             ids: IDS.slice(),
             force: (id) => startPhen(id),
             active: () => (active ? { id: active.id, t: active.t, dur: active.dur } : null),
+            info: (id) => { const P = PHEN[id]; if (!P) return null; const R = RARITY[P.rar]; return { name: P.name, icon: P.icon, col: P.col, rar: P.rar, rarLabel: R.label, rarCol: R.col }; },
             end: () => endPhen(false),
             skip: (sec) => { if (active) active.t = Math.min(active.dur - 0.01, active.t + sec); },
             dirT: () => dirT,

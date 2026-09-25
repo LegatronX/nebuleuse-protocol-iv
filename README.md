@@ -64,6 +64,12 @@ Petit shoot 'em up vertical en HTML/CSS/JS pur (aucune dépendance), jouable dir
   - Confort : notifications en file (une seule pastille fine à la fois en jeu, doublons fusionnés, messages périmés abandonnés) ; **HUD fantôme** (score, vague, barres, pièces, badges s'effacent quand un ennemi, une balle ou le vaisseau passe dessous) ; panneau de barres compact.
   - Tests : `tests/e2e/phenomena16.cjs` (20 tests, captures de chaque scène).
 
+- **Instantané cosmique v5.17** (`v517.js`, placé après le pipeline GPU) : mode photo. Un obturateur 📷 apparaît pendant un phénomène (aussi « 📷 Mode photo » dans la pause, touche O) : l'action se fige, le HUD, les commandes, les notifications et les textes flottants disparaissent, la musique continue. L'image est prélevée après le post-traitement WebGL2 (bloom, halos, ondes).
+  - Chambre noire : glisser pour cadrer, pincer ou double-tap pour zoomer (×1 à ×3), 5 filtres (Brut, Nébuleuse, Noir & Or, Infrarouge, Argentique : matrices de couleur, vignettage, grain déterministe ; aperçu identique au tirage), 4 formats (plein écran, 4:5, 1:1, cinéma 2:1), cartouche titré (phénomène, rareté, secteur, date, seed).
+  - Tirage JPEG (petit côté ≥ 1080 px) → feuille de partage iOS (« Enregistrer l'image ») ou téléchargement. La vignette du phénomène devient le fond de sa tuile dans le Carnet (`meta.phen[id].photo`, additif), +20 ⬡ au premier cliché de chaque phénomène.
+  - Reprise avec le compte à rebours habituel ; depuis la pause, retour à la pause.
+  - Tests : `tests/e2e/photo17.cjs` (15 tests).
+
 ### Fichiers v5
 
 - `index.html` — jeu complet (moteur + modules v5). **Binaires `assets/` non versionnés** (mp3/png/jpg) : distribués via le ZIP `nebuleuse-v5.8.zip` joint à la release. Sans eux, le jeu fonctionne en repli synthétique.

@@ -256,7 +256,7 @@ async function main() {
     const src = fs.readFileSync(path.join(APP_DIR, 'v516.js'), 'utf8').replace(/\/\/.*$/gm, '');
     A(!/Math\.random\s*\(|\brand\(|\bpick\(/.test(src), 'appel aléatoire global');
     A(/MODULE V5\.16/.test(fs.readFileSync(path.join(APP_DIR, 'index.html'), 'utf8')), 'module non intégré');
-    A(/np4-v5\.16/.test(fs.readFileSync(path.join(APP_DIR, 'sw.js'), 'utf8')), 'sw non versionné');
+    A(/np4-v5\.1[6-9]/.test(fs.readFileSync(path.join(APP_DIR, 'sw.js'), 'utf8')), 'sw non versionné');
   });
 
   await browser.close();
