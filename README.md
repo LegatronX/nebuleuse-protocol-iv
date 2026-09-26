@@ -2,6 +2,19 @@
 
 Petit shoot 'em up vertical en HTML/CSS/JS pur (aucune dépendance), jouable directement dans un navigateur.
 
+## v5.20 — Aperçu : rencontres et profondeur
+
+Basé sur la v5.19 de Claude (`07b4a3e`). Lancer cet aperçu avec `npm start`, puis ouvrir **http://127.0.0.1:8179/**.
+
+- Les dix vagues ordinaires de l'Acte I en campagne ont un nom, une intention et des formations composées : éclaireurs, chasseurs, blindés, batteries, diviseurs. Leur deuxième passage inverse les positions. Les trois densités modifient le rythme et l'effectif ; un budget de menace retarde les arrivées quand l'écran est chargé.
+- Les escortes attendent la fin de l'entrée du boss et une fenêtre moins chargée. Leur nombre respecte maintenant les places restantes : 4 ennemis avec un plafond de 5 donnent un seul renfort.
+- Dans les actes III à V, l'injecteur cesse d'alimenter une vague dont la file est vide et consulte le budget avant ses renforts.
+- Une couche d'anneaux brisés et d'épaves défile sous le plan de vol de l'Acte I. Elle se fige en pause et en photo, respecte la réduction des animations, et peut être désactivée dans les réglages.
+- Les morceaux studio restent les enregistrements d'origine. Leur niveau accompagne doucement les accalmies ; ce réglage est désactivable. Les bruitages du premier moteur studio ont une cadence et un nombre de voix limités, avec de petites variations indépendantes du hasard du gameplay.
+- Trois [prompts Suno prêts à copier](design/suno-prompts-v520.md) accompagnent l'aperçu : combat, exploration et boss. Les futures compositions restent à produire puis à écouter et intégrer.
+
+Cet aperçu doit encore être évalué visuellement et à l'écoute sur appareils. Les tests DOM/audio simulés ne mesurent ni le plaisir de jeu, ni les performances GPU, ni la durée réelle d'une partie humaine. Les classements et la simulation globale ne deviennent pas déterministes par cette seule mise à jour.
+
 ## v5.19 — Escadrilles et bande-son studio
 
 - **Plus d'ennemis** (`v519.js`). Mesuré sur 70 s d'Acte I avec la même seed : 2,9 ennemis à l'écran hors boss en mode Classique, 6,6 en Intense (défaut), 7,8 en Déchaînée. Le jeu était clairsemé depuis la v5.14, pas seulement depuis la v5.18.
