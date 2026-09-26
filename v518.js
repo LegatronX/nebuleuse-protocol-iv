@@ -117,7 +117,7 @@
         $('menuEmblem').hidden = true; $('menuEmblem').style.display = 'none';
         const oldRow = card.querySelector('.btn-row'); oldRow.classList.add('bridge-legacy');
         const layout = document.createElement('div');
-        layout.innerHTML = `<header class="bridge-topline"><span class="bridge-brand">NP / IV &nbsp; · &nbsp; EXPLORATION & COMBAT</span><span class="bridge-version">5.19</span></header>
+        layout.innerHTML = `<header class="bridge-topline"><span class="bridge-brand">NP / IV &nbsp; · &nbsp; EXPLORATION & COMBAT</span><span class="bridge-version">5.20 · aperçu</span></header>
           <div class="bridge-main"><section><p class="bridge-eyebrow">Aux frontières du signal</p><div id="bridgeTitle18"></div>
           <p class="bridge-intro">Cinq actes. Des routes à choisir.<br>Et quelque chose, dans le vide, qui vous attend.</p>
           <div class="bridge-launch" id="bridgeLaunch18"></div><div id="bridgeActs18"></div></section>

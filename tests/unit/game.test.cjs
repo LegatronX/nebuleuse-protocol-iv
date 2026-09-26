@@ -63,8 +63,8 @@ test('missing audio assets and absent AudioContext leave gameplay working',async
 test('new source module equals embedded artifact and PWA precaches every new dependency',()=>{
  const html=fs.readFileSync(path.join(root,'index.html'),'utf8');const mod=fs.readFileSync(path.join(root,'v518.js'),'utf8');
  assert.ok(html.includes('// BEGIN EXPERIENCE V5.18\n'+mod+'\n      // END EXPERIENCE V5.18'));
- const sw=fs.readFileSync(path.join(root,'sw.js'),'utf8');assert.match(sw,/'np4-v5\.(1[89]|[2-9]\d)'/);
- for(const f of ['experience/score.js','experience/bridge.css']){assert.ok(html.includes(f));assert.ok(sw.includes(f));assert.ok(fs.statSync(path.join(root,f)).size>0);}
+ const sw=fs.readFileSync(path.join(root,'sw.js'),'utf8');assert.match(sw,/'np4-v5\.(1[89]|[2-9]\d)(?:-preview\d+)?'/);
+ for(const f of ['experience/score.js','experience/bridge.css','experience/encounters.js']){assert.ok(html.includes(f));assert.ok(sw.includes(f));assert.ok(fs.statSync(path.join(root,f)).size>0);}
  const scripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)];scripts.forEach(s=>new vm.Script(s[1]));
 });
 test('v5.15 routes, v5.16 phenomena and v5.17 photo state still compose with the new layer',()=>{
@@ -111,9 +111,11 @@ test('studio default: recorded loops own the music bus in act I, act music in la
 test('v5.19 squadrons: wings queued on light enemies, escorts during a boss disband when it falls, Classique restores the old waves',()=>{
  const h=boot();try{const d=h.w.document;assert.equal(h.g.density.level(),'intense');assert.ok(d.getElementById('stDensity19'));
  d.getElementById('modeCampagne').click();h.advance(100);
+ h.g.density.setMode('operation'); // Random squadrons remain the daily-mode director.
  let queued=0;for(let n=1;n<=8;n++){if(n%3===0)continue;h.g.density.startWave(n);queued+=h.g.density.queueWings();}
  assert.ok(queued>=8,'ailiers en file : '+queued);
- h.g.density.startWave(3);h.advance(3000);assert.ok(h.g.boss,'boss présent');h.g.player.invuln=999;
+ h.g.density.setMode('campagne');h.g.density.startWave(3);h.advance(3000);assert.ok(h.g.boss,'boss présent');h.g.player.invuln=999;
+ h.g.boss.entering=false; // v5.20: escorts wait until the boss has finished entering.
  h.g.density.escortIn(0);h.advance(100);const esc=h.g.enemies.filter(e=>e.escort).length;assert.ok(esc>=3,'escorte '+esc);
  assert.ok(h.g.enemies.filter(e=>e.escort&&e.wing).length>=2);
  h.g.routes.kill(h.g.boss);h.advance(100);assert.equal(h.g.enemies.filter(e=>e.escort).length,0,'escorte dissoute');

@@ -26,7 +26,7 @@ function boot({assets=false,meta={},audio=true}={}) {
  Object.defineProperty(w.performance,'now',{value:()=>clock});
  if(audio)w.AudioContext=AudioContext;
  w.localStorage.setItem('nebula4_meta',JSON.stringify({tuto:1,chest:{lastDate:new Date().toLocaleDateString('en-CA'),streak:1},...meta}));
- w.eval(fs.readFileSync(path.join(root,'experience/score.js'),'utf8'));
+ for (const src of ['experience/score.js','experience/encounters.js']) w.eval(fs.readFileSync(path.join(root,src),'utf8'));
  for(const script of w.document.querySelectorAll('script:not([src])')) if(script.textContent.trim())w.eval(script.textContent);
  const g=w.__NP4;
  function step(ms=33){clock+=ms;g?.audio.ctx?.advance(clock/1000);

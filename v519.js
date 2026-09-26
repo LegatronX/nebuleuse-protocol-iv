@@ -74,6 +74,7 @@
         function escort(dt) {
           const c = cfg();
           if (!c || state !== 'playing' || !boss || boss.finalBoss || !enemies.includes(boss)) return;
+          if (boss.entering || eBullets.length > (W < 480 ? 65 : 95) || beams.some(b => b.active <= 0)) return;
           escortT -= dt;
           if (escortT > 0) return;
           escortT = rand(c.escort[0], c.escort[1]);
@@ -83,7 +84,7 @@
           const lead = spawnEnemy(type, rand(70, Math.max(71, W - 70)), -40);
           if (!lead) return;
           lead.escort = true;
-          spawnWing(lead, wave >= 6 ? 3 : 2).forEach((e) => { e.escort = true; });
+          spawnWing(lead, Math.min(wave >= 6 ? 3 : 2, c.escortCap - light - 1)).forEach((e) => { e.escort = true; });
           escorts++;
         }
         // le boss tombe : son escorte se désintègre (sans retarder la fin de vague)
