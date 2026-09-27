@@ -79,3 +79,23 @@ python3 tools/suno_generate.py --title "…" --style "…" --prompt "…" --conf
 - `api.sunoapi.org` autorisé dans l'accès réseau ;
 - l'identifiant d'API « Suno API », pris en compte dans une **nouvelle** session ;
 - l'hôte des fichiers audio renvoyés par l'API autorisé lui aussi (visible dans `sourceHost` après le premier essai).
+
+## Automatisation GitHub Actions (recommandée)
+
+`.github/workflows/suno-music.yml` fait tourner les outils ci-dessus sur les serveurs de GitHub. Ceux-ci ont accès à Internet, et la clé reste dans les secrets du dépôt (`SUNO_KEY` : Settings → Secrets and variables → Actions).
+
+Pour faire une demande, pousser sur une branche `claude/suno-*` un fichier `music-requests/<nom>.json` :
+
+| Demande | Effet |
+|---|---|
+| `{"mode": "credits"}` | Lit les crédits restants. Rien n'est dépensé. |
+| `{"mode": "generate", "cue": "boss"}` | Génère un morceau (dépense des crédits). |
+| `{"mode": "generate", "title": "…", "style": "…", "prompt": "…"}` | Génération libre. |
+| `{"mode": "recover", "tasks": ["taskId", "…"]}` | Récupère des générations existantes. |
+
+L'automatisation commite ensuite sur la même branche :
+- les morceaux, dans `assets/music/suno-originals/` ;
+- l'inventaire mis à jour ;
+- la demande et son compte rendu, dans `music-requests/done/`.
+
+Les journaux commités sont purgés des jetons d'URL. Une fois le workflow présent sur la branche par défaut, il peut aussi être lancé à la main (onglet Actions → Suno music → Run workflow).

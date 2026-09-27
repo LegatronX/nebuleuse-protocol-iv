@@ -92,6 +92,19 @@ def wait(task_id, key, timeout_s):
     return False
 
 
+def credits(key):
+    """Lecture seule : crédits restants (aucune dépense)."""
+    for path in ("/generate/credit", "/account/credits", "/credits"):
+        try:
+            res = rec.api_get(path, {}, key)
+        except Exception as e:  # endpoint absent
+            print(f"  {path} : {e}")
+            continue
+        print(f"  {path} : {json.dumps(res, ensure_ascii=False)}")
+        return res
+    return None
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--cue", choices=sorted(CUES))
@@ -102,11 +115,14 @@ def main():
     ap.add_argument("--confirm", action="store_true", help="lance réellement la génération (dépense des crédits)")
     ap.add_argument("--timeout", type=int, default=900, help="attente maximale en secondes")
     ap.add_argument("--list-cues", action="store_true")
+    ap.add_argument("--credits", action="store_true", help="affiche les crédits restants (lecture seule)")
     args = ap.parse_args()
     if args.list_cues:
         for k, (t, s, p) in CUES.items():
             print(f"{k:10} {t} — {s}")
         return
+    if args.credits:
+        sys.exit(0 if credits(os.environ.get("SUNO_KEY")) is not None else 1)
     payload = build(args)
     print(json.dumps(payload, ensure_ascii=False, indent=2))
     if not args.confirm:
