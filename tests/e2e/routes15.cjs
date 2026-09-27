@@ -211,6 +211,8 @@ async function main() {
   await T('restauration : tap → vague, score, secteur et route Forge restaurés, modificateur actif', async () => {
     await page.tap('#routeResumeBtn');
     await wait(2800);
+    // le badge reste masqué pendant la bannière de vague, plus longue sous charge
+    await page.waitForFunction(() => document.getElementById('routeBadge').classList.contains('show'), null, { timeout: 6000 }).catch(() => {});
     const r = await G(() => {
       const g = window.__NP4;
       g.v10.spawnQ('drone');

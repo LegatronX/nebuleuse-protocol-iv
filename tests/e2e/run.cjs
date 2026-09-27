@@ -1078,7 +1078,8 @@ async function main() {
       await GB(() => { const g = window.__NP4; g.v13.spawnType('prisme'); g.v10.kill(g.enemies.findIndex(e => e.type === 'prisme')); });
       await pb.waitForTimeout(250);
       const eclats = await GB(() => window.__NP4.enemies.filter(e => e.type === 'eclat').length);
-      await GB(() => window.__NP4.v13.spawnType('reveur'));
+      // coque renforcée : le tir peut sinon l'abattre avant sa première phase (échec intermittent)
+      await GB(() => { const e = window.__NP4.v13.spawnType('reveur'); if (e) e.hp = e.maxHp = 1e6; });
       await pb.waitForTimeout(700);
       const reveur = await GB(() => window.__NP4.enemies.some(e => e.type === 'reveur' && 'ghostNow' in e));
       await GB(() => window.__NP4.v11.setAutoFire(true));

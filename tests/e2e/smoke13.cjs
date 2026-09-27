@@ -161,7 +161,8 @@ async function main() {
     await G(() => window.__NP4.v11 && window.__NP4.v11.setAutoFire(true));
   });
   await T('reveur : phase fantôme cyclique', async () => {
-    await G(() => window.__NP4.v13.spawnType('reveur'));
+    // coque renforcée : le tir peut sinon l'abattre avant sa première phase (échec intermittent)
+    await G(() => { const e = window.__NP4.v13.spawnType('reveur'); if (e) e.hp = e.maxHp = 1e6; });
     await page.waitForTimeout(700);
     A(await G(() => window.__NP4.enemies.some(e => e.type === 'reveur' && 'ghostNow' in e)), 'reveur KO');
   });

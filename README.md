@@ -2,6 +2,39 @@
 
 Petit shoot 'em up vertical en HTML/CSS/JS pur (aucune dépendance), jouable directement dans un navigateur.
 
+## v5.22 — Bande-son « Nébuleuse »
+
+Les 31 morceaux Suno retenus sur la page d'écoute (tri et commentaires du 27/09) deviennent la bande-son par défaut (`v522.js`). Elle se règle dans Réglages → Bande-son : Nébuleuse, Studio ou Évolutive.
+
+| Situation | Morceaux (commentaire du tri) |
+|---|---|
+| Menu | Les Balises oubliées A et B (« générique/menu ») |
+| Ouverture de campagne (vagues 1–2) | Traversée du Signal C (« générique, plutôt au début »), puis D |
+| Combat léger (Acte I) | Traversée du Signal D et C |
+| Transition après un boss, Actes II–III | Traversée du Signal G et H (« pas au début… entre deux scènes importantes ») |
+| Combat intense (Actes IV–V, Déchaînée, survie avancée) | Traversée du Signal E et F (« nombreux ennemis ») |
+| Routes, Carnet | Traversée du Signal B, I et J (« exploration », « découverte ») |
+| Phénomène épique (supernova, armada, regard, ver, faille, éclipse) | Rêve lucide A (« contemplation active, épique »), Victoire 1 E |
+| Phénomène contemplatif (baleine, aurores, cristal, silence) | Rêve lucide B (« solitaire, lente ») |
+| Premier boss de l'Acte I | Le Gardien de la faille D (« petit boss ») |
+| Boss (Actes I–III) | Le Gardien de la faille A et B |
+| Boss (Actes IV–V) | Le Gardien de la faille E, Victoire 1 A |
+| Boss final | Le Gardien de la faille C (« fait penser à Inception ») |
+| Triomphe (22 s après un boss) | Victoire 1 B, Le Gardien de la faille F |
+| Pause | Attente A et B, Les Balises oubliées B (« musique d'attente ») |
+| Défaite | Défaite du joueur A ; B quand la défaite est écrasante (10 ennemis ou plus, ou Acte III et au-delà) |
+| Victoire finale | Victoire 1 F (« cinématique »), puis Traversée du Signal A (« générique joyeux ») |
+| Coffre du jour, missions | Victoire 1 C (« gain de pièces ») |
+| Jingles | Effet A (« découverte d'un trésor ») à l'ouverture du coffre ; Effet B (« apaisement ») au début d'une accalmie |
+
+- **Départs** : tous les longs morceaux montent en puissance pendant 30 à 60 s (mesure du volume par tranche de 30 s). Les boss, triomphes et combats intenses démarrent donc dans la partie déjà dense.
+- **Variété** : chaque situation alterne entre ses morceaux, sans répéter le dernier. Un morceau seul dans sa situation reprend après son introduction.
+- **Continuité** : fondus enchaînés de 1,8 s entre deux lecteurs. Après une pause, un phénomène ou une photo, la musique reprend à l'endroit où elle s'était arrêtée.
+- **Volume** : un gain par morceau, calculé d'après la mesure, harmonise le niveau (il y avait jusqu'à 5 dB d'écart).
+- **Poids** : fichiers MP3 à 96 kbit/s dans `assets/music/game/` (108 Mo en tout). Ils sont lus en continu : seul le morceau joué est téléchargé, et rien n'est gardé en mémoire. Le service worker ne les met pas en cache, car une réponse complète casserait la lecture partielle sur iOS.
+- **Hors ligne** : si la lecture échoue deux fois, la bande-son studio reprend. Un nouvel essai a lieu toutes les 90 s.
+- Morceaux écartés au tri : Fin du jeu A et B, Victoire 1 D. Les originaux restent dans `assets/music/suno-originals/`.
+
 ## v5.21 — Interface unifiée et lisibilité
 
 Réponse aux retours de jeu sur la v5.20 (`v521.js`, intégré par `tools/build-experience.py`).

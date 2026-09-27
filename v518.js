@@ -6,7 +6,7 @@
         // v5.19 : la bande-son studio (pistes enregistrées) est la référence. La partition
         // évolutive synthétisée reste proposée ; seul un choix explicite du joueur la garde
         // (les sauvegardes passées en « evolving » par le défaut de l'aperçu v5.18 reviennent au studio).
-        if (meta.musicPick !== true || !['evolving', 'studio'].includes(meta.musicStyle)) meta.musicStyle = 'studio';
+        if (meta.musicPick !== true || !['evolving', 'studio', 'suno'].includes(meta.musicStyle)) meta.musicStyle = 'studio'; // v5.22 : « suno » par défaut (v522.js)
         if (typeof meta.softShots !== 'boolean') meta.softShots = true;
         let score18 = null, musicTimer = null, mixKey = '';
         const aliveScene = () => ['playing', 'paused', 'photo', 'countdown', 'route'].includes(state);
@@ -23,11 +23,13 @@
           const advanced = aliveScene() && !!((AudioSys.__act12Music && AudioSys.__act12Music()) ||
             (AudioSys.__act13Music && AudioSys.__act13Music()));
           const evolving = meta.musicStyle === 'evolving';
+          // v5.22 : la bande-son Nébuleuse (Suno) remplace studio et actes tant qu'elle joue
+          const suno = !!(AudioSys.__sunoLive && AudioSys.__sunoLive());
           const audible = !document.hidden && !AudioSys.muted;
           const quiet = state === 'paused' || state === 'photo' || state === 'route';
-          const key = [evolving, advanced, audible, quiet].join(':');
+          const key = [evolving, advanced, audible, quiet, suno].join(':');
           if (key !== mixKey) {
-            const t = AudioSys.ctx.currentTime, level = audible && !evolving ? (quiet ? 0.38 : 1) : 0;
+            const t = AudioSys.ctx.currentTime, level = audible && !evolving && !suno ? (quiet ? 0.38 : 1) : 0;
             AudioSys.studioBus.gain.setTargetAtTime(advanced ? 0 : level, t, 0.35);
             AudioSys.actMusicBus.gain.setTargetAtTime(advanced ? level : 0, t, 0.35);
             score18.setActive(evolving && audible, quiet);
@@ -82,7 +84,7 @@
         window.addEventListener('pageshow', () => { if (score18 && !musicTimer) musicTimer = setInterval(syncMix, 25); });
 
         function setMusicStyle(style) {
-          meta.musicStyle = style === 'evolving' ? 'evolving' : 'studio'; meta.musicPick = true; saveMeta();
+          meta.musicStyle = ['evolving', 'suno'].includes(style) ? style : 'studio'; meta.musicPick = true; saveMeta();
           AudioSys.init();
           if (AudioSys.ctx) AudioSys.ctx.resume().catch(() => {});
           if (AudioSys.__stopSequencer) AudioSys.__stopSequencer();
@@ -91,9 +93,9 @@
         const settings = $('settingsOverlay');
         const audioOptions = document.createElement('div');
         audioOptions.innerHTML = `<div class="settings-row"><label for="scoreStyle18">Bande-son
-          <span class="settings-desc">Studio : les pistes enregistrées de chaque acte · Évolutive : partition synthétisée qui suit le danger</span></label>
+          <span class="settings-desc">Nébuleuse : morceaux choisis selon l'acte, le boss, le phénomène · Studio : les pistes enregistrées de chaque acte · Évolutive : partition synthétisée qui suit le danger</span></label>
           <div class="settings-control"><select id="scoreStyle18" class="experience-select">
-          <option value="studio">Studio · pistes enregistrées</option><option value="evolving">Évolutive · synthèse</option></select></div></div>
+          <option value="suno">Nébuleuse · 31 morceaux selon la situation</option><option value="studio">Studio · pistes enregistrées</option><option value="evolving">Évolutive · synthèse</option></select></div></div>
           <div class="settings-row"><label for="shotsStyle18">Signature des tirs
           <span class="settings-desc">Timbres distincts par vaisseau, aigus adoucis</span></label>
           <div class="settings-control"><select id="shotsStyle18"><option value="soft">Feutrée</option><option value="arcade">Arcade</option></select></div></div>`;
@@ -230,7 +232,7 @@
           if (!isHidden(menuOverlay)) {
             const info = score18 && score18.info();
             $('bridgeMusic18').textContent = AudioSys.muted ? 'Son coupé · Réglages' : !info ? 'Audio au premier contact' :
-              meta.musicStyle === 'studio' ? 'Bande-son studio' : `${info.title} · ${info.section}`;
+              meta.musicStyle === 'studio' ? 'Bande-son studio' : meta.musicStyle === 'suno' ? 'Bande-son Nébuleuse' : `${info.title} · ${info.section}`;
           }
         };
         G.experience = { audio: () => score18 && score18.info(), style: () => meta.musicStyle,

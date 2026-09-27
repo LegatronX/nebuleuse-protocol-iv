@@ -11,7 +11,7 @@ test('whole game boots and all original controls retain their IDs and handlers',
  }
  d.getElementById('shipBtn').click();assert.ok(!d.getElementById('shipOverlay').classList.contains('hidden'));
  d.getElementById('closeShipBtn').click();d.getElementById('modeCampagne').click();h.advance(500);
- assert.equal(h.g.state,'playing');assert.equal(h.g.experience.style(),'studio');assert.equal(h.g.experience.audio().active,false);
+ assert.equal(h.g.state,'playing');assert.equal(h.g.experience.style(),'suno');assert.equal(h.g.experience.audio().active,false);
  assert.match(d.getElementById('specialBtn').getAttribute('aria-label'),/NOVA/);checkErrors(h);
  }finally{h.close();}
 });
@@ -26,7 +26,7 @@ test('help traps focus, Escape closes it, then pauses a run and auto-fire persis
  }finally{h.close();}
 });
 test('Enter in settings never starts a game; user preferences survive initialization',()=>{
- const h=boot({meta:{musicStyle:'studio',softShots:false,ship:2,musicVol:.35}});try{const d=h.w.document;
+ const h=boot({meta:{musicStyle:'studio',musicPick:true,softShots:false,ship:2,musicVol:.35}});try{const d=h.w.document;
  d.getElementById('settingsBtn').click();const sel=d.getElementById('scoreStyle18');sel.focus();h.key('Enter',sel);
  assert.equal(h.g.state,'menu');assert.equal(sel.value,'studio');assert.equal(d.getElementById('shotsStyle18').value,'arcade');
  assert.equal(d.getElementById('bridgeShipName18').textContent,'TITAN');
@@ -92,12 +92,12 @@ test('keyboard fire is not swallowed when an in-game action button has focus',()
  assert.equal(h.g.v11.fireHeld(),true);checkErrors(h);
  }finally{h.close();}
 });
-test('studio soundtrack is the default; previews saved as evolving return to studio; an explicit pick sticks',()=>{
- for(const [meta,want] of [[{},'studio'],[{musicStyle:'evolving'},'studio'],[{musicStyle:'evolving',musicPick:true},'evolving'],[{musicStyle:'studio',musicPick:true},'studio']]){
+test('Nébuleuse soundtrack is the default (v5.22); unpicked styles follow it; an explicit pick sticks',()=>{
+ for(const [meta,want] of [[{},'suno'],[{musicStyle:'evolving'},'suno'],[{musicStyle:'studio'},'suno'],[{musicStyle:'evolving',musicPick:true},'evolving'],[{musicStyle:'studio',musicPick:true},'studio']]){
   const h=boot({meta});try{assert.equal(h.g.experience.style(),want,JSON.stringify(meta));
   assert.equal(h.w.document.getElementById('scoreStyle18').value,want);checkErrors(h);}finally{h.close();}
  }
- const h=boot();try{const sel=h.w.document.getElementById('scoreStyle18');assert.equal(sel.options[0].value,'studio');
+ const h=boot();try{const sel=h.w.document.getElementById('scoreStyle18');assert.equal(sel.options[0].value,'suno');assert.equal(sel.options[1].value,'studio');
   sel.value='evolving';sel.dispatchEvent(new h.w.Event('change',{bubbles:true}));
   const m=JSON.parse(h.w.localStorage.getItem('nebula4_meta'));assert.equal(m.musicStyle,'evolving');assert.equal(m.musicPick,true);checkErrors(h);
  }finally{h.close();}
@@ -167,4 +167,38 @@ test('v5.21 generated planets: varied kinds, never three in a row the same, dele
 test('v5.21 module is embedded by the build tool, last',()=>{
  const html=fs.readFileSync(path.join(root,'index.html'),'utf8');const mod=fs.readFileSync(path.join(root,'v521.js'),'utf8');
  const i=html.indexOf('// BEGIN INTERFACE V5.21\n'+mod+'\n      // END INTERFACE V5.21');assert.ok(i>0);assert.ok(i>html.indexOf('// END RENCONTRES V5.20'));
+});
+test('v5.22 every Nébuleuse track exists, is one of the kept picks, and gains stay bounded',()=>{
+ const h=boot();try{const tr=h.g.suno.tracks();assert.equal(tr.length,31);
+  for(const t of tr){assert.ok(fs.existsSync(path.join(root,t.file)),t.file);assert.ok(t.gain>=0.55&&t.gain<=1.4,t.key);}
+  const cues=h.g.suno.cues();const keys=new Set(tr.map(t=>t.key));
+  for(const [n,c] of Object.entries(cues))for(const k of c.pool)assert.ok(keys.has(k),n+':'+k);
+  const used=new Set(Object.values(cues).flatMap(c=>c.pool));for(const k of keys)if(!['tresor','apaisement'].includes(k))assert.ok(used.has(k),'inutilisé '+k);
+  checkErrors(h);}finally{h.close();}
+});
+test('v5.22 director: menu, opening, act I boss, triumph, pause resumes the same track, phenomena, defeat',async()=>{
+ const h=boot({audio:true});try{const d=h.w.document,S=h.g.suno;
+  d.body.dispatchEvent(new h.w.Event('pointerdown',{bubbles:true}));h.advance(900);
+  assert.ok(S.unlocked());assert.equal(S.cue(),'menu');assert.ok(['balisesA','balisesB'].includes(S.now().key));
+  assert.equal(h.g.audio.studioBus.gain.value,0,'studio coupé quand la bande-son Nébuleuse joue');
+  d.getElementById('modeCampagne').click();h.advance(900);assert.equal(S.cue(),'opening');assert.equal(S.now().key,'signalC');
+  h.g.spawnBoss();h.advance(900);assert.equal(S.cue(),'bossSmall');assert.equal(S.now().key,'gardienD');assert.equal(S.now().t,20);
+  const b=h.g.boss;h.g.enemies.splice(h.g.enemies.indexOf(b),1);h.advance(900);assert.equal(S.cue(),'triumph');
+  const tri=S.now().key;h.key('Escape');h.advance(900);assert.equal(h.g.state,'paused');assert.equal(S.cue(),'pause');
+  h.key('Escape');h.advance(4500);assert.equal(S.cue(),'triumph');assert.equal(S.now().key,tri,'reprise du morceau interrompu');
+  for(let i=0;i<24;i++){h.g.player.invuln=5;h.advance(1000);}assert.equal(S.cue(),'combat2','transition après un boss');
+  h.g.phen.force('supernova');assert.equal(S.situation(),'phenEpic');S.tick();assert.equal(S.cue(),'phenEpic');h.g.phen.end();h.advance(900);
+  h.g.phen.force('baleine');S.tick();assert.equal(S.cue(),'phenCalm');h.g.phen.end();
+  for(let i=0;i<40&&h.g.state==='playing';i++){h.g.player.invuln=0;h.g.hurt(9999);h.advance(100);}h.advance(3000);assert.equal(h.g.state,'gameover');assert.ok(['defeat','defeatHeavy'].includes(S.cue()));checkErrors(h);
+ }finally{h.close();}
+});
+test('v5.22 failed playback falls back to the studio soundtrack',()=>{
+ const h=boot();try{const d=h.w.document;d.body.dispatchEvent(new h.w.Event('pointerdown',{bubbles:true}));h.advance(900);
+  assert.equal(h.g.audio.studioBus.gain.value,0);h.g.suno.setLive(false);h.advance(300);
+  assert.equal(h.g.audio.studioBus.gain.value,1);checkErrors(h);}finally{h.close();}
+});
+test('v5.22 module is embedded last and the service worker streams the soundtrack without caching it',()=>{
+ const html=fs.readFileSync(path.join(root,'index.html'),'utf8');const mod=fs.readFileSync(path.join(root,'v522.js'),'utf8');
+ const i=html.indexOf('// BEGIN BANDE-SON V5.22\n'+mod+'\n      // END BANDE-SON V5.22');assert.ok(i>html.indexOf('// END INTERFACE V5.21'));
+ const sw=fs.readFileSync(path.join(root,'sw.js'),'utf8');assert.match(sw,/assets\/music\/game\/'\)\) return;/);assert.doesNotMatch(sw,/"assets\/music\/game\//);
 });
