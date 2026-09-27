@@ -1,0 +1,99 @@
+# Création / récupération de musiques Suno pour le jeu, exécutée sur les serveurs GitHub.
+# La clé reste dans les secrets du dépôt (SUNO_KEY) ; elle n'apparaît jamais dans les journaux.
+#
+# Déclenchement : pousser un fichier music-requests/<nom>.json sur une branche claude/suno-*
+# (ou lancer le workflow à la main une fois celui-ci présent sur la branche par défaut).
+# Formats de demande :
+#   {"mode": "credits"}                                   → lecture des crédits, rien n'est dépensé
+#   {"mode": "probe"}                                     → cherche une liste des générations (lecture seule)
+#   {"mode": "generate", "cue": "boss"}                   → génère (dépense des crédits)
+#   {"mode": "generate", "title": "…", "style": "…", "prompt": "…", "model": "V5"}
+#   {"mode": "recover", "tasks": ["taskId1", "taskId2"]}  → récupère des générations existantes
+# Chaque demande traitée est déplacée dans music-requests/done/ avec son compte rendu,
+# et les morceaux obtenus sont commités dans assets/music/suno-originals/.
+name: Suno music
+
+on:
+  push:
+    branches: ['claude/suno-*']
+    paths: ['music-requests/*.json']
+  workflow_dispatch:
+    inputs:
+      request:
+        description: 'Demande JSON (voir l’en-tête du workflow)'
+        required: true
+        default: '{"mode": "credits"}'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: suno-music-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  music:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Outils audio
+        run: sudo apt-get install -y -qq ffmpeg >/dev/null
+      - name: Traiter les demandes
+        env:
+          SUNO_KEY: ${{ secrets.SUNO_KEY }}
+          DISPATCH_REQUEST: ${{ github.event.inputs.request }}
+        run: |
+          set -u
+          if [ -z "${SUNO_KEY}" ]; then echo "::error::Secret SUNO_KEY absent du dépôt"; exit 1; fi
+          mkdir -p music-requests/done
+          if [ -n "${DISPATCH_REQUEST:-}" ]; then
+            printf '%s' "$DISPATCH_REQUEST" > "music-requests/dispatch-$(date -u +%Y%m%dT%H%M%S).json"
+          fi
+          status=0
+          for req in music-requests/*.json; do
+            [ -e "$req" ] || continue
+            name=$(basename "$req" .json)
+            log="music-requests/done/${name}.log"
+            mode=$(python3 -c "import json,sys;print(json.load(open(sys.argv[1])).get('mode','credits'))" "$req")
+            echo "## Demande ${name} (${mode})" >> "$GITHUB_STEP_SUMMARY"
+            case "$mode" in
+              credits)
+                python3 tools/suno_generate.py --credits > "$log" 2>&1 || status=1 ;;
+              probe)
+                python3 tools/suno_generate.py --probe-history > "$log" 2>&1 || status=1 ;;
+              generate)
+                args=$(python3 - "$req" <<'PY'
+          import json, shlex, sys
+          r = json.load(open(sys.argv[1]))
+          out = []
+          for k in ("cue", "title", "style", "prompt", "model"):
+              if r.get(k):
+                  out += [f"--{k}", str(r[k])]
+          print(" ".join(shlex.quote(a) for a in out))
+          PY
+                )
+                eval "python3 tools/suno_generate.py $args --confirm" > "$log" 2>&1 || status=1 ;;
+              recover)
+                python3 -c "import json,sys;print('\n'.join(json.load(open(sys.argv[1]))['tasks']))" "$req" > /tmp/tasks.txt
+                python3 tools/suno_recover.py /tmp/tasks.txt > "$log" 2>&1 || status=1 ;;
+              *)
+                echo "mode inconnu : $mode" > "$log"; status=1 ;;
+            esac
+            # jamais de jeton dans les journaux commités
+            sed -i -E 's/([?&](token|sig|signature|key|X-Amz-[A-Za-z]+)=)[^&" ]+/\1<masqué>/g' "$log"
+            { echo '```'; tail -n 40 "$log"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+            git mv -f "$req" "music-requests/done/${name}.json" 2>/dev/null || mv "$req" "music-requests/done/${name}.json"
+          done
+          echo "STATUS=$status" >> "$GITHUB_ENV"
+      - name: Commiter les résultats
+        if: always()
+        run: |
+          git config user.name "suno-music-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add -A music-requests assets/music/suno-originals
+          if git diff --cached --quiet; then echo "Rien à commiter"; else
+            git commit -m "chore(suno): résultats de l'automatisation Suno [${GITHUB_RUN_ID}]"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
+          exit "${STATUS:-1}"

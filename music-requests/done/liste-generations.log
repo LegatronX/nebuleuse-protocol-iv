@@ -1,0 +1,25 @@
+  /generate/record-list {'page': 1, 'pageSize': 50} : HTTP 404 {"timestamp":1790506424690,"status":404,"error":"Not Found","message":"No message available","path":"/api/v1/generate/record-list"}
+  /generate/record-list {} : HTTP 404 {"timestamp":1790506425070,"status":404,"error":"Not Found","message":"No message available","path":"/api/v1/generate/record-list"}
+  /generate/list {'page': 1, 'pageSize': 50} : HTTP 404 {"timestamp":1790506425484,"status":404,"error":"Not Found","message":"No message available","path":"/api/v1/generate/list"}
+  /generate/list {} : HTTP 404 {"timestamp":1790506425578,"status":404,"error":"Not Found","message":"No message available","path":"/api/v1/generate/list"}
+  /generate/history {'page': 1, 'pageSize': 50} : HTTP 404 {"timestamp":1790506425673,"status":404,"error":"Not Found","message":"No message available","path":"/api/v1/generate/history"}
+  /generate/history {} : HTTP 404 {"timestamp":1790506425776,"status":404,"error":"Not Found","message":"No message available","path":"/api/v1/generate/history"}
+  /generate/records {'page': 1, 'pageSize': 50} : HTTP 404 {"timestamp":1790506425870,"status":404,"error":"Not Found","message":"No message available","path":"/api/v1/generate/records"}
+  /generate/records {} : HTTP 404 {"timestamp":1790506425963,"status":404,"error":"Not Found","message":"No message available","path":"/api/v1/generate/records"}
+  /record/list {'page': 1, 'pageSize': 50} : HTTP 404 {"timestamp":1790506426056,"status":404,"error":"Not Found","message":"No message available","path":"/api/v1/record/list"}
+  /record/list {} : HTTP 404 {"timestamp":1790506426149,"status":404,"error":"Not Found","message":"No message available","path":"/api/v1/record/list"}
+  /task/list {'page': 1, 'pageSize': 50} : HTTP 404 {"timestamp":1790506426437,"status":404,"error":"Not Found","message":"No message available","path":"/api/v1/task/list"}
+  /task/list {} : HTTP 404 {"timestamp":1790506426538,"status":404,"error":"Not Found","message":"No message available","path":"/api/v1/task/list"}
+  /tasks {'page': 1, 'pageSize': 50} : HTTP 404 {"timestamp":1790506426630,"status":404,"error":"Not Found","message":"No message available","path":"/api/v1/tasks"}
+  /tasks {} : HTTP 404 {"timestamp":1790506426732,"status":404,"error":"Not Found","message":"No message available","path":"/api/v1/tasks"}
+  /history {'page': 1, 'pageSize': 50} : HTTP 404 {"timestamp":1790506426824,"status":404,"error":"Not Found","message":"No message available","path":"/api/v1/history"}
+  /history {} : HTTP 404 {"timestamp":1790506426916,"status":404,"error":"Not Found","message":"No message available","path":"/api/v1/history"}
+  /logs {'page': 1, 'pageSize': 50} : HTTP 404 {"timestamp":1790506427011,"status":404,"error":"Not Found","message":"No message available","path":"/api/v1/logs"}
+  /logs {} : HTTP 404 {"timestamp":1790506427114,"status":404,"error":"Not Found","message":"No message available","path":"/api/v1/logs"}
+  /generate/logs {'page': 1, 'pageSize': 50} : HTTP 404 {"timestamp":1790506427209,"status":404,"error":"Not Found","message":"No message available","path":"/api/v1/generate/logs"}
+  /generate/logs {} : HTTP 404 {"timestamp":1790506427316,"status":404,"error":"Not Found","message":"No message available","path":"/api/v1/generate/logs"}
+  /user/records {'page': 1, 'pageSize': 50} : HTTP 404 {"timestamp":1790506427409,"status":404,"error":"Not Found","message":"No message available","path":"/api/v1/user/records"}
+  /user/records {} : HTTP 404 {"timestamp":1790506427506,"status":404,"error":"Not Found","message":"No message available","path":"/api/v1/user/records"}
+  /account/records {'page': 1, 'pageSize': 50} : HTTP 404 {"timestamp":1790506427800,"status":404,"error":"Not Found","message":"No message available","path":"/api/v1/account/records"}
+  /account/records {} : HTTP 404 {"timestamp":1790506427908,"status":404,"error":"Not Found","message":"No message available","path":"/api/v1/account/records"}
+Liste trouvée : aucune
