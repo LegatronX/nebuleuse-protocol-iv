@@ -1,6 +1,5 @@
 {
   "schema": 1,
-  "status": "en attente — aucun morceau récupéré (accès réseau api.sunoapi.org refusé dans l'environnement de récupération, clé et identifiants de tâches non fournis)",
   "tracks": [
     {
       "title": "Dudu d’idole d’idole dkddn",
@@ -823,12 +822,12 @@
     {
       "taskId": "9ca70a12942338d6bc86ddef205e5f71",
       "status": "SENSITIVE_WORD_ERROR",
-      "reason": "success"
+      "reason": "génération rejetée par le fournisseur (mot sensible) : aucun audio produit"
     },
     {
       "taskId": "ac986155117c33b6b30f50b406abe54a",
       "status": "SENSITIVE_WORD_ERROR",
-      "reason": "success"
+      "reason": "génération rejetée par le fournisseur (mot sensible) : aucun audio produit"
     }
   ],
   "generatedAt": "2026-09-27T10:57:04+00:00"

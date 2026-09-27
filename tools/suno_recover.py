@@ -118,7 +118,7 @@ def recover_task(task_id, key, manifest, known_hashes):
     clips = (data.get("response") or {}).get("sunoData") or []
     if not clips:
         manifest["failures"].append({"taskId": task_id, "status": status,
-                                     "reason": res.get("msg") or "aucun morceau dans la réponse"})
+                                     "reason": "aucun morceau dans la réponse" if status != "SENSITIVE_WORD_ERROR" else "génération rejetée par le fournisseur (mot sensible)"})
         return 0
     params = data.get("param")
     if isinstance(params, str):
@@ -198,6 +198,7 @@ def main():
     os.makedirs(OUT_DIR, exist_ok=True)
     manifest = load_manifest()
     manifest["failures"] = []
+    manifest.pop("status", None)
     known = {t["sha256"]: t["path"] for t in manifest["tracks"] if t.get("sha256")}
     total = 0
     for tid in dict.fromkeys(tasks):

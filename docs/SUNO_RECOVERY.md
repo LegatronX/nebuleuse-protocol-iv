@@ -10,7 +10,7 @@ Récupérer des morceaux **déjà générés** avec l'API Suno de `LegatronX/sun
 | Application Streamlit déployée (Streamlit Community Cloud) | L'historique vit dans `st.session_state["history"]` : il est perdu à la fermeture de la session. Ce n'est pas une archive. |
 | `pipeline.py` → `output/` | Écrit `<clip_id>.mp3`, `<clip_id>_cover.jpg` et `<clip_id>_metadata.txt` **sur la machine qui exécute l'application**. Sur Streamlit Cloud, ce disque est éphémère : il est effacé au redémarrage. En exécution locale, regarder `suno-creator/output/`. |
 | Fournisseur sunoapi.org | Source faisant foi. L'API ne propose **pas** de liste des générations : il faut l'identifiant de tâche (`taskId`) pour lire une génération via `GET /generate/record-info`. Les identifiants se trouvent dans le tableau de bord sunoapi.org (journal des tâches), dans la réponse de `POST /generate` (`data.taskId`) ou dans `output/*_metadata.txt`. |
-| URLs audio renvoyées (`audioUrl`, `sourceAudioUrl`) | Hébergées temporairement par le fournisseur. **Leur durée de vie n'a pas pu être vérifiée** : récupérer les fichiers sans attendre. La doc du dépôt indique 3 jours pour les fichiers *uploadés* (`downloadUrl`). |
+| URLs audio renvoyées (`audioUrl`, `sourceAudioUrl`) | Hébergées sur `tempfile.aiquickdraw.com` (hôte « fichiers temporaires », vérifié le 27/09). Leur durée de vie exacte n'est pas documentée : récupérer les fichiers sans attendre. Les morceaux de 3 h à 8 h du matin étaient encore disponibles 8 h plus tard. |
 
 ## Secrets
 
@@ -99,3 +99,11 @@ L'automatisation commite ensuite sur la même branche :
 - la demande et son compte rendu, dans `music-requests/done/`.
 
 Les journaux commités sont purgés des jetons d'URL. Une fois le workflow présent sur la branche par défaut, il peut aussi être lancé à la main (onglet Actions → Suno music → Run workflow).
+
+## Récupération du 27 septembre 2026
+
+- **Demande** : 19 tâches (générations du 27/09, entre 02:38 et 03:32 heure de Paris), liste dans `music-requests/done/recup-26-27-sept.json`.
+- **Résultat** : **34 morceaux** récupérés, tous des MP3 que `ffprobe` décode, environ 174 min au total, modèle `chirp-hawk`. Aucun doublon d'empreinte SHA-256.
+- **Échecs** : 2 tâches, `9ca70a12…` et `ac986155…` (« Traversée du Signal (REJETÉ) »), refusées par le fournisseur (`SENSITIVE_WORD_ERROR`). Aucun audio n'existe pour elles.
+- La tâche `26638e8f…` (type « sounds ») a produit deux courts effets sonores de 17 s et 21 s, titrés par Suno « Dudu d'idole… ».
+- **Volume** : environ 235 Mo, versionnés dans Git (chaque fichier fait moins de 10 Mo).
