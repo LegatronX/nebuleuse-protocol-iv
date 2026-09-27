@@ -58,3 +58,24 @@ Toute valeur absente vaut `"inconnu"`. **Droits commerciaux** : l'API ne les ren
 ## Volume
 
 Un morceau fait environ 3 à 8 Mo en MP3. Jusqu'à une centaine de fichiers, Git suffit (les pistes actuelles du jeu sont déjà versionnées). Au-delà, utiliser Git LFS (`git lfs track "assets/music/suno-originals/*"`) ou une Release GitHub, et noter l'emplacement dans ce document.
+
+## Créer de nouvelles musiques pour le jeu
+
+`tools/suno_generate.py` lance une génération, attend le résultat par interrogation de `record-info`, télécharge les originaux et les ajoute au manifeste (champ `cue`).
+
+```sh
+python3 tools/suno_generate.py --list-cues            # préréglages : menu, combat, boss, final, phenomene, victoire
+python3 tools/suno_generate.py --cue boss             # essai à blanc : affiche la requête, n'envoie rien
+python3 tools/suno_generate.py --cue boss --confirm   # génère (dépense des crédits), attend, télécharge
+python3 tools/suno_generate.py --title "…" --style "…" --prompt "…" --confirm
+```
+
+- Les morceaux sont toujours instrumentaux et pensés pour boucler. Une palette commune (`HOUSE_STYLE`) assure la cohérence avec la bande-son studio.
+- **Sans `--confirm`, rien n'est envoyé.** Une génération produit en général deux variantes.
+- Le `taskId` est affiché et conservé dans le manifeste. En cas d'expiration de l'attente, relancer `tools/suno_recover.py --task <taskId>`.
+- Le jeu n'est pas modifié : le choix et l'intégration d'une piste se font ensuite.
+
+**Prérequis de l'environnement cloud :**
+- `api.sunoapi.org` autorisé dans l'accès réseau ;
+- l'identifiant d'API « Suno API », pris en compte dans une **nouvelle** session ;
+- l'hôte des fichiers audio renvoyés par l'API autorisé lui aussi (visible dans `sourceHost` après le premier essai).
