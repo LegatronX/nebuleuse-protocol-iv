@@ -32,6 +32,8 @@ MANIFEST = os.path.join(OUT_DIR, "manifest.json")
 UNKNOWN = "inconnu"
 # signatures des formats audio attendus
 MAGIC = {b"ID3": "mp3", b"RIFF": "wav", b"fLaC": "flac", b"OggS": "ogg"}
+# certains pare-feu rejettent l'identifiant « Python-urllib » par défaut (HTTP 403)
+UA = {"User-Agent": "nebuleuse-suno-tools/1.0 (+https://github.com/LegatronX/nebuleuse-protocol-iv)", "Accept": "application/json"}
 RIGHTS_NOTE = ("Droits commerciaux non vérifiés par ce script : dépendent de l'abonnement "
                "Suno / sunoapi.org actif au moment de la génération. À confirmer dans le "
                "tableau de bord du fournisseur.")
@@ -40,7 +42,7 @@ RIGHTS_NOTE = ("Droits commerciaux non vérifiés par ce script : dépendent de 
 def api_get(path, params, key):
     url = f"{BASE_URL}{path}?{urllib.parse.urlencode(params)}"
     # sans clé locale, l'en-tête est ajouté par le proxy de l'environnement cloud (identifiant « Suno API »)
-    req = urllib.request.Request(url, headers={"Authorization": f"Bearer {key}"} if key else {})
+    req = urllib.request.Request(url, headers={**UA, **({"Authorization": f"Bearer {key}"} if key else {})})
     with urllib.request.urlopen(req, timeout=30) as r:
         return json.loads(r.read().decode("utf-8"))
 
@@ -84,7 +86,8 @@ def sha256(path):
 
 def download(url, dest):
     tmp = dest + ".part"
-    with urllib.request.urlopen(url, timeout=120) as r, open(tmp, "wb") as f:
+    req = urllib.request.Request(url, headers={"User-Agent": UA["User-Agent"]})
+    with urllib.request.urlopen(req, timeout=120) as r, open(tmp, "wb") as f:
         while True:
             chunk = r.read(1 << 20)
             if not chunk:

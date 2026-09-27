@@ -21,6 +21,7 @@ import json
 import os
 import sys
 import time
+import urllib.error
 import urllib.request
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -51,7 +52,7 @@ CUES = {
 def api_post(path, payload, key):
     req = urllib.request.Request(
         f"{rec.BASE_URL}{path}", data=json.dumps(payload).encode("utf-8"), method="POST",
-        headers={"Content-Type": "application/json", **({"Authorization": f"Bearer {key}"} if key else {})})
+        headers={**rec.UA, "Content-Type": "application/json", **({"Authorization": f"Bearer {key}"} if key else {})})
     with urllib.request.urlopen(req, timeout=60) as r:
         return json.loads(r.read().decode("utf-8"))
 
@@ -97,6 +98,9 @@ def credits(key):
     for path in ("/generate/credit", "/account/credits", "/credits"):
         try:
             res = rec.api_get(path, {}, key)
+        except urllib.error.HTTPError as e:
+            print(f"  {path} : HTTP {e.code} {e.read()[:300].decode('utf-8', 'replace')}")
+            continue
         except Exception as e:  # endpoint absent
             print(f"  {path} : {e}")
             continue
