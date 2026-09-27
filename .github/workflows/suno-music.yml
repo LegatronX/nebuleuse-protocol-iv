@@ -5,6 +5,7 @@
 # (ou lancer le workflow à la main une fois celui-ci présent sur la branche par défaut).
 # Formats de demande :
 #   {"mode": "credits"}                                   → lecture des crédits, rien n'est dépensé
+#   {"mode": "probe"}                                     → cherche une liste des générations (lecture seule)
 #   {"mode": "generate", "cue": "boss"}                   → génère (dépense des crédits)
 #   {"mode": "generate", "title": "…", "style": "…", "prompt": "…", "model": "V5"}
 #   {"mode": "recover", "tasks": ["taskId1", "taskId2"]}  → récupère des générations existantes
@@ -59,6 +60,8 @@ jobs:
             case "$mode" in
               credits)
                 python3 tools/suno_generate.py --credits > "$log" 2>&1 || status=1 ;;
+              probe)
+                python3 tools/suno_generate.py --probe-history > "$log" 2>&1 || status=1 ;;
               generate)
                 args=$(python3 - "$req" <<'PY'
           import json, shlex, sys

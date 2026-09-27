@@ -109,6 +109,29 @@ def credits(key):
     return None
 
 
+def probe_history(key):
+    """Lecture seule : cherche une liste des générations récentes (non documentée)."""
+    cands = ["/generate/record-list", "/generate/list", "/generate/history", "/generate/records",
+             "/record/list", "/task/list", "/tasks", "/history", "/logs", "/generate/logs",
+             "/user/records", "/account/records"]
+    found = None
+    for path in cands:
+        for params in ({"page": 1, "pageSize": 50}, {}):
+            try:
+                res = rec.api_get(path, params, key)
+                body = json.dumps(res, ensure_ascii=False)
+                print(f"  {path} {params} : OK {body[:600]}")
+                if res.get("code") == 200 and res.get("data"):
+                    found = found or path
+                break
+            except urllib.error.HTTPError as e:
+                print(f"  {path} {params} : HTTP {e.code} {e.read()[:160].decode('utf-8', 'replace')}")
+            except Exception as e:
+                print(f"  {path} {params} : {e}")
+    print(f"Liste trouvée : {found or 'aucune'}")
+    return found
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--cue", choices=sorted(CUES))
@@ -120,10 +143,14 @@ def main():
     ap.add_argument("--timeout", type=int, default=900, help="attente maximale en secondes")
     ap.add_argument("--list-cues", action="store_true")
     ap.add_argument("--credits", action="store_true", help="affiche les crédits restants (lecture seule)")
+    ap.add_argument("--probe-history", action="store_true", help="cherche une liste des générations (lecture seule)")
     args = ap.parse_args()
     if args.list_cues:
         for k, (t, s, p) in CUES.items():
             print(f"{k:10} {t} — {s}")
+        return
+    if args.probe_history:
+        probe_history(os.environ.get("SUNO_KEY"))
         return
     if args.credits:
         sys.exit(0 if credits(os.environ.get("SUNO_KEY")) is not None else 1)
