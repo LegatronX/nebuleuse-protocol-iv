@@ -133,3 +133,38 @@ test('v5.19 module is embedded by the build tool, after v5.18',()=>{
  const i=html.indexOf('// BEGIN ESCADRILLES V5.19\n'+mod+'\n      // END ESCADRILLES V5.19');assert.ok(i>0);assert.ok(i>html.indexOf('// END EXPERIENCE V5.18'));
  assert.doesNotMatch(mod.replace(/\/\/.*$/gm,''),/Math\.random\(\)\s*\*\s*1e|localStorage/);
 });
+test('v5.21 boss bar is hidden without a boss, even under the ghost HUD, and shown during a boss',()=>{
+ const h=boot();try{const d=h.w.document;d.getElementById('modeCampagne').click();h.advance(300);
+ const bar=d.getElementById('bossHud');bar.classList.add('np-ghost');assert.equal(h.g.hud21.boss(),false);
+ h.g.spawnBoss();h.advance(100);assert.equal(h.g.hud21.boss(),true);
+ h.g.enemies.length=0;h.g.endWave&&h.g.endWave();h.advance(300);
+ assert.match(d.getElementById('hud21').textContent,/#bossHud:not\(\.on21\)\{opacity:0!important/);checkErrors(h);
+ }finally{h.close();}
+});
+test('v5.21 fewer floating texts: graze text removed, quick score gains merged, at most six on screen',()=>{
+ const h=boot();try{h.w.document.getElementById('modeCampagne').click();h.advance(200);const H=h.g.hud21;
+ const n0=H.texts().length;H.addText(10,10,'FRÔLEMENT x4','#fff');assert.equal(H.texts().length,n0);
+ H.addText(10,10,'+20','#fff');H.addText(12,12,'+30','#fff');assert.ok(H.texts().includes('+50'));
+ for(let i=0;i<12;i++)H.addText(10,10,'BONUS '+i,'#fff');assert.ok(H.texts().length<=6);checkErrors(h);
+ }finally{h.close();}
+});
+test('v5.21 humanised fire varies the cadence; the Métronome setting restores a fixed rhythm',()=>{
+ const h=boot({meta:{ship:0}});try{const d=h.w.document;d.getElementById('modeCampagne').click();h.advance(200);
+ const cds=new Set();for(let i=0;i<40;i++)cds.add(h.g.hud21.fire().toFixed(4));assert.ok(cds.size>10,'cadence variable');
+ const sel=d.getElementById('stHuman21');sel.value='0';sel.dispatchEvent(new h.w.Event('change',{bubbles:true}));
+ const fixed=new Set();for(let i=0;i<20;i++)fixed.add(h.g.hud21.fire().toFixed(4));assert.equal(fixed.size,1);
+ assert.equal(JSON.parse(h.w.localStorage.getItem('nebula4_meta')).humanFire,false);checkErrors(h);
+ }finally{h.close();}
+});
+test('v5.21 generated planets: varied kinds, never three in a row the same, delegated by the legacy parallax layer',()=>{
+ const h=boot();try{const ps=h.g.planets21.sample(9);const kinds=ps.map(p=>p.kind);
+ assert.ok(new Set(kinds).size>=5);for(let i=3;i<kinds.length;i++)assert.ok(!kinds.slice(i-3,i).includes(kinds[i]));
+ const p=h.g.planets21.create(390);assert.ok(p.g21&&p.r>0&&p.vy>0);
+ const html=fs.readFileSync(path.join(root,'index.html'),'utf8');assert.match(html,/planets\.push\(window\.__NP4\.planets21\.create\(W\)\)/);
+ assert.match(html,/if \(p\.g21\) \{ window\.__NP4\.planets21\.draw\(ctx, p\); continue; \}/);checkErrors(h);
+ }finally{h.close();}
+});
+test('v5.21 module is embedded by the build tool, last',()=>{
+ const html=fs.readFileSync(path.join(root,'index.html'),'utf8');const mod=fs.readFileSync(path.join(root,'v521.js'),'utf8');
+ const i=html.indexOf('// BEGIN INTERFACE V5.21\n'+mod+'\n      // END INTERFACE V5.21');assert.ok(i>0);assert.ok(i>html.indexOf('// END RENCONTRES V5.20'));
+});

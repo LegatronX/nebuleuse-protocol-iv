@@ -2,6 +2,18 @@
 
 Petit shoot 'em up vertical en HTML/CSS/JS pur (aucune dépendance), jouable directement dans un navigateur.
 
+## v5.21 — Interface unifiée et lisibilité
+
+Réponse aux retours de jeu sur la v5.20 (`v521.js`, intégré par `tools/build-experience.py`).
+
+- **Barre de boss** : fine (3 px), centrée, et visible seulement quand un boss est en jeu. Depuis la v5.16, le « HUD fantôme » la laissait affichée à 40 % sur toute la largeur, même sans boss.
+- **Moins d'informations à l'écran** : les gains de score rapprochés sont fusionnés en un seul texte, avec six textes flottants au maximum. Le record, le compteur de frôlements et les étiquettes sous les boutons sont retirés du HUD.
+- **Un seul style d'interface**, en verre translucide flouté avec une seule famille de caractères, appliqué aux panneaux, badges, notifications, barre de boss et boutons.
+- **Commandes tactiles** : NOVA, BOMBE, DASH et TIR deviennent des boutons de verre de 58 px avec une icône. La charge de la NOVA s'affiche en anneau et le nombre de bombes en pastille. Une tape à deux doigts, n'importe où, lance une bombe (astuce affichée une fois).
+- **Tir humanisé** (réglage, activé par défaut) : la cadence accélère et ralentit comme une gâchette tenue à la main, avec de courtes rafales et de micro-hésitations. Le son alterne trois timbres, avec une hauteur (±70 cents), une vélocité et un départ légèrement variables. Les missiles et le plasma n'arrivent plus à intervalle fixe. Le choix « Métronome » rétablit le comportement d'avant.
+- **Planètes générées** : sept genres (géante gazeuse, tellurique, glacée, volcanique, océanique, désertique, toxique), avec une palette dérivée du secteur, des anneaux à plusieurs bandes, des lunes et des planètes lointaines en parallaxe. Un genre ne revient pas avant trois autres.
+- **Frôlements** : la mécanique reste (passer très près d'un tir ennemi charge la NOVA), mais le texte « FRÔLEMENT xN » quitte l'écran.
+
 ## v5.20 — Aperçu : rencontres et profondeur
 
 Basé sur la v5.19 de Claude (`07b4a3e`). Lancer cet aperçu avec `npm start`, puis ouvrir **http://127.0.0.1:8179/**.

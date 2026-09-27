@@ -144,7 +144,9 @@ async function main() {
     await shot('v517-cadrage-4-5');
     nano0 = await G(() => JSON.parse(localStorage.getItem('nebula4_meta')).nanites);
     await page.tap('#photoShoot');
-    await wait(900);
+    // l'encodage JPEG HD peut dépasser 900 ms sous rendu logiciel : on attend le tirage
+    await page.waitForFunction(() => window.__NP4.photo.blob(), null, { timeout: 4000 }).catch(() => {});
+    await wait(200);
     const r = await G(() => {
       const meta = JSON.parse(localStorage.getItem('nebula4_meta'));
       const e = meta.phen && meta.phen.baleine;
@@ -251,7 +253,7 @@ async function main() {
     A(!/Math\.random\s*\(|\brand\(|\bpick\(/.test(src), 'appel aléatoire global');
     const html = fs.readFileSync(path.join(APP_DIR, 'index.html'), 'utf8');
     A(html.indexOf('MODULE V5.17') > html.indexOf('MODULE V5.14 — PIPELINE'), 'v5.17 doit suivre le pipeline GPU');
-    A(/np4-v5\.1[7-9]/.test(fs.readFileSync(path.join(APP_DIR, 'sw.js'), 'utf8')), 'sw non versionné');
+    A(/np4-v5\.(1[7-9]|[2-9]\d)/.test(fs.readFileSync(path.join(APP_DIR, 'sw.js'), 'utf8')), 'sw non versionné');
   });
 
   await browser.close();
