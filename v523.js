@@ -15,7 +15,7 @@
         const G = window.__NP4;
         const MAX = 3;
         const isTitan = () => (meta.ship || 0) === 2;
-        let salvo = 0, salvoT = 0, fired = 0;
+        let salvo = 0, salvoT = 0, fired = 0, novaCd = 0;
 
         const nova = doSpecial; // chaîne complète (missions, succès, prototypes)
 
@@ -66,7 +66,7 @@
 
         const baseStart23 = startGame;
         startGame = function (...a) {
-          salvo = 0;
+          salvo = 0; novaCd = 0;
           baseStart23.apply(this, a);
           if (player) player.cannon = isTitan() ? 2 : 1;
           updateHUD();
@@ -86,8 +86,10 @@
             salvoT -= dt;
             if (salvoT <= 0) { shoot(); salvo--; salvoT = 0.2; }
           }
-          // NOVA automatique à énergie pleine
-          if (player.energy >= 100 && enemies.length) nova();
+          // NOVA automatique à énergie pleine — v5.24 : au plus toutes les 25 s, et seulement
+          // quand elle sert (4 ennemis ou plus, ou un boss)
+          novaCd -= dt;
+          if (player.energy >= 100 && novaCd <= 0 && (enemies.length >= 4 || (boss && enemies.includes(boss)))) { novaCd = 25; nova(); }
           const n = player.cannon || 0;
           specialBtn.dataset.status = `${n} · C`;
           specialBtn.setAttribute('aria-label', n ? `Canon lourd, ${n} obus, touche C` : 'Canon lourd, aucun obus');

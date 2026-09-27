@@ -446,10 +446,10 @@ async function main() {
     const r = await p.evaluate(() => {
       const b = document.getElementById('routeBadge').getBoundingClientRect();
       const bars = document.querySelector('#hud .mid .panel.bars');
-      const bb = bars ? bars.getBoundingClientRect() : { bottom: 0 };
-      return { st: window.__NP4.state, act: window.__NP4.routes.active(), badgeTop: b.top, barsBottom: bb.bottom, badgeBottom: b.bottom, ih: innerHeight };
+      const bb = bars ? bars.getBoundingClientRect() : { top: 0, bottom: 0 };
+      return { st: window.__NP4.state, act: window.__NP4.routes.active(), badgeTop: b.top, barsTop: bb.top, barsBottom: bb.bottom, badgeBottom: b.bottom, ih: innerHeight };
     });
-    A(r.st === 'playing' && r.act && r.badgeTop >= r.barsBottom - 1 && r.badgeBottom < r.ih * 0.5, JSON.stringify(r));
+    A(r.st === 'playing' && r.act && (r.badgeTop >= r.barsBottom - 1 || r.badgeBottom <= r.barsTop + 1) && r.badgeBottom < r.ih * 0.5 /* v5.24 : jauges en bas ; pas de chevauchement */, JSON.stringify(r));
     await c.close();
   });
 

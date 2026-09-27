@@ -229,9 +229,32 @@ test('v5.23 O capsule adds a shell (max 3) and bosses always drop one',()=>{
   h.g.cannon.apply('O');assert.equal(h.g.cannon.count(),3,'plafond');checkErrors(h);
  }finally{h.close();}
 });
-test('v5.23 NOVA fires by itself when energy is full',()=>{
+test('v5.23/5.24 NOVA fires by itself when energy is full, at most every 25 s',()=>{
  const h=boot();try{h.w.document.getElementById('modeCampagne').click();h.advance(300);
-  h.g.enemies.push({type:'dummy',x:195,y:-70,r:1,hp:1e9,maxHp:1e9,vy:0,fireCd:999,t:0,score:0});
-  h.g.player.energy=100;h.advance(100);assert.ok(h.g.player.energy<50,'NOVA déclenchée');checkErrors(h);
+  for(let i=0;i<5;i++)h.g.enemies.push({type:'dummy',x:40+i*70,y:-70,r:1,hp:1e9,maxHp:1e9,vy:0,fireCd:999,t:0,score:0});
+  h.g.player.energy=100;h.advance(100);assert.ok(h.g.player.energy<50,'NOVA déclenchée');
+  h.g.player.energy=100;h.advance(3000);assert.ok(h.g.player.energy>=100,'pas avant 25 s');checkErrors(h);
+ }finally{h.close();}
+});
+test('v5.24 random capsules from ordinary enemies are throttled; bosses still drop theirs',()=>{
+ const h=boot();try{h.w.document.getElementById('modeCampagne').click();h.advance(300);
+  for(let i=0;i<40;i++){h.g.enemies.push({type:'drone',x:100,y:100,r:10,hp:1,maxHp:1,vy:0,fireCd:999,t:0,score:1,elite:true});h.g.v10.kill(h.g.enemies.length-1);}
+  const d=h.g.comfort.drops();assert.equal(d.kept,1,'une seule capsule sur 40 élites en rafale');assert.ok(d.skipped>=39);
+  h.g.spawnBoss();h.advance(100);const b=h.g.boss;b.hp=0;h.g.v10.kill(h.g.enemies.indexOf(b));
+  assert.equal(h.g.cannon.caps(),1,'obus du boss');checkErrors(h);
+ }finally{h.close();}
+});
+test('v5.24 gauges sit at the bottom left, labelled, and ignore the ghost HUD; the fire button is thumb-sized',()=>{
+ const h=boot();try{const d=h.w.document;const css=d.getElementById('hud24').textContent;
+  assert.match(css,/panel\.bars\{position:fixed!important;top:auto!important/);assert.match(css,/panel\.bars\.np-ghost\{opacity:\.92!important\}/);
+  assert.match(css,/#fireBtn\{width:84px!important/);
+  const labels=[...d.querySelectorAll('#hud .mid .bar-row span')].map(s=>s.dataset.l);assert.ok(labels.slice(0,3).join('')==='CBÉ',labels.join(''));
+  assert.ok(d.querySelector('#fireBtn svg'));checkErrors(h);
+ }finally{h.close();}
+});
+test('v5.24 NOVA lance recharges slowly and only fires on a target in its lane',()=>{
+ const h=boot({meta:{autoFire:true}});try{h.w.document.getElementById('modeCampagne').click();h.advance(300);
+  assert.ok(h.g.v12.lanceT()>=12);h.g.enemies.length=0;h.advance(16000);assert.ok(h.g.v12.charge()>=0.99,'chargée mais sans cible');
+  checkErrors(h);
  }finally{h.close();}
 });

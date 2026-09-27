@@ -2,6 +2,15 @@
 
 Petit shoot 'em up vertical en HTML/CSS/JS pur (aucune dépendance), jouable directement dans un navigateur.
 
+## v5.24 — Confort de jeu
+
+- **NOVA LANCE** (le rayon central qui partait du vaisseau) : en tir automatique, elle se déclenchait toutes les 2,6 s. Elle se recharge maintenant en 12 à 20 s, de façon irrégulière, et ne part que sur une cible dans son axe. Son son et sa secousse sont adoucis, et le texte « NOVA LANCE » est retiré.
+- **NOVA automatique** (v5.23) : elle part au plus toutes les 25 s, et seulement face à 4 ennemis ou plus, ou à un boss.
+- **L'Orgue pétrifié** (monde des machines, vague 27) : en deuxième phase, le grincement métallique sonnait toutes les 1,1 s. Il revient maintenant toutes les 5 à 9 s, plus bas.
+- **Bonus** : les ennemis ordinaires lâchent au plus une capsule aléatoire toutes les 9 s de jeu (4 s pour une élite). Avant, 17 % de chances par ennemi, avec la densité v5.19, faisaient pleuvoir les capsules. Boss, mini-boss et capsules spéciales ne changent pas.
+- **Jauges** : coque, bouclier, énergie et surcharge quittent le haut gauche, où le HUD fantôme les faisait disparaître. Ce sont maintenant de fines jauges verticales en bas à gauche, au-dessus du bouton CANON, toujours visibles.
+- **Bouton TIR** (tir manuel) : 84 px avec un viseur. La v5.21 l'avait réduit à 58 px.
+
 ## v5.23 — Canon lourd à la demande
 
 Retour de jeu : en tir automatique, le canon à rail du TITAN partait à chaque salve (environ toutes les 0,6 s). Il écrasait les ennemis et son bruit devenait lassant (`v523.js`).

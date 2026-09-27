@@ -916,6 +916,9 @@ async function main() {
       const r = await GA(async () => {
         const N = window.__NP4;
         const pan0 = N.v12.panUsed();
+        // v5.24 : recharge longue et cible requise dans l'axe ; on remet l'ancien délai et une cible
+        N.v12.lanceT(2.6);
+        N.enemies.push({ type: 'dummy', x: N.player.x, y: N.player.y - 200, r: 10, hp: 1e9, maxHp: 1e9, vy: 0, fireCd: 999, t: 0, score: 0 });
         N.v11.pressFire(true);
         await new Promise(r2 => setTimeout(r2, 3200));
         N.v11.pressFire(false);
