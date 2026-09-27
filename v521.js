@@ -69,9 +69,9 @@ body #bossHud.on21.np-ghost{opacity:.3!important}
   place-content:center;gap:2px;opacity:.9!important;touch-action:none}
 #specialBtn svg,#bombBtn svg,#dashBtn svg{width:22px;height:22px;display:block;margin:0 auto}
 #hud #specialBtn::after,#hud #bombBtn::after{content:none!important}
-#specialBtn{--charge:0;background:conic-gradient(rgba(125,211,252,.55) calc(var(--charge)*1turn),transparent 0) padding-box,var(--g-bg)!important}
-#specialBtn.ready{box-shadow:inset 0 1px 0 var(--g-hi),0 0 0 2px rgba(125,211,252,.7),0 0 22px rgba(125,211,252,.45)!important}
-#bombBtn .n21{position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;border-radius:9px;background:var(--g-ink);
+#specialBtn{position:relative;opacity:.55!important}
+#specialBtn.ready{opacity:.95!important;box-shadow:inset 0 1px 0 var(--g-hi),0 0 0 2px rgba(253,186,116,.75),0 0 22px rgba(253,186,116,.4)!important}
+#specialBtn .n21,#bombBtn .n21{position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;border-radius:9px;background:var(--g-ink);
   color:#0b1020;font:700 11px/18px var(--g-font);text-align:center;padding:0 4px}
 #bombBtn{position:relative}
 #specialBtn:active,#bombBtn:active,#dashBtn:active{transform:scale(.92)!important}
@@ -85,6 +85,7 @@ body #bossHud.on21.np-ghost{opacity:.3!important}
 
         // icônes (traits simples, lisibles à petite taille)
         const ICONS = {
+          cannon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="12" rx="1.5"/><path d="M7 15h10l-1.5 4h-7z"/><path d="M12 1v2"/></svg>',
           nova: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M18.4 5.6l-2.8 2.8M8.4 15.6l-2.8 2.8"/><circle cx="12" cy="12" r="2.2" fill="currentColor"/></svg>',
           bomb: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="14" r="6.5"/><path d="M15.5 9.5l2-2M18 5l1-1M19.5 7.5H21M16.5 4V3"/></svg>',
           dash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h10M10 7l5 5-5 5M18 6v12"/></svg>'
@@ -96,12 +97,16 @@ body #bossHud.on21.np-ghost{opacity:.3!important}
         }
         const bombBadge = document.createElement('span');
         bombBadge.className = 'n21';
+        const cannonBadge = document.createElement('span'); // v5.23 : obus du canon lourd
+        cannonBadge.className = 'n21';
         function dressAll() {
-          dress($('specialBtn'), 'nova', 'NOVA');
+          dress($('specialBtn'), 'cannon', 'CANON');
           dress($('bombBtn'), 'bomb', 'BOMBE');
           dress($('dashBtn'), 'dash', 'DASH');
           const b = $('bombBtn');
           if (b && bombBadge.parentNode !== b) b.appendChild(bombBadge);
+          const sp = $('specialBtn');
+          if (sp && cannonBadge.parentNode !== sp) sp.appendChild(cannonBadge);
         }
         dressAll();
 
@@ -322,7 +327,8 @@ body #bossHud.on21.np-ghost{opacity:.3!important}
           if (state !== 'playing' || !player) return;
           dressAll();
           const sb = $('specialBtn');
-          if (sb) sb.style.setProperty('--charge', String(Math.min(1, player.energy / 100)));
+          if (sb) sb.classList.toggle('ready', (player.cannon || 0) > 0);
+          cannonBadge.textContent = String(player.cannon || 0);
           bombBadge.textContent = String(player.bombs);
           if (!hinted && gameTime > 25 && player.bombs > 0) {
             hinted = true;

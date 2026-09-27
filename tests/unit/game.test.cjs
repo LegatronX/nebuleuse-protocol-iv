@@ -12,7 +12,7 @@ test('whole game boots and all original controls retain their IDs and handlers',
  d.getElementById('shipBtn').click();assert.ok(!d.getElementById('shipOverlay').classList.contains('hidden'));
  d.getElementById('closeShipBtn').click();d.getElementById('modeCampagne').click();h.advance(500);
  assert.equal(h.g.state,'playing');assert.equal(h.g.experience.style(),'suno');assert.equal(h.g.experience.audio().active,false);
- assert.match(d.getElementById('specialBtn').getAttribute('aria-label'),/NOVA/);checkErrors(h);
+ assert.match(d.getElementById('specialBtn').getAttribute('aria-label'),/Canon lourd/);checkErrors(h);
  }finally{h.close();}
 });
 test('help traps focus, Escape closes it, then pauses a run and auto-fire persists',()=>{
@@ -201,4 +201,37 @@ test('v5.22 module is embedded last and the service worker streams the soundtrac
  const html=fs.readFileSync(path.join(root,'index.html'),'utf8');const mod=fs.readFileSync(path.join(root,'v522.js'),'utf8');
  const i=html.indexOf('// BEGIN BANDE-SON V5.22\n'+mod+'\n      // END BANDE-SON V5.22');assert.ok(i>html.indexOf('// END INTERFACE V5.21'));
  const sw=fs.readFileSync(path.join(root,'sw.js'),'utf8');assert.match(sw,/assets\/music\/game\/'\)\) return;/);assert.doesNotMatch(sw,/"assets\/music\/game\//);
+});
+test('v5.23 TITAN no longer fires its heavy rail on every volley; auto-fire keeps the normal cadence',()=>{
+ const h=boot({meta:{ship:2,humanFire:false}});try{h.w.document.getElementById('modeCampagne').click();h.advance(200);
+  const cd=h.g.hud21.fire();assert.ok(cd<0.2,'cadence normale '+cd);
+  h.advance(3000);assert.equal(h.g.cannon.fired(),0);checkErrors(h);
+ }finally{h.close();}
+});
+test('v5.23 CANON button: limited shells, salvo of 3 (5 for TITAN), key C, shells from the O capsule',()=>{
+ for(const [ship,start,shots] of [[0,1,3],[2,2,5]]){
+  const h=boot({meta:{ship}});try{const d=h.w.document;d.getElementById('modeCampagne').click();h.advance(300);
+   const C=h.g.cannon;assert.equal(C.count(),start);
+   h.g.enemies.push({type:'dummy',x:195,y:-70,r:1,hp:1e9,maxHp:1e9,vy:0,fireCd:999,t:0,score:0});
+   const btn=d.getElementById('specialBtn');assert.ok(btn.classList.contains('ready'));assert.match(btn.textContent,/CANON/);
+   let rails=0;const sig=h.g.sig,orig=sig.rail;sig.rail=(...a)=>{rails++;return orig(...a);};
+   btn.dispatchEvent(new h.w.Event('pointerdown',{bubbles:true,cancelable:true}));h.advance(1500);
+   assert.equal(rails,shots);assert.equal(C.count(),start-1);
+   C.set(0);h.advance(200);assert.ok(!btn.classList.contains('ready'));h.key('KeyC');h.advance(800);assert.equal(rails,shots,'pas d’obus, pas de tir');
+   checkErrors(h);}finally{h.close();}
+ }
+});
+test('v5.23 O capsule adds a shell (max 3) and bosses always drop one',()=>{
+ const h=boot();try{h.w.document.getElementById('modeCampagne').click();h.advance(300);
+  h.g.spawnBoss();h.advance(100);const b=h.g.boss;b.hp=0;h.g.v10.kill(h.g.enemies.indexOf(b));
+  assert.equal(h.g.cannon.caps(),1);
+  h.g.cannon.set(2);h.g.cannon.apply('O');assert.equal(h.g.cannon.count(),3);
+  h.g.cannon.apply('O');assert.equal(h.g.cannon.count(),3,'plafond');checkErrors(h);
+ }finally{h.close();}
+});
+test('v5.23 NOVA fires by itself when energy is full',()=>{
+ const h=boot();try{h.w.document.getElementById('modeCampagne').click();h.advance(300);
+  h.g.enemies.push({type:'dummy',x:195,y:-70,r:1,hp:1e9,maxHp:1e9,vy:0,fireCd:999,t:0,score:0});
+  h.g.player.energy=100;h.advance(100);assert.ok(h.g.player.energy<50,'NOVA déclenchée');checkErrors(h);
+ }finally{h.close();}
 });

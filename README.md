@@ -2,6 +2,16 @@
 
 Petit shoot 'em up vertical en HTML/CSS/JS pur (aucune dépendance), jouable directement dans un navigateur.
 
+## v5.23 — Canon lourd à la demande
+
+Retour de jeu : en tir automatique, le canon à rail du TITAN partait à chaque salve (environ toutes les 0,6 s). Il écrasait les ennemis et son bruit devenait lassant (`v523.js`).
+
+- Le canon lourd n'est plus automatique. Il se tire avec le bouton **CANON**, qui remplace l'ancien bouton NOVA (touche <kbd>C</kbd>), comme la bombe. Chaque obus donne une salve de 3 tirs perçants, 5 pour le TITAN, avec une explosion à partir du niveau 2 du vaisseau.
+- Les obus sont rares. Une capsule **O** (orange) en donne un : elle tombe toujours d'un boss, avec 30 % de chances d'un mini-boss et 4 % d'un blindé ou d'une élite. Le maximum est de 3 obus, dont 1 au départ (2 pour le TITAN).
+- Le TITAN garde sa cadence et ses dégâts normaux. Il n'a plus de pénalité, puisque le rail ne part plus à chaque salve.
+- La NOVA n'a plus de bouton : elle part d'elle-même quand l'énergie est pleine. Frôler les tirs la charge toujours, et les missions, succès et prototypes NOVA restent valables.
+- Le manuel de vol est mis à jour.
+
 ## v5.22 — Bande-son « Nébuleuse »
 
 Les 31 morceaux Suno retenus sur la page d'écoute (tri et commentaires du 27/09) deviennent la bande-son par défaut (`v522.js`). Elle se règle dans Réglages → Bande-son : Nébuleuse, Studio ou Évolutive.

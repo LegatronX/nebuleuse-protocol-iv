@@ -1074,7 +1074,8 @@ async function main() {
     await T('TC-V13-009', 'V13', 'P0', 'Ennemis : prisme → 3 éclats ; rêveur phasé', async () => {
       await GB(() => window.__NP4.v11.setAutoFire(false));
       await pb.waitForTimeout(900); // balles résiduelles
-      await GB(() => { window.__NP4.enemies.length = 0; });
+      // v5.23 : la NOVA part d'elle-même à énergie pleine ; jauge vidée pour compter les éclats
+      await GB(() => { window.__NP4.enemies.length = 0; window.__NP4.player.energy = 0; });
       await GB(() => { const g = window.__NP4; g.v13.spawnType('prisme'); g.v10.kill(g.enemies.findIndex(e => e.type === 'prisme')); });
       await pb.waitForTimeout(250);
       const eclats = await GB(() => window.__NP4.enemies.filter(e => e.type === 'eclat').length);

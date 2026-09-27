@@ -162,11 +162,11 @@
         const help = document.createElement('div'); help.className = 'flight-help'; help.hidden = true;
         help.setAttribute('role', 'dialog'); help.setAttribute('aria-modal', 'true'); help.setAttribute('aria-labelledby', 'flightHelpTitle18');
         help.innerHTML = `<article><p class="bridge-eyebrow">Manuel de vol / 01</p><h2 id="flightHelpTitle18">Prenez les commandes.</h2>
-          <p>Frôlez les projectiles pour charger votre NOVA. Le dash vous rend brièvement invulnérable ; la bombe nettoie l’écran quand la situation se referme.</p>
+          <p>Frôlez les projectiles pour charger votre NOVA, qui part d’elle-même. Les obus du canon lourd sont rares : gardez-les pour les boss. Le dash vous rend brièvement invulnérable ; la bombe nettoie l’écran quand la situation se referme.</p>
           <dl><div><dt>Piloter</dt><dd>Glisser · Flèches · ZQSD / WASD</dd></div>
           <div><dt>Tirer</dt><dd>Maintenir TIR ou <kbd>F</kbd></dd></div>
           <div><dt>Dash</dt><dd><kbd>Maj</kbd> ou <kbd>V</kbd></dd></div>
-          <div><dt>NOVA, énergie pleine</dt><dd><kbd>C</kbd></dd></div>
+          <div><dt>Canon lourd (obus)</dt><dd>CANON · <kbd>C</kbd></dd></div>
           <div><dt>Bombe</dt><dd><kbd>Espace</kbd> ou <kbd>X</kbd></dd></div>
           <div><dt>Pause / reprendre</dt><dd><kbd>P</kbd> · <kbd>Échap</kbd></dd></div>
           <div><dt>Mode photo</dt><dd><kbd>O</kbd>, aussi depuis la pause</dd></div></dl>

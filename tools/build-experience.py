@@ -6,7 +6,7 @@ p = root / 'index.html'
 html = p.read_text()
 anchor = '      let last = performance.now();'
 # (source file, marker tag) — order matters: each module wraps the previous ones.
-MODULES = [('v518.js', 'EXPERIENCE V5.18'), ('v519.js', 'ESCADRILLES V5.19'), ('v520.js', 'RENCONTRES V5.20'), ('v521.js', 'INTERFACE V5.21'), ('v522.js', 'BANDE-SON V5.22')]
+MODULES = [('v518.js', 'EXPERIENCE V5.18'), ('v519.js', 'ESCADRILLES V5.19'), ('v520.js', 'RENCONTRES V5.20'), ('v521.js', 'INTERFACE V5.21'), ('v522.js', 'BANDE-SON V5.22'), ('v523.js', 'CANON V5.23')]
 for src, tag in MODULES:
     start = f'      // BEGIN {tag}\n'
     end = f'      // END {tag}\n'

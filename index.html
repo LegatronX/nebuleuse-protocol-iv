@@ -10083,6 +10083,15 @@
           }
         }
 
+        // v5.23 : obus du canon lourd (bouton CANON), mêmes projectiles que l'ancien rail du TITAN
+        // (le pont __NP4 est créé plus loin : v523.js lit window.__np4Sig23)
+        const sig23 = window.__np4Sig23 = {
+          rail: (x, y, dmg, splash) => specialBullets.push({
+            kind: 'rail', x, y, vx: 0, vy: -880, dmg, r: 7, pierce: 99, splash: splash || 0, color: '#fdba74', life: 1.7
+          }),
+          level: (i) => shipLevel5(i)
+        };
+
         const baseFirePlayerSig = firePlayer;
         firePlayer = function signatureFirePlayer() {
           const shipIdx = meta.ship || 0;
@@ -10126,16 +10135,9 @@
             }
             pBullets.length = before;
           } else if (shipIdx === 2) {
-            // TITAN : canon à rail lourd
-            for (const b of added) b.dmg *= 0.75;
-
-            const dmg = (12 + player.weapon * 3) * 2.3;
-            specialBullets.push({
-              kind: 'rail', x: player.x, y: player.y - 20, vx: 0, vy: -880,
-              dmg, r: 6, pierce: 99, splash: lvl >= 2 ? 75 : 0, color: '#fdba74', life: 1.7
-            });
-            player.fireCd = Math.min(0.55, player.fireCd * 1.35);
-            shake = Math.max(shake, 0.12);
+            // TITAN : v5.23 — le canon à rail lourd ne part plus à chaque salve (trop facile,
+            // son lassant) ; il devient une munition rare tirée au bouton CANON (v523.js).
+            // Le TITAN y gagne une salve plus longue et deux obus au départ.
           } else if (shipIdx === 3) {
             // MIRAGE : éventail spectral à guidage
             for (const b of added) {
@@ -19244,11 +19246,11 @@
         const help = document.createElement('div'); help.className = 'flight-help'; help.hidden = true;
         help.setAttribute('role', 'dialog'); help.setAttribute('aria-modal', 'true'); help.setAttribute('aria-labelledby', 'flightHelpTitle18');
         help.innerHTML = `<article><p class="bridge-eyebrow">Manuel de vol / 01</p><h2 id="flightHelpTitle18">Prenez les commandes.</h2>
-          <p>Frôlez les projectiles pour charger votre NOVA. Le dash vous rend brièvement invulnérable ; la bombe nettoie l’écran quand la situation se referme.</p>
+          <p>Frôlez les projectiles pour charger votre NOVA, qui part d’elle-même. Les obus du canon lourd sont rares : gardez-les pour les boss. Le dash vous rend brièvement invulnérable ; la bombe nettoie l’écran quand la situation se referme.</p>
           <dl><div><dt>Piloter</dt><dd>Glisser · Flèches · ZQSD / WASD</dd></div>
           <div><dt>Tirer</dt><dd>Maintenir TIR ou <kbd>F</kbd></dd></div>
           <div><dt>Dash</dt><dd><kbd>Maj</kbd> ou <kbd>V</kbd></dd></div>
-          <div><dt>NOVA, énergie pleine</dt><dd><kbd>C</kbd></dd></div>
+          <div><dt>Canon lourd (obus)</dt><dd>CANON · <kbd>C</kbd></dd></div>
           <div><dt>Bombe</dt><dd><kbd>Espace</kbd> ou <kbd>X</kbd></dd></div>
           <div><dt>Pause / reprendre</dt><dd><kbd>P</kbd> · <kbd>Échap</kbd></dd></div>
           <div><dt>Mode photo</dt><dd><kbd>O</kbd>, aussi depuis la pause</dd></div></dl>
@@ -19709,9 +19711,9 @@ body #bossHud.on21.np-ghost{opacity:.3!important}
   place-content:center;gap:2px;opacity:.9!important;touch-action:none}
 #specialBtn svg,#bombBtn svg,#dashBtn svg{width:22px;height:22px;display:block;margin:0 auto}
 #hud #specialBtn::after,#hud #bombBtn::after{content:none!important}
-#specialBtn{--charge:0;background:conic-gradient(rgba(125,211,252,.55) calc(var(--charge)*1turn),transparent 0) padding-box,var(--g-bg)!important}
-#specialBtn.ready{box-shadow:inset 0 1px 0 var(--g-hi),0 0 0 2px rgba(125,211,252,.7),0 0 22px rgba(125,211,252,.45)!important}
-#bombBtn .n21{position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;border-radius:9px;background:var(--g-ink);
+#specialBtn{position:relative;opacity:.55!important}
+#specialBtn.ready{opacity:.95!important;box-shadow:inset 0 1px 0 var(--g-hi),0 0 0 2px rgba(253,186,116,.75),0 0 22px rgba(253,186,116,.4)!important}
+#specialBtn .n21,#bombBtn .n21{position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;border-radius:9px;background:var(--g-ink);
   color:#0b1020;font:700 11px/18px var(--g-font);text-align:center;padding:0 4px}
 #bombBtn{position:relative}
 #specialBtn:active,#bombBtn:active,#dashBtn:active{transform:scale(.92)!important}
@@ -19725,6 +19727,7 @@ body #bossHud.on21.np-ghost{opacity:.3!important}
 
         // icônes (traits simples, lisibles à petite taille)
         const ICONS = {
+          cannon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="12" rx="1.5"/><path d="M7 15h10l-1.5 4h-7z"/><path d="M12 1v2"/></svg>',
           nova: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M18.4 5.6l-2.8 2.8M8.4 15.6l-2.8 2.8"/><circle cx="12" cy="12" r="2.2" fill="currentColor"/></svg>',
           bomb: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="14" r="6.5"/><path d="M15.5 9.5l2-2M18 5l1-1M19.5 7.5H21M16.5 4V3"/></svg>',
           dash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h10M10 7l5 5-5 5M18 6v12"/></svg>'
@@ -19736,12 +19739,16 @@ body #bossHud.on21.np-ghost{opacity:.3!important}
         }
         const bombBadge = document.createElement('span');
         bombBadge.className = 'n21';
+        const cannonBadge = document.createElement('span'); // v5.23 : obus du canon lourd
+        cannonBadge.className = 'n21';
         function dressAll() {
-          dress($('specialBtn'), 'nova', 'NOVA');
+          dress($('specialBtn'), 'cannon', 'CANON');
           dress($('bombBtn'), 'bomb', 'BOMBE');
           dress($('dashBtn'), 'dash', 'DASH');
           const b = $('bombBtn');
           if (b && bombBadge.parentNode !== b) b.appendChild(bombBadge);
+          const sp = $('specialBtn');
+          if (sp && cannonBadge.parentNode !== sp) sp.appendChild(cannonBadge);
         }
         dressAll();
 
@@ -19962,7 +19969,8 @@ body #bossHud.on21.np-ghost{opacity:.3!important}
           if (state !== 'playing' || !player) return;
           dressAll();
           const sb = $('specialBtn');
-          if (sb) sb.style.setProperty('--charge', String(Math.min(1, player.energy / 100)));
+          if (sb) sb.classList.toggle('ready', (player.cannon || 0) > 0);
+          cannonBadge.textContent = String(player.cannon || 0);
           bombBadge.textContent = String(player.bombs);
           if (!hinted && gameTime > 25 && player.bombs > 0) {
             hinted = true;
@@ -20275,6 +20283,109 @@ body #bossHud.on21.np-ghost{opacity:.3!important}
       })();
 
       // END BANDE-SON V5.22
+
+      // BEGIN CANON V5.23
+      // ============================================================
+      // MODULE V5.23 — CANON LOURD À LA DEMANDE
+      // Retour de jeu (27/09) : en tir automatique, le canon à rail du TITAN partait à
+      // chaque salve (≈ 0,6 s), écrasait les ennemis et son tir devenait lassant.
+      // A. Le canon lourd devient une munition rare : des obus, tirés au bouton CANON
+      //    (ancien bouton NOVA, touche C), comme la bombe. Une salve de 3 obus perçants
+      //    (5 pour le TITAN), avec explosion au niveau 2 du vaisseau.
+      // B. Obus gagnés par une capsule « O » : garantie à la chute d'un boss, 30 % sur un
+      //    mini-boss, 4 % sur un blindé ou une élite. 3 obus au plus ; 1 au départ (2 pour le TITAN).
+      // C. La NOVA n'a plus de bouton : elle se déclenche d'elle-même quand l'énergie est
+      //    pleine (frôler les tirs la charge toujours). Missions, succès et prototypes NOVA
+      //    restent valables.
+      // ============================================================
+      (() => {
+        const G = window.__NP4;
+        const MAX = 3;
+        const isTitan = () => (meta.ship || 0) === 2;
+        let salvo = 0, salvoT = 0, fired = 0;
+
+        const nova = doSpecial; // chaîne complète (missions, succès, prototypes)
+
+        function doCannon() {
+          if (state !== 'playing' || !player || !player.alive || (player.cannon || 0) <= 0 || salvo > 0) return;
+          player.cannon--;
+          salvo = isTitan() ? 5 : 3;
+          salvoT = 0;
+          fired++;
+          addText(player.x, player.y - 44, 'CANON', '#fdba74');
+          vibrate([25, 20, 25]);
+          updateHUD();
+        }
+        function shoot() {
+          const sig = window.__np4Sig23;
+          if (!sig || !player || !player.alive) { salvo = 0; return; }
+          const lvl = sig.level(meta.ship || 0);
+          const dmg = (12 + player.weapon * 3) * (isTitan() ? 3 : 2.5);
+          const off = salvo % 2 ? 0 : (salvo % 4 === 0 ? -9 : 9);
+          sig.rail(player.x + off, player.y - 20, dmg, lvl >= 2 || isTitan() ? 75 : 0);
+          shake = Math.max(shake, 0.3);
+          if (AudioSys.playSfx) AudioSys.playSfx('subhit', 0.8, 0.9 + Math.random() * 0.2);
+          if (AudioSys.tone && AudioSys.ctx) AudioSys.tone({ freq: 120 + Math.random() * 30, slide: -70, dur: 0.22, type: 'sawtooth', gain: 0.07, filterFreq: 900, filterEnd: 180 });
+        }
+        doSpecial = doCannon;
+
+        // capsule « O » : obus de canon
+        const baseKill23 = killEnemy;
+        killEnemy = function (index, ...rest) {
+          const e = enemies[index];
+          const r = baseKill23.call(this, index, ...rest);
+          if (!e || !player || enemies[index] === e) return r; // pas réellement détruit
+          const p = e.type === 'boss' ? 1 : e.type === 'miniboss' ? 0.3 : e.type === 'tank' || e.type === 'elite' ? 0.04 : 0;
+          if (p && Math.random() < p) dropPowerup(e.x, e.y + 16, 'O');
+          return r;
+        };
+        const baseApply23 = applyPowerup;
+        applyPowerup = function (p) {
+          if (p.type !== 'O') return baseApply23(p);
+          AudioSys.power();
+          if ((player.cannon || 0) >= MAX) { addScore(500); addText(player.x, player.y - 34, 'OBUS MAX', '#fdba74'); return; }
+          player.cannon = (player.cannon || 0) + 1;
+          addText(player.x, player.y - 34, 'OBUS +1', '#fdba74');
+          updateHUD();
+        };
+        const basePC23 = powerColor;
+        powerColor = function (t) { return t === 'O' ? '#fdba74' : basePC23(t); };
+
+        const baseStart23 = startGame;
+        startGame = function (...a) {
+          salvo = 0;
+          baseStart23.apply(this, a);
+          if (player) player.cannon = isTitan() ? 2 : 1;
+          updateHUD();
+        };
+
+        const baseHUD23 = updateHUD;
+        updateHUD = function () {
+          baseHUD23();
+          if (typeof specialBtn !== 'undefined' && player) specialBtn.classList.toggle('ready', (player.cannon || 0) > 0);
+        };
+
+        const baseUpdate23 = update;
+        update = function (dt) {
+          baseUpdate23(dt);
+          if (state !== 'playing' || !player || !player.alive) return;
+          if (salvo > 0) {
+            salvoT -= dt;
+            if (salvoT <= 0) { shoot(); salvo--; salvoT = 0.2; }
+          }
+          // NOVA automatique à énergie pleine
+          if (player.energy >= 100 && enemies.length) nova();
+          const n = player.cannon || 0;
+          specialBtn.dataset.status = `${n} · C`;
+          specialBtn.setAttribute('aria-label', n ? `Canon lourd, ${n} obus, touche C` : 'Canon lourd, aucun obus');
+          specialBtn.setAttribute('aria-disabled', String(!n));
+        };
+
+        if (G) G.sig = window.__np4Sig23;
+        if (G) G.cannon = { caps: () => powerups.filter((p) => p.type === 'O').length, apply: (t) => applyPowerup({ type: t }), fire: () => doCannon(), count: () => (player ? player.cannon || 0 : 0), set: (n) => { player.cannon = n; }, fired: () => fired, salvo: () => salvo, nova: () => nova() };
+      })();
+
+      // END CANON V5.23
 
       let last = performance.now();
 
