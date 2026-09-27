@@ -5,7 +5,7 @@ Lecture seule : un GET /generate/record-info par identifiant de tâche, puis le
 téléchargement des fichiers audio. Rien d'autre n'est appelé.
 
 Usage :
-    export SUNO_KEY=...             # jamais versionné (voir docs/SUNO_RECOVERY.md)
+    export SUNO_KEY=...   # jamais versionné ; inutile si l'environnement cloud injecte l'identifiant « Suno API »
     python3 tools/suno_recover.py tasks.txt
     python3 tools/suno_recover.py --task ID1 --task ID2
 
@@ -39,7 +39,8 @@ RIGHTS_NOTE = ("Droits commerciaux non vérifiés par ce script : dépendent de 
 
 def api_get(path, params, key):
     url = f"{BASE_URL}{path}?{urllib.parse.urlencode(params)}"
-    req = urllib.request.Request(url, headers={"Authorization": f"Bearer {key}"})
+    # sans clé locale, l'en-tête est ajouté par le proxy de l'environnement cloud (identifiant « Suno API »)
+    req = urllib.request.Request(url, headers={"Authorization": f"Bearer {key}"} if key else {})
     with urllib.request.urlopen(req, timeout=30) as r:
         return json.loads(r.read().decode("utf-8"))
 
@@ -184,7 +185,7 @@ def main():
     args = ap.parse_args()
     key = os.environ.get("SUNO_KEY")
     if not key:
-        sys.exit("SUNO_KEY absente de l'environnement (voir docs/SUNO_RECOVERY.md).")
+        print("SUNO_KEY absente : l'authentification doit être injectée par le proxy de l'environnement.", file=sys.stderr)
     tasks = list(args.task)
     if args.file:
         with open(args.file, encoding="utf-8") as f:

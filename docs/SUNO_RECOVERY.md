@@ -15,12 +15,13 @@ Récupérer des morceaux **déjà générés** avec l'API Suno de `LegatronX/sun
 ## Secrets
 
 - Application : secrets Streamlit, clé `SUNO_KEY` (menu *Settings → Secrets* de l'application sur share.streamlit.io, ou `.streamlit/secrets.toml` en local, non versionné).
-- Script de récupération : variable d'environnement `SUNO_KEY`. Ne jamais la mettre dans un fichier du dépôt, un manifeste ou une conversation.
+- Environnement cloud Claude Code : identifiant d'API « Suno API » pour `api.sunoapi.org`, injecté par le proxy. Aucune clé n'est visible dans la session. Un identifiant ajouté en cours de session n'est pris en compte que dans une **nouvelle** session : le 27/09, l'injection a échoué dans la session ouverte avant son ajout (réponse HTTP 502 « injection failed »).
+- Script de récupération ailleurs : variable d'environnement `SUNO_KEY`. Ne jamais la mettre dans un fichier du dépôt, un manifeste ou une conversation.
 
 ## Procédure
 
 1. **Lister les identifiants de tâches.** Les copier depuis le tableau de bord sunoapi.org (journal des générations), un par ligne, dans un fichier hors dépôt, par exemple `~/suno-tasks.txt`.
-2. **Autoriser le réseau** (environnement cloud uniquement) : `api.sunoapi.org` et les hôtes des fichiers audio renvoyés par l'API, visibles dans le champ `sourceHost` du manifeste après un premier essai.
+2. **Autoriser le réseau** (environnement cloud uniquement) : `api.sunoapi.org` (autorisé au 27/09 ; `sunoapi.org` et `docs.sunoapi.org` restent bloqués, ce qui n'empêche pas la récupération) et les hôtes des fichiers audio renvoyés par l'API, visibles dans le champ `sourceHost` du manifeste après un premier essai.
 3. **Lancer la récupération** depuis la racine du jeu :
    ```sh
    export SUNO_KEY=…            # depuis le gestionnaire de secrets, jamais dans l'historique partagé
