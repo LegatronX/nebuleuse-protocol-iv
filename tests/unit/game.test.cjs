@@ -11,8 +11,8 @@ test('whole game boots and all original controls retain their IDs and handlers',
  }
  d.getElementById('shipBtn').click();assert.ok(!d.getElementById('shipOverlay').classList.contains('hidden'));
  d.getElementById('closeShipBtn').click();d.getElementById('modeCampagne').click();h.advance(500);
- assert.equal(h.g.state,'playing');assert.equal(h.g.experience.style(),'studio');assert.equal(h.g.experience.audio().active,false);
- assert.match(d.getElementById('specialBtn').getAttribute('aria-label'),/NOVA/);checkErrors(h);
+ assert.equal(h.g.state,'playing');assert.equal(h.g.experience.style(),'suno');assert.equal(h.g.experience.audio().active,false);
+ assert.match(d.getElementById('specialBtn').getAttribute('aria-label'),/Canon lourd/);checkErrors(h);
  }finally{h.close();}
 });
 test('help traps focus, Escape closes it, then pauses a run and auto-fire persists',()=>{
@@ -26,7 +26,7 @@ test('help traps focus, Escape closes it, then pauses a run and auto-fire persis
  }finally{h.close();}
 });
 test('Enter in settings never starts a game; user preferences survive initialization',()=>{
- const h=boot({meta:{musicStyle:'studio',softShots:false,ship:2,musicVol:.35}});try{const d=h.w.document;
+ const h=boot({meta:{musicStyle:'studio',musicPick:true,softShots:false,ship:2,musicVol:.35}});try{const d=h.w.document;
  d.getElementById('settingsBtn').click();const sel=d.getElementById('scoreStyle18');sel.focus();h.key('Enter',sel);
  assert.equal(h.g.state,'menu');assert.equal(sel.value,'studio');assert.equal(d.getElementById('shotsStyle18').value,'arcade');
  assert.equal(d.getElementById('bridgeShipName18').textContent,'TITAN');
@@ -92,12 +92,12 @@ test('keyboard fire is not swallowed when an in-game action button has focus',()
  assert.equal(h.g.v11.fireHeld(),true);checkErrors(h);
  }finally{h.close();}
 });
-test('studio soundtrack is the default; previews saved as evolving return to studio; an explicit pick sticks',()=>{
- for(const [meta,want] of [[{},'studio'],[{musicStyle:'evolving'},'studio'],[{musicStyle:'evolving',musicPick:true},'evolving'],[{musicStyle:'studio',musicPick:true},'studio']]){
+test('Nébuleuse soundtrack is the default (v5.22); unpicked styles follow it; an explicit pick sticks',()=>{
+ for(const [meta,want] of [[{},'suno'],[{musicStyle:'evolving'},'suno'],[{musicStyle:'studio'},'suno'],[{musicStyle:'evolving',musicPick:true},'evolving'],[{musicStyle:'studio',musicPick:true},'studio']]){
   const h=boot({meta});try{assert.equal(h.g.experience.style(),want,JSON.stringify(meta));
   assert.equal(h.w.document.getElementById('scoreStyle18').value,want);checkErrors(h);}finally{h.close();}
  }
- const h=boot();try{const sel=h.w.document.getElementById('scoreStyle18');assert.equal(sel.options[0].value,'studio');
+ const h=boot();try{const sel=h.w.document.getElementById('scoreStyle18');assert.equal(sel.options[0].value,'suno');assert.equal(sel.options[1].value,'studio');
   sel.value='evolving';sel.dispatchEvent(new h.w.Event('change',{bubbles:true}));
   const m=JSON.parse(h.w.localStorage.getItem('nebula4_meta'));assert.equal(m.musicStyle,'evolving');assert.equal(m.musicPick,true);checkErrors(h);
  }finally{h.close();}
@@ -132,4 +132,129 @@ test('v5.19 module is embedded by the build tool, after v5.18',()=>{
  const html=fs.readFileSync(path.join(root,'index.html'),'utf8');const mod=fs.readFileSync(path.join(root,'v519.js'),'utf8');
  const i=html.indexOf('// BEGIN ESCADRILLES V5.19\n'+mod+'\n      // END ESCADRILLES V5.19');assert.ok(i>0);assert.ok(i>html.indexOf('// END EXPERIENCE V5.18'));
  assert.doesNotMatch(mod.replace(/\/\/.*$/gm,''),/Math\.random\(\)\s*\*\s*1e|localStorage/);
+});
+test('v5.21 boss bar is hidden without a boss, even under the ghost HUD, and shown during a boss',()=>{
+ const h=boot();try{const d=h.w.document;d.getElementById('modeCampagne').click();h.advance(300);
+ const bar=d.getElementById('bossHud');bar.classList.add('np-ghost');assert.equal(h.g.hud21.boss(),false);
+ h.g.spawnBoss();h.advance(100);assert.equal(h.g.hud21.boss(),true);
+ h.g.enemies.length=0;h.g.endWave&&h.g.endWave();h.advance(300);
+ assert.match(d.getElementById('hud21').textContent,/#bossHud:not\(\.on21\)\{opacity:0!important/);checkErrors(h);
+ }finally{h.close();}
+});
+test('v5.21 fewer floating texts: graze text removed, quick score gains merged, at most six on screen',()=>{
+ const h=boot();try{h.w.document.getElementById('modeCampagne').click();h.advance(200);const H=h.g.hud21;
+ const n0=H.texts().length;H.addText(10,10,'FRÔLEMENT x4','#fff');assert.equal(H.texts().length,n0);
+ H.addText(10,10,'+20','#fff');H.addText(12,12,'+30','#fff');assert.ok(H.texts().includes('+50'));
+ for(let i=0;i<12;i++)H.addText(10,10,'BONUS '+i,'#fff');assert.ok(H.texts().length<=6);checkErrors(h);
+ }finally{h.close();}
+});
+test('v5.21 humanised fire varies the cadence; the Métronome setting restores a fixed rhythm',()=>{
+ const h=boot({meta:{ship:0}});try{const d=h.w.document;d.getElementById('modeCampagne').click();h.advance(200);
+ const cds=new Set();for(let i=0;i<40;i++)cds.add(h.g.hud21.fire().toFixed(4));assert.ok(cds.size>10,'cadence variable');
+ const sel=d.getElementById('stHuman21');sel.value='0';sel.dispatchEvent(new h.w.Event('change',{bubbles:true}));
+ const fixed=new Set();for(let i=0;i<20;i++)fixed.add(h.g.hud21.fire().toFixed(4));assert.equal(fixed.size,1);
+ assert.equal(JSON.parse(h.w.localStorage.getItem('nebula4_meta')).humanFire,false);checkErrors(h);
+ }finally{h.close();}
+});
+test('v5.21 generated planets: varied kinds, never three in a row the same, delegated by the legacy parallax layer',()=>{
+ const h=boot();try{const ps=h.g.planets21.sample(9);const kinds=ps.map(p=>p.kind);
+ assert.ok(new Set(kinds).size>=5);for(let i=3;i<kinds.length;i++)assert.ok(!kinds.slice(i-3,i).includes(kinds[i]));
+ const p=h.g.planets21.create(390);assert.ok(p.g21&&p.r>0&&p.vy>0);
+ const html=fs.readFileSync(path.join(root,'index.html'),'utf8');assert.match(html,/planets\.push\(window\.__NP4\.planets21\.create\(W\)\)/);
+ assert.match(html,/if \(p\.g21\) \{ window\.__NP4\.planets21\.draw\(ctx, p\); continue; \}/);checkErrors(h);
+ }finally{h.close();}
+});
+test('v5.21 module is embedded by the build tool, last',()=>{
+ const html=fs.readFileSync(path.join(root,'index.html'),'utf8');const mod=fs.readFileSync(path.join(root,'v521.js'),'utf8');
+ const i=html.indexOf('// BEGIN INTERFACE V5.21\n'+mod+'\n      // END INTERFACE V5.21');assert.ok(i>0);assert.ok(i>html.indexOf('// END RENCONTRES V5.20'));
+});
+test('v5.22 every Nébuleuse track exists, is one of the kept picks, and gains stay bounded',()=>{
+ const h=boot();try{const tr=h.g.suno.tracks();assert.equal(tr.length,31);
+  for(const t of tr){assert.ok(fs.existsSync(path.join(root,t.file)),t.file);assert.ok(t.gain>=0.55&&t.gain<=1.4,t.key);}
+  const cues=h.g.suno.cues();const keys=new Set(tr.map(t=>t.key));
+  for(const [n,c] of Object.entries(cues))for(const k of c.pool)assert.ok(keys.has(k),n+':'+k);
+  const used=new Set(Object.values(cues).flatMap(c=>c.pool));for(const k of keys)if(!['tresor','apaisement'].includes(k))assert.ok(used.has(k),'inutilisé '+k);
+  checkErrors(h);}finally{h.close();}
+});
+test('v5.22 director: menu, opening, act I boss, triumph, pause resumes the same track, phenomena, defeat',async()=>{
+ const h=boot({audio:true});try{const d=h.w.document,S=h.g.suno;
+  d.body.dispatchEvent(new h.w.Event('pointerdown',{bubbles:true}));h.advance(900);
+  assert.ok(S.unlocked());assert.equal(S.cue(),'menu');assert.ok(['balisesA','balisesB'].includes(S.now().key));
+  assert.equal(h.g.audio.studioBus.gain.value,0,'studio coupé quand la bande-son Nébuleuse joue');
+  d.getElementById('modeCampagne').click();h.advance(900);assert.equal(S.cue(),'opening');assert.equal(S.now().key,'signalC');
+  h.g.spawnBoss();h.advance(900);assert.equal(S.cue(),'bossSmall');assert.equal(S.now().key,'gardienD');assert.equal(S.now().t,20);
+  const b=h.g.boss;h.g.enemies.splice(h.g.enemies.indexOf(b),1);h.advance(900);assert.equal(S.cue(),'triumph');
+  const tri=S.now().key;h.key('Escape');h.advance(900);assert.equal(h.g.state,'paused');assert.equal(S.cue(),'pause');
+  h.key('Escape');h.advance(4500);assert.equal(S.cue(),'triumph');assert.equal(S.now().key,tri,'reprise du morceau interrompu');
+  for(let i=0;i<24;i++){h.g.player.invuln=5;h.advance(1000);}assert.equal(S.cue(),'combat2','transition après un boss');
+  h.g.phen.force('supernova');assert.equal(S.situation(),'phenEpic');S.tick();assert.equal(S.cue(),'phenEpic');h.g.phen.end();h.advance(900);
+  h.g.phen.force('baleine');S.tick();assert.equal(S.cue(),'phenCalm');h.g.phen.end();
+  for(let i=0;i<40&&h.g.state==='playing';i++){h.g.player.invuln=0;h.g.hurt(9999);h.advance(100);}h.advance(3000);assert.equal(h.g.state,'gameover');assert.ok(['defeat','defeatHeavy'].includes(S.cue()));checkErrors(h);
+ }finally{h.close();}
+});
+test('v5.22 failed playback falls back to the studio soundtrack',()=>{
+ const h=boot();try{const d=h.w.document;d.body.dispatchEvent(new h.w.Event('pointerdown',{bubbles:true}));h.advance(900);
+  assert.equal(h.g.audio.studioBus.gain.value,0);h.g.suno.setLive(false);h.advance(300);
+  assert.equal(h.g.audio.studioBus.gain.value,1);checkErrors(h);}finally{h.close();}
+});
+test('v5.22 module is embedded last and the service worker streams the soundtrack without caching it',()=>{
+ const html=fs.readFileSync(path.join(root,'index.html'),'utf8');const mod=fs.readFileSync(path.join(root,'v522.js'),'utf8');
+ const i=html.indexOf('// BEGIN BANDE-SON V5.22\n'+mod+'\n      // END BANDE-SON V5.22');assert.ok(i>html.indexOf('// END INTERFACE V5.21'));
+ const sw=fs.readFileSync(path.join(root,'sw.js'),'utf8');assert.match(sw,/assets\/music\/game\/'\)\) return;/);assert.doesNotMatch(sw,/"assets\/music\/game\//);
+});
+test('v5.23 TITAN no longer fires its heavy rail on every volley; auto-fire keeps the normal cadence',()=>{
+ const h=boot({meta:{ship:2,humanFire:false}});try{h.w.document.getElementById('modeCampagne').click();h.advance(200);
+  const cd=h.g.hud21.fire();assert.ok(cd<0.2,'cadence normale '+cd);
+  h.advance(3000);assert.equal(h.g.cannon.fired(),0);checkErrors(h);
+ }finally{h.close();}
+});
+test('v5.23 CANON button: limited shells, salvo of 3 (5 for TITAN), key C, shells from the O capsule',()=>{
+ for(const [ship,start,shots] of [[0,1,3],[2,2,5]]){
+  const h=boot({meta:{ship}});try{const d=h.w.document;d.getElementById('modeCampagne').click();h.advance(300);
+   const C=h.g.cannon;assert.equal(C.count(),start);
+   h.g.enemies.push({type:'dummy',x:195,y:-70,r:1,hp:1e9,maxHp:1e9,vy:0,fireCd:999,t:0,score:0});
+   const btn=d.getElementById('specialBtn');assert.ok(btn.classList.contains('ready'));assert.match(btn.textContent,/CANON/);
+   let rails=0;const sig=h.g.sig,orig=sig.rail;sig.rail=(...a)=>{rails++;return orig(...a);};
+   btn.dispatchEvent(new h.w.Event('pointerdown',{bubbles:true,cancelable:true}));h.advance(1500);
+   assert.equal(rails,shots);assert.equal(C.count(),start-1);
+   C.set(0);h.advance(200);assert.ok(!btn.classList.contains('ready'));h.key('KeyC');h.advance(800);assert.equal(rails,shots,'pas d’obus, pas de tir');
+   checkErrors(h);}finally{h.close();}
+ }
+});
+test('v5.23 O capsule adds a shell (max 3) and bosses always drop one',()=>{
+ const h=boot();try{h.w.document.getElementById('modeCampagne').click();h.advance(300);
+  h.g.spawnBoss();h.advance(100);const b=h.g.boss;b.hp=0;h.g.v10.kill(h.g.enemies.indexOf(b));
+  assert.equal(h.g.cannon.caps(),1);
+  h.g.cannon.set(2);h.g.cannon.apply('O');assert.equal(h.g.cannon.count(),3);
+  h.g.cannon.apply('O');assert.equal(h.g.cannon.count(),3,'plafond');checkErrors(h);
+ }finally{h.close();}
+});
+test('v5.23/5.24 NOVA fires by itself when energy is full, at most every 25 s',()=>{
+ const h=boot();try{h.w.document.getElementById('modeCampagne').click();h.advance(300);
+  for(let i=0;i<5;i++)h.g.enemies.push({type:'dummy',x:40+i*70,y:-70,r:1,hp:1e9,maxHp:1e9,vy:0,fireCd:999,t:0,score:0});
+  h.g.player.energy=100;h.advance(100);assert.ok(h.g.player.energy<50,'NOVA déclenchée');
+  h.g.player.energy=100;h.advance(3000);assert.ok(h.g.player.energy>=100,'pas avant 25 s');checkErrors(h);
+ }finally{h.close();}
+});
+test('v5.24 random capsules from ordinary enemies are throttled; bosses still drop theirs',()=>{
+ const h=boot();try{h.w.document.getElementById('modeCampagne').click();h.advance(300);
+  for(let i=0;i<40;i++){h.g.enemies.push({type:'drone',x:100,y:100,r:10,hp:1,maxHp:1,vy:0,fireCd:999,t:0,score:1,elite:true});h.g.v10.kill(h.g.enemies.length-1);}
+  const d=h.g.comfort.drops();assert.equal(d.kept,1,'une seule capsule sur 40 élites en rafale');assert.ok(d.skipped>=39);
+  h.g.spawnBoss();h.advance(100);const b=h.g.boss;b.hp=0;h.g.v10.kill(h.g.enemies.indexOf(b));
+  assert.equal(h.g.cannon.caps(),1,'obus du boss');checkErrors(h);
+ }finally{h.close();}
+});
+test('v5.24 gauges sit at the bottom left, labelled, and ignore the ghost HUD; the fire button is thumb-sized',()=>{
+ const h=boot();try{const d=h.w.document;const css=d.getElementById('hud24').textContent;
+  assert.match(css,/panel\.bars\{position:fixed!important;top:auto!important/);assert.match(css,/panel\.bars\.np-ghost\{opacity:\.92!important\}/);
+  assert.match(css,/#fireBtn\{width:84px!important/);
+  const labels=[...d.querySelectorAll('#hud .mid .bar-row span')].map(s=>s.dataset.l);assert.ok(labels.slice(0,3).join('')==='CBÉ',labels.join(''));
+  assert.ok(d.querySelector('#fireBtn svg'));checkErrors(h);
+ }finally{h.close();}
+});
+test('v5.24 NOVA lance recharges slowly and only fires on a target in its lane',()=>{
+ const h=boot({meta:{autoFire:true}});try{h.w.document.getElementById('modeCampagne').click();h.advance(300);
+  assert.ok(h.g.v12.lanceT()>=12);h.g.enemies.length=0;h.advance(16000);assert.ok(h.g.v12.charge()>=0.99,'chargée mais sans cible');
+  checkErrors(h);
+ }finally{h.close();}
 });

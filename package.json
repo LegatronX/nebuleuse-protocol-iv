@@ -1,7 +1,7 @@
 {
   "name": "nebuleuse-protocol-iv",
   "private": true,
-  "version": "5.20.0-preview",
+  "version": "5.24.0-preview",
   "scripts": {
     "build": "python3 tools/build-experience.py",
     "test": "node --test tests/unit/*.test.cjs",

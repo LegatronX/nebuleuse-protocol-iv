@@ -16,6 +16,13 @@ function boot({assets=false,meta={},audio=true}={}) {
   {get:(o,k)=>k in o?o[k]:(()=>{}),set:(o,k,v)=>(o[k]=v,true)});
  w.HTMLCanvasElement.prototype.getContext=function(type){return type==='2d'?canvas:null;};
  w.HTMLCanvasElement.prototype.toDataURL=()=>'';
+ // lecture média simulée (v5.22 : bande-son en continu)
+ const media=w.HTMLMediaElement.prototype;
+ Object.defineProperty(media,'paused',{get(){return this.__paused!==false;},configurable:true});
+ Object.defineProperty(media,'readyState',{get(){return this.__ready||0;},configurable:true});
+ Object.defineProperty(media,'currentTime',{get(){return this.__t||0;},set(v){this.__t=v;},configurable:true});
+ media.play=function(){this.__paused=false;this.__ready=4;this.dispatchEvent(new w.Event('playing'));return Promise.resolve();};
+ media.pause=function(){this.__paused=true;};media.load=function(){};
  w.matchMedia=()=>({matches:false,addEventListener(){},removeEventListener(){}});
  w.ResizeObserver=class{observe(){} disconnect(){}};
  w.fetch=async()=>({ok:assets,arrayBuffer:async()=>new ArrayBuffer(8),json:async()=>[]});

@@ -916,6 +916,9 @@ async function main() {
       const r = await GA(async () => {
         const N = window.__NP4;
         const pan0 = N.v12.panUsed();
+        // v5.24 : recharge longue et cible requise dans l'axe ; on remet l'ancien délai et une cible
+        N.v12.lanceT(2.6);
+        N.enemies.push({ type: 'dummy', x: N.player.x, y: N.player.y - 200, r: 10, hp: 1e9, maxHp: 1e9, vy: 0, fireCd: 999, t: 0, score: 0 });
         N.v11.pressFire(true);
         await new Promise(r2 => setTimeout(r2, 3200));
         N.v11.pressFire(false);
@@ -1074,11 +1077,13 @@ async function main() {
     await T('TC-V13-009', 'V13', 'P0', 'Ennemis : prisme → 3 éclats ; rêveur phasé', async () => {
       await GB(() => window.__NP4.v11.setAutoFire(false));
       await pb.waitForTimeout(900); // balles résiduelles
-      await GB(() => { window.__NP4.enemies.length = 0; });
+      // v5.23 : la NOVA part d'elle-même à énergie pleine ; jauge vidée pour compter les éclats
+      await GB(() => { window.__NP4.enemies.length = 0; window.__NP4.player.energy = 0; });
       await GB(() => { const g = window.__NP4; g.v13.spawnType('prisme'); g.v10.kill(g.enemies.findIndex(e => e.type === 'prisme')); });
       await pb.waitForTimeout(250);
       const eclats = await GB(() => window.__NP4.enemies.filter(e => e.type === 'eclat').length);
-      await GB(() => window.__NP4.v13.spawnType('reveur'));
+      // coque renforcée : le tir peut sinon l'abattre avant sa première phase (échec intermittent)
+      await GB(() => { const e = window.__NP4.v13.spawnType('reveur'); if (e) e.hp = e.maxHp = 1e6; });
       await pb.waitForTimeout(700);
       const reveur = await GB(() => window.__NP4.enemies.some(e => e.type === 'reveur' && 'ghostNow' in e));
       await GB(() => window.__NP4.v11.setAutoFire(true));
