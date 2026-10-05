@@ -35,7 +35,7 @@ function manual(id, cat, pri, name, note) {
 }
 
 async function main() {
-  const server = spawn('python3', ['-m', 'http.server', String(PORT)], { cwd: APP_DIR, stdio: 'ignore' });
+  const server = spawn('python3', [path.join(__dirname, '../../tools/serve-range.py'), String(PORT)], { cwd: APP_DIR, stdio: 'ignore' });
   await new Promise(r => setTimeout(r, 1200));
   const browser = await chromium.launch({ args: ['--use-gl=swiftshader', '--autoplay-policy=no-user-gesture-required'] });
   // v5.15 : cette suite ne teste pas les bifurcations de routes (voir routes15.cjs) — un « pilote »
@@ -231,11 +231,23 @@ async function main() {
   });
 
   // ============ FIN DE VAGUE / DRAFT ============
+  const finishCurrentWave = async () => {
+    const initial = await G(() => window.__NP4.wave);
+    for (let i = 0; i < 100; i++) {
+      await G(() => {
+        const g = window.__NP4;
+        g.player.invuln = 2;
+        [...g.enemies].forEach(e => g.killEnemy(e, true));
+      });
+      if (await G(() => window.__NP4.wave > initial)) return;
+      await page.waitForTimeout(250);
+    }
+    throw new Error('file de vague non terminée en 25 s : ' + JSON.stringify(await G(() => window.__NP4.pacing?.stats())));
+  };
   let orbNames1 = [];
   await T('TC-GAME-003', 'GAME', 'P0', 'Fin de vague + capsules', async () => {
     const w0 = await G(() => window.__NP4.wave);
-    await G(() => { const g = window.__NP4; [...g.enemies].forEach(e => g.killEnemy(e, true)); });
-    await page.waitForTimeout(1500);
+    await finishCurrentWave();
     const r = await G(() => ({ w: window.__NP4.wave, orbs: window.__NP4.orbs.length }));
     assert(r.w === w0 + 1, `wave ${w0} -> ${r.w}`);
     assert(r.orbs === 3, `orbs=${r.orbs}`);
@@ -272,13 +284,11 @@ async function main() {
   });
   // deuxième vague pour la variété
   await T('TC-DRAFT-004', 'DRAFT', 'P2', 'Variété des offres', async () => {
-    await G(() => { const g = window.__NP4; [...g.enemies].forEach(e => g.killEnemy(e, true)); });
-    await page.waitForTimeout(1500);
+    await finishCurrentWave();
     const names2 = await G(() => window.__NP4.orbs.map(o => o.name || (o.d && o.d.name) || '?'));
     let all = new Set([...orbNames1, ...names2]);
     if (all.size < 2) { // tirage identique possible (RNG) : un 3ᵉ jet de secours
-      await G(() => { const g = window.__NP4; [...g.enemies].forEach(e => g.killEnemy(e, true)); });
-      await page.waitForTimeout(1500);
+      await finishCurrentWave();
       const names3 = await G(() => window.__NP4.orbs.map(o => o.name || (o.d && o.d.name) || '?'));
       all = new Set([...all, ...names3]);
     }

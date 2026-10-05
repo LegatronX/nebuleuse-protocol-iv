@@ -1,5 +1,7 @@
 # Nébuleuse Protocol IV
 
+Reprise et tests dans le Cloud : [docs/CLOUD.md](docs/CLOUD.md). La version GitHub Pages doit être vérifiée après chaque déploiement ; son lien peut encore servir une ancienne branche.
+
 Petit shoot 'em up vertical en HTML/CSS/JS pur (aucune dépendance), jouable directement dans un navigateur.
 
 ## v5.29 — Frisson (le frôlement devient utile) et cohérence

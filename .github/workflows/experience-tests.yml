@@ -1,16 +1,9 @@
 name: Experience regression tests
 on:
   push:
-    branches: [codex/v5.18-experience]
+    branches: [codex/v5.25-cloud-validation]
   pull_request:
-    paths:
-      - index.html
-      - v518.js
-      - experience/**
-      - tests/unit/**
-      - tools/**
-      - package*.json
-      - sw.js
+    branches: [claude/v5.21-interface]
 permissions:
   contents: read
 jobs:
@@ -27,3 +20,18 @@ jobs:
       - run: git diff --exit-code -- index.html
       - run: npm test
       - run: node tools/render-score.cjs /tmp/nebuleuse-extrait.wav
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: node tests/e2e/photo17.cjs .
+      - run: node tests/e2e/phenomena16.cjs .
+      - run: node tests/e2e/routes15.cjs .
+      - run: node tests/e2e/smoke13.cjs .

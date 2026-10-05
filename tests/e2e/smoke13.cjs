@@ -1,5 +1,6 @@
 // Smoke V5.13 — Actes III·IV·V
 const { spawn } = require('child_process');
+const path = require('path');
 const { chromium } = (() => { try { return require('playwright'); } catch (e) { return require('/home/kimi/.npm-global/lib/node_modules/playwright'); } })();
 const APP_DIR = process.argv[2] || '/mnt/agents/output/app';
 const PORT = 8137;
@@ -8,7 +9,7 @@ let pass = 0, fail = 0;
 const errors = [];
 
 async function main() {
-  const server = spawn('python3', ['-m', 'http.server', String(PORT)], { cwd: APP_DIR, stdio: 'ignore' });
+  const server = spawn('python3', [path.join(__dirname, '../../tools/serve-range.py'), String(PORT)], { cwd: APP_DIR, stdio: 'ignore' });
   await new Promise(r => setTimeout(r, 1200));
   const browser = await chromium.launch({ args: ['--use-gl=swiftshader', '--autoplay-policy=no-user-gesture-required'] });
   const page = await browser.newPage({ viewport: { width: 430, height: 932 } });

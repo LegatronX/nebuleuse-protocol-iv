@@ -17,7 +17,7 @@ let pass = 0, fail = 0;
 const errors = [];
 
 async function main() {
-  const server = spawn('python3', ['-m', 'http.server', String(PORT)], { cwd: APP_DIR, stdio: 'ignore' });
+  const server = spawn('python3', [path.join(__dirname, '../../tools/serve-range.py'), String(PORT)], { cwd: APP_DIR, stdio: 'ignore' });
   await new Promise((r) => setTimeout(r, 1200));
   const browser = await chromium.launch({ args: ['--use-gl=swiftshader', '--autoplay-policy=no-user-gesture-required'] });
   const ctx = await browser.newContext(IPHONE);

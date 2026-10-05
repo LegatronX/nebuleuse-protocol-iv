@@ -1,0 +1,34 @@
+name: Version jouable
+on:
+  push:
+    branches: [codex/v5.25-cloud-validation]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: false
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - name: Préparer les seuls fichiers du jeu
+        run: |
+          mkdir -p public/assets/music
+          cp index.html sw.js manifest.json public/
+          cp -R experience icons public/
+          find assets -maxdepth 1 -type f -exec cp {} public/assets/ \;
+          cp -R assets/music/game public/assets/music/
+          test -z "$(find public -iname '*suno-originals*' -print -quit)"
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+      - id: deployment
+        uses: actions/deploy-pages@v4
