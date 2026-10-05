@@ -2,6 +2,36 @@
 
 Petit shoot 'em up vertical en HTML/CSS/JS pur (aucune dépendance), jouable directement dans un navigateur.
 
+## v5.29 — Frisson (le frôlement devient utile) et cohérence
+
+Frôler un tir ne rapportait que quelques points et un peu d'énergie NOVA, qui part maintenant toute seule : le geste le plus risqué du jeu n'avait plus d'enjeu. Le module `v529.js` lui en donne un.
+
+- **Jauge de Frisson** : chaque frôlement la remplit (3 points + 0,15 par frôlement de la chaîne, au plus 5) ; un arc fin autour du vaisseau en montre le niveau. Sans frôlement pendant 3 s, elle redescend de 4 points par seconde.
+- **FRISSON** : jauge pleine (≈ 25 frôlements), le vaisseau s'embrase 6 s : **score ×1,5** et **tir 20 % plus vif**. L'arc doré se vide avec le temps, puis la jauge repart de zéro. Danser entre les balles paie ; se cacher en bas de l'écran, non.
+- **Équité** : désactivé en Opération du jour et en Tournoi.
+- Le bilan de fin de partie compte les Frissons (ligne FRISSON, et « Frissons : n » dans les détails).
+- **Cohérence** : la version du menu suit la version réelle (elle affichait « 5.20 · aperçu ») ; le manuel de vol décrit le Frisson et le spécial par vaisseau ; la fiche du talent « Réacteur NOVA » rappelle que la NOVA part seule à 100 %.
+
+## v5.28 — Hangar : sept vaisseaux, sept silhouettes, sept spéciaux
+
+Les quatre vaisseaux se distinguaient par leurs chiffres et leurs fiches, mais en jeu c'était la même flèche recolorée ; et le bouton CANON n'avait de sens que pour le TITAN. Le module `v528.js` change ça.
+
+| Vaisseau | Silhouette | Arme principale | Spécial (bouton **C**) | Débloqué |
+|---|---|---|---|---|
+| PULSE | flèche à ailerons | tir équilibré | **SALVE** : 9 missiles à tête chercheuse en 3 vagues | d'emblée |
+| VECTOR | dard effilé | lasers perçants | **LANCE** : rayon perçant 0,7 s | record 15 000 |
+| TITAN | forteresse à canons | tir lourd | **CANON** : 5 obus perçants (inchangé) | record 60 000 |
+| MIRAGE | fantôme à double image | éventail guidé | **PHASE** : intangible 2,6 s + temps ralenti | record 120 000 |
+| **AUBE** | goutte à halo | éventail d'or léger, bouclier +50 % de régénération | **HALO** : onde qui efface les tirs, blesse, rend 50 de bouclier | terminer l'Acte I |
+| **FAUCHEUR** | faux à deux lames | cinq plombs courts en éventail (redoutable au contact) | **FAUCHÉE** : arc balayant l'écran devant soi | terminer l'Acte III |
+| **ÉCLIPSE** | disque à couronne | orbes lourds et perçants, cadence lente | **SINGULARITÉ** : trou noir 3,4 s qui attire tirs et ennemis, puis s'effondre (2 charges au départ) | atteindre la Source |
+
+- Les spéciaux partagent les mêmes **charges rares** (capsule `O`, 1 au départ, 3 au plus) : le bouton prend l'icône et le nom du spécial du vaisseau.
+- **Histoire** : AUBE est la rescapée du Protocole I, FAUCHEUR est forgé dans les épaves du Protocole II, ÉCLIPSE est le vaisseau du pilote du Protocole III. Les fiches du hangar le disent ; la victoire qui débloque un vaisseau l'annonce (une fois).
+- **Hangar refait** : sept fiches (spécial, passif, anecdote, niveau d'XP, condition de déblocage) ; les trois nouvelles fiches sont dessinées en code, dans la veine des schémas existants.
+- Technique : crochet `window.__np4DrawShip` dans `drawPlayer` (repli sur l'ancienne flèche si absent) ; les armes et spéciaux n'utilisent aucun aléa de jeu.
+- Le bilan de fin de partie nomme le prochain vaisseau à débloquer.
+
 ## v5.27 — Bilan de fin de partie
 
 L'écran de fin ne donnait qu'une pile de chiffres. Le module `v527.js` ajoute un bilan de quatre lignes (au-dessus du rang de mission) qui donne envie de relancer :

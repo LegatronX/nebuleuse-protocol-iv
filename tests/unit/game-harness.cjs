@@ -4,7 +4,7 @@ const fs=require('node:fs');
 const path=require('node:path');
 const {AudioContext}=require('./audio-mock.cjs');
 const root=path.resolve(__dirname,'../..');
-function boot({assets=false,meta={},audio=true}={}) {
+function boot({assets=false,meta={},audio=true,best=0}={}) {
  const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
  const dom=new JSDOM(html,{url:'https://unit.test/',runScripts:'outside-only',pretendToBeVisual:true});
  const w=dom.window;const observers=[];const Observer=w.MutationObserver;
@@ -32,6 +32,7 @@ function boot({assets=false,meta={},audio=true}={}) {
  w.clearTimeout=w.clearInterval=id=>timers.delete(id);
  Object.defineProperty(w.performance,'now',{value:()=>clock});
  if(audio)w.AudioContext=AudioContext;
+ if(best)w.localStorage.setItem('nebula4_best',String(best));
  w.localStorage.setItem('nebula4_meta',JSON.stringify({tuto:1,chest:{lastDate:new Date().toLocaleDateString('en-CA'),streak:1},...meta}));
  for (const src of ['experience/score.js','experience/encounters.js']) w.eval(fs.readFileSync(path.join(root,src),'utf8'));
  for(const script of w.document.querySelectorAll('script:not([src])')) if(script.textContent.trim())w.eval(script.textContent);

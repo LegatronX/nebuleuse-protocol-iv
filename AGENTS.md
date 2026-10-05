@@ -3,17 +3,20 @@
 Shoot 'em up vertical en HTML/JS pur, pensé pour iPhone (tactile). Tout le jeu tient dans `index.html`
 (~20 000 lignes, un seul script). L'auteur échange en français : répondre et commenter en français.
 
-## État au 28/09/2026 (relais Claude → Codex)
+## État au 05/10/2026 (relais Claude → Codex)
 
-- **Branche de travail** : `claude/v5.21-interface` (dernier commit : v5.24).
-- **PR #10** (brouillon) : v5.21 → v5.24, base `claude/suno-recovery`. CI verte, fusionnable.
+- **Branche de travail** : `claude/v5.21-interface` (dernier commit : v5.29).
+- **PR #10** (brouillon) : v5.21 → v5.29, base `claude/suno-recovery`.
 - **Empilement des PR** (aucune fusionnée) :
   `main` ← #6 (v5.15–v5.19, `claude/nebuleuse-branching-routes-vpzs4u`)
   · `codex/v5.20-playable-demo` ← #9 (`claude/suno-recovery`, musiques Suno) ← #10.
 - **Version jouable** publiée par Claude : un Artifact claude.ai privé de l'auteur. Il n'est pas
   accessible à Codex ; pour tester, lancer `npm start` et ouvrir http://127.0.0.1:8179/.
-- **En attente** : les retours de jeu de l'auteur sur la v5.24 (voir README, section v5.24). Aucun
-  autre chantier n'est ouvert.
+- **En attente** : les retours de jeu de l'auteur sur les v5.25 → v5.29 (rythme, histoire, bilan,
+  hangar à sept vaisseaux, Frisson : voir README). Aucun autre chantier n'est ouvert.
+- **Réglage GitHub Pages** (à faire par l'auteur) : Settings → Environments → github-pages →
+  autoriser les branches `codex/*` (ou aucune restriction), et Pages → Source : GitHub Actions.
+  Sinon la page publique reste sur une ancienne version.
 
 ## Architecture : modules empilés
 
@@ -26,7 +29,7 @@ Chaque version ajoute un module IIFE qui **enveloppe** des fonctions globales r�
 - Les appels internes passent par le nom global : une enveloppe tardive intercepte bien le code ancien.
 - Pont de test : `window.__NP4.*`. Il est créé vers la ligne 10 500. Un module plus ancien ne peut pas
   y écrire à l'exécution : il expose alors un global (ex. `window.__np4Sig23`).
-- Les modules v518 → v524 vivent dans des fichiers `v5xx.js` à la racine et sont recopiés dans
+- Les modules v518 → v529 vivent dans des fichiers `v5xx.js` à la racine et sont recopiés dans
   `index.html` entre `// BEGIN <TAG>` et `// END <TAG>` par **`npm run build`**
   (`tools/build-experience.py`, liste `MODULES`). **On modifie le fichier `v5xx.js`, puis on lance
   `npm run build`**. La CI échoue si `index.html` n'est pas à jour.
@@ -44,13 +47,18 @@ Chaque version ajoute un module IIFE qui **enveloppe** des fonctions globales r�
 | v522 | Bande-son « Nébuleuse » : 31 morceaux Suno dirigés selon la situation (streaming HTMLAudio) |
 | v523 | Bouton CANON (obus rares, capsule `O`), NOVA automatique |
 | v524 | Capsules limitées, jauges verticales en bas à gauche, bouton TIR 84 px |
+| v525 | Réalisateur : montée → déferlante → souffle (densité, plafond de menace, musique), capsules méritées |
+| v526 | Récit et but : briefing, ÉCHO (transmissions), Distance à la Source, archives I–XVII, accès progressif aux actes, épilogue |
+| v527 | Bilan de fin de partie (record, chute, palier du Laboratoire, Source), « Revanche », repère de record |
+| v528 | Hangar : 7 vaisseaux (AUBE, FAUCHEUR, ÉCLIPSE liés aux Protocoles perdus), silhouettes, un spécial par vaisseau |
+| v529 | Frisson (frôlements → score ×1,5 et tir vif 6 s) et cohérence des textes |
 
 ## Commandes
 
 ```bash
 npm install          # jsdom pour les tests unitaires
-npm run build        # recopie v518…v524 dans index.html (à relancer après chaque modif d'un v5xx.js)
-npm test             # tests unitaires jsdom : 43/43 attendus
+npm run build        # recopie v518…v529 dans index.html (à relancer après chaque modif d'un v5xx.js)
+npm test             # tests unitaires jsdom : 51/51 attendus (≈ 2 min)
 npm start            # serveur local http://127.0.0.1:8179/
 ```
 
@@ -74,6 +82,19 @@ node tests/e2e/run.cjs .          # 83 PASS · 7 FAIL attendus (voir plus bas)
   condition (`waitForFunction`).
 
 ## Pièges connus
+
+- **Identifiants dupliqués** : une balise `<style id="x">` et un élément `id="x"` se masquent
+  (`getElementById` renvoie le premier). Les feuilles de style de v526+ finissent par `…css` ou
+  portent un autre nom que les éléments.
+- **Fonctions locales** : `addText`, `killEnemy`, `startWave`… sont des fonctions de la portée du script,
+  pas des propriétés de `window` : tester `typeof addText === 'function'`, jamais `window.addText`.
+- **Histoire** (v526) : `meta.story = { briefed, far, done, seen, arch, finale }` ; seule la Campagne
+  l'alimente. Le briefing ne s'affiche pas si `navigator.webdriver` (tests) ou `?nobrief`. Les actes
+  du menu sont verrouillés en mode « Progressif » : les tests e2e n'utilisent pas ces boutons.
+- **Vaisseaux** (v528) : un vaisseau ≥ 4 (AUBE, FAUCHEUR, ÉCLIPSE) se débloque par l'histoire
+  (`G.story.done`/`finale`) ; les quatre premiers par le record. Un spécial consomme `player.cannon`
+  (les « charges »). `window.__np4DrawShip` dessine la silhouette ; sans lui, drawPlayer retombe sur l'ancienne flèche.
+- **Tests lents** : `node --test` ignore `--test-name-pattern` ici ; la suite entière tourne en ≈ 2 min.
 
 - **Audio iOS** : le son ne démarre qu'après un geste. Les lecteurs `<audio>` de v522 sont
   « débloqués » au premier toucher. La musique est lue en continu par requêtes `Range` ; le service

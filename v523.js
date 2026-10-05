@@ -56,9 +56,10 @@
         applyPowerup = function (p) {
           if (p.type !== 'O') return baseApply23(p);
           AudioSys.power();
-          if ((player.cannon || 0) >= MAX) { addScore(500); addText(player.x, player.y - 34, 'OBUS MAX', '#fdba74'); return; }
+          const unit = (G && G.hangar && G.hangar.special().unit) || 'OBUS'; // v5.28 : chaque vaisseau a son spécial
+          if ((player.cannon || 0) >= MAX) { addScore(500); addText(player.x, player.y - 34, unit + ' MAX', '#fdba74'); return; }
           player.cannon = (player.cannon || 0) + 1;
-          addText(player.x, player.y - 34, 'OBUS +1', '#fdba74');
+          addText(player.x, player.y - 34, unit + ' +1', '#fdba74');
           updateHUD();
         };
         const basePC23 = powerColor;

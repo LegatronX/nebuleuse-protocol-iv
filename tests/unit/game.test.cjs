@@ -12,7 +12,7 @@ test('whole game boots and all original controls retain their IDs and handlers',
  d.getElementById('shipBtn').click();assert.ok(!d.getElementById('shipOverlay').classList.contains('hidden'));
  d.getElementById('closeShipBtn').click();d.getElementById('modeCampagne').click();h.advance(500);
  assert.equal(h.g.state,'playing');assert.equal(h.g.experience.style(),'suno');assert.equal(h.g.experience.audio().active,false);
- assert.match(d.getElementById('specialBtn').getAttribute('aria-label'),/Canon lourd/);checkErrors(h);
+ assert.match(d.getElementById('specialBtn').getAttribute('aria-label'),/SALVE, 1 charge/);checkErrors(h);
  }finally{h.close();}
 });
 test('help traps focus, Escape closes it, then pauses a run and auto-fire persists',()=>{
@@ -208,8 +208,8 @@ test('v5.23 TITAN no longer fires its heavy rail on every volley; auto-fire keep
   h.advance(3000);assert.equal(h.g.cannon.fired(),0);checkErrors(h);
  }finally{h.close();}
 });
-test('v5.23 CANON button: limited shells, salvo of 3 (5 for TITAN), key C, shells from the O capsule',()=>{
- for(const [ship,start,shots] of [[0,1,3],[2,2,5]]){
+test('v5.23 CANON button (TITAN since v5.28): limited shells, salvo of 5, key C, shells from the O capsule',()=>{
+ for(const [ship,start,shots] of [[2,2,5]]){
   const h=boot({meta:{ship}});try{const d=h.w.document;d.getElementById('modeCampagne').click();h.advance(300);
    const C=h.g.cannon;assert.equal(C.count(),start);
    h.g.enemies.push({type:'dummy',x:195,y:-70,r:1,hp:1e9,maxHp:1e9,vy:0,fireCd:999,t:0,score:0});
@@ -254,7 +254,7 @@ test('v5.24 gauges sit at the bottom left, labelled, and ignore the ghost HUD; t
 });
 test('v5.24 NOVA lance recharges slowly and only fires on a target in its lane',()=>{
  const h=boot({meta:{autoFire:true}});try{h.w.document.getElementById('modeCampagne').click();h.advance(300);
-  assert.ok(h.g.v12.lanceT()>=12);h.g.enemies.length=0;h.advance(h.g.v12.lanceT()*1000+2500);assert.ok(h.g.v12.charge()>=0.99,'chargée mais sans cible');
+  assert.ok(h.g.v12.lanceT()>=12);for(let ms=0;ms<h.g.v12.lanceT()*1000+2500;ms+=300){h.g.enemies.length=0;h.advance(300);}assert.ok(h.g.v12.charge()>=0.99,'chargée mais sans cible');
   checkErrors(h);
  }finally{h.close();}
 });
@@ -348,6 +348,66 @@ test('v5.27 bilan: an affordable lab tier gets a shortcut, a normal death says R
   assert.equal(h.g.state,'gameover');assert.equal(d.getElementById('retryBtn').textContent,'Rejouer');
   assert.ok(B.rows().some(r=>r.k==='PALIER'&&r.lab));assert.ok(d.getElementById('labEnd27').classList.contains('on'));
   d.getElementById('labEnd27').click();assert.equal(h.g.state,'menu');assert.ok(!d.getElementById('labOverlay').classList.contains('hidden'));
+  checkErrors(h);
+ }finally{h.close();}
+});
+
+const ALL_DONE={briefed:true,far:52,finale:true,done:{1:true,2:true,3:true,4:true,5:true}};
+test('v5.28 hangar: seven ships, story unlocks, seven silhouettes drawn without error, the card art falls back safely',()=>{
+ const h=boot({meta:{story:{briefed:true}}});try{const d=h.w.document,H=h.g.hangar;
+  assert.equal(H.ships().join(),'PULSE,VECTOR,TITAN,MIRAGE,AUBE,FAUCHEUR,ÉCLIPSE');assert.equal(typeof h.w.__np4DrawShip,'function');
+  assert.ok(!H.unlocked(4)&&!H.unlocked(5)&&!H.unlocked(6));assert.equal(H.lockText(4),'TERMINER L\'ACTE I');
+  d.getElementById('shipBtn').click();assert.equal(d.querySelectorAll('#shipList .ship-card').length,7);
+  assert.match(d.querySelectorAll('#shipList .ship-card')[6].textContent,/VERROUILLÉ — ATTEINDRE LA SOURCE/);
+  assert.match(d.querySelectorAll('#shipList .ship-card')[4].textContent,/SPÉCIAL · HALO/);
+  h.g.story.complete(1);assert.ok(H.unlocked(4));h.g.story.complete(3);assert.ok(H.unlocked(5));assert.ok(!H.unlocked(6));h.g.story.complete(5);assert.ok(H.unlocked(6));
+  d.getElementById('shipBtn').click();d.querySelectorAll('#shipList .ship-card')[5].click();assert.equal(JSON.parse(h.w.localStorage.getItem('nebula4_meta')).ship,5);
+  assert.equal(d.getElementById('bridgeShipName18').textContent,'FAUCHEUR');assert.match(d.getElementById('bridgeShipDesc18').textContent,/FAUCHÉE/);
+  const c=d.createElement('canvas').getContext('2d');for(let i=0;i<7;i++){H.draw(c,i,1.3);H.art(i);}
+  checkErrors(h);
+ }finally{h.close();}
+});
+test('v5.28 specials: SALVE, LANCE, PHASE, HALO, FAUCHÉE, SINGULARITÉ each consume a charge and do their job; TITAN keeps CANON',()=>{
+ const mk=(ship)=>boot({best:200000,meta:{ship,story:ALL_DONE}});
+ const run=(ship,fn)=>{const h=mk(ship);try{const d=h.w.document;d.getElementById('modeCampagne').click();h.advance(300);h.g.player.invuln=99;h.g.player.cannon=2;h.g.enemies.length=0;fn(h,d);checkErrors(h);}finally{h.close();}};
+ run(0,(h)=>{assert.equal(h.g.hangar.special().name,'SALVE');h.g.hangar.use();assert.equal(h.g.player.cannon,2,'sans cible, pas de salve');
+  const e=h.g.enemies;h.g.v13.spawnType('drone');assert.ok(h.g.enemies.length>0);h.g.hangar.use();assert.equal(h.g.player.cannon,1);h.advance(700);assert.ok(h.g.hangar.fx().salvo===0);});
+ run(1,(h)=>{assert.equal(h.g.hangar.special().name,'LANCE');h.g.v13.spawnType('drone');const e=h.g.enemies[0];e.x=h.g.player.x;e.y=200;e.hp=40;h.g.hangar.use();assert.equal(h.g.player.cannon,1);h.advance(300);assert.ok(!h.g.enemies.includes(e),'le rayon fait fondre la cible');h.advance(800);assert.equal(h.g.hangar.fx().lance,0);});
+ run(2,(h)=>{assert.equal(h.g.hangar.special().name,'CANON');h.g.hangar.use();assert.equal(h.g.player.cannon,1);assert.ok(h.g.cannon.salvo()>0);});
+ run(3,(h)=>{assert.equal(h.g.hangar.special().name,'PHASE');h.g.player.invuln=0;h.g.hangar.use();assert.ok(h.g.player.invuln>=2.5);assert.ok(h.g.hangar.fx().phase>2);h.g.hangar.use();assert.equal(h.g.player.cannon,1,'pas de double phase');});
+ run(4,(h)=>{assert.equal(h.g.hangar.special().name,'HALO');h.g.player.shield=10;for(let k=0;k<5;k++)h.g.v13&&h.g.enemies.length;
+  h.g.eBullets;h.g.v13.spawnType('drone');h.g.hangar.use();assert.ok(h.g.player.shield>=55);h.advance(900);assert.equal(h.g.hangar.fx().halo,0);});
+ run(5,(h)=>{assert.equal(h.g.hangar.special().name,'FAUCHÉE');h.g.v13.spawnType('drone');const e=h.g.enemies[0];e.x=h.g.player.x-60;e.y=h.g.player.y-120;e.hp=30;h.g.hangar.use();h.advance(700);assert.ok(!h.g.enemies.includes(e),'la faux tranche');});
+ run(6,(h)=>{assert.equal(h.g.hangar.special().name,'SINGULARITÉ');assert.equal(h.g.player.cannon,2);h.g.v13.spawnType('drone');const e=h.g.enemies[0];e.x=h.g.player.x+120;e.y=h.g.player.y-250;e.hp=5000;const x0=e.x;
+  h.g.hangar.use();assert.ok(h.g.hangar.fx().hole);h.advance(1500);assert.ok(e.x<x0,'le trou noir attire');h.advance(2400);assert.ok(!h.g.hangar.fx().hole,'puis il s\'effondre');});
+});
+test('v5.28 ships: the new main weapons fire their own pattern; AUBE regenerates its shield faster; ÉCLIPSE starts with two charges',()=>{
+ const go=(ship,fn)=>{const h=boot({best:200000,meta:{ship,story:ALL_DONE,autoFire:false}});try{h.w.document.getElementById('modeCampagne').click();h.advance(300);h.g.player.invuln=99;fn(h);checkErrors(h);}finally{h.close();}};
+ const volley=(h)=>{const n=h.g.hangar.pb(),o=h.g.hangar.fx().orbs;h.g.hangar.fire();return [h.g.hangar.pb()-n,h.g.hangar.fx().orbs-o];};
+ go(0,(h)=>{assert.equal(h.g.player.shieldRegen,14);assert.equal(volley(h).join(),'1,0');});
+ go(4,(h)=>{assert.equal(h.g.player.shieldRegen,21);assert.equal(h.g.player.cannon,1);assert.equal(volley(h).join(),'3,0','tir central + deux rayons');});
+ go(5,(h)=>{assert.equal(volley(h).join(),'5,0','cinq plombs en éventail');});
+ go(6,(h)=>{assert.equal(h.g.player.cannon,2);assert.equal(volley(h).join(),'0,1','un orbe perçant, aucune balle ordinaire');});
+});
+test('v5.28 victory announces a newly unlocked ship once; the bilan names the next one',()=>{
+ const h=boot({meta:{story:{briefed:true}}});try{const d=h.w.document,S=h.g.story;
+  d.getElementById('modeCampagne').click();h.advance(300);
+  S.victory(15);assert.ok(d.getElementById('shipLine28'));assert.match(d.getElementById('shipLine28').textContent,/AUBE/);assert.match(d.getElementById('shipLine28').textContent,/Protocole I/);
+  S.victory(15);assert.ok(!d.getElementById('shipLine28'),'annoncé une seule fois');
+  assert.equal(h.g.hangar.newShips().length,0);checkErrors(h);
+ }finally{h.close();}
+});
+
+test('v5.29 Frisson: grazes fill a gauge, a full gauge sets the player ablaze for 6 s (score ×1.5), idle gauge drains, fixed modes ignore it',()=>{
+ const h=boot({meta:{story:{briefed:true}}});try{const d=h.w.document,F=h.g.frisson;
+  d.getElementById('modeCampagne').click();h.advance(300);h.g.player.invuln=99;
+  F.graze(5);assert.ok(F.meter()>10&&F.meter()<40);assert.equal(F.active(),0);
+  let n=0;while(F.active()===0&&n<80){F.graze(1);n++;}assert.equal(F.count(),1);assert.ok(n>=15&&n<=40,'plein en '+n+' frôlements');assert.equal(F.mult(),1.5);
+  h.advance(3000);assert.ok(F.active()>2&&F.active()<3.5);assert.ok(F.meter()<60,'la jauge se vide en même temps');
+  h.advance(3300);assert.equal(F.active(),0);assert.equal(F.meter(),0);assert.equal(F.mult(),1);
+  F.graze(8);const m0=F.meter();h.advance(2500);assert.equal(Math.round(F.meter()),Math.round(m0));h.advance(3500);assert.ok(F.meter()<m0,'sans frôlement, elle redescend');
+  h.g.density.setMode('operation');F.set(0);F.graze(40);assert.equal(F.meter(),0,'équité : Opération du jour');h.g.density.setMode('campagne');
+  assert.match(d.querySelector('.bridge-version').textContent,/5\.29/);assert.match(d.querySelector('.flight-help').textContent,/FRISSON/);assert.match(d.querySelector('.flight-help').textContent,/Spécial du vaisseau/);
   checkErrors(h);
  }finally{h.close();}
 });
