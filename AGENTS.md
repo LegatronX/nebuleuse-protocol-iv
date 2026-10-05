@@ -58,7 +58,7 @@ Chaque version ajoute un module IIFE qui **enveloppe** des fonctions globales r�
 ```bash
 npm install          # jsdom pour les tests unitaires
 npm run build        # recopie v518…v529 dans index.html (à relancer après chaque modif d'un v5xx.js)
-npm test             # tests unitaires jsdom : 51/51 attendus (≈ 2 min)
+npm test             # tests unitaires jsdom : 55/55 attendus (≈ 2 min)
 npm start            # serveur local http://127.0.0.1:8179/
 ```
 

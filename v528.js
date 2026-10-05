@@ -346,7 +346,7 @@
           }
           ctx.restore();
           if (fx.hole) {
-            const h = fx.hole, r = 26 * h.r + Math.sin(globalTime * 8) * 1.5;
+            const h = fx.hole, r = Math.max(1, 26 * h.r + Math.sin(globalTime * 8) * 1.5); // rayon jamais négatif (createRadialGradient lèverait)
             ctx.save(); ctx.globalCompositeOperation = 'lighter';
             const g = ctx.createRadialGradient(h.x, h.y, r * 0.6, h.x, h.y, r * 3.4);
             g.addColorStop(0, 'rgba(192,132,252,.55)'); g.addColorStop(1, 'rgba(88,28,135,0)');

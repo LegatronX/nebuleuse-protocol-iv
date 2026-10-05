@@ -763,7 +763,7 @@ async function main() {
       });
       assert(r === 4, 'schémas OK: ' + r + '/4');
     });
-    await T('TC-V11-002', 'V11', 'P1', 'Vitrine : 4 cartes, schémas uniques, silhouettes', async () => {
+    await T('TC-V11-002', 'V11', 'P1', 'Vitrine : 7 cartes (v5.28), schémas uniques, silhouettes', async () => {
       const r = await GW(() => {
         document.querySelectorAll('.overlay').forEach(o => o.classList.add('hidden'));
         window.__NP4.v11.openShips();
@@ -775,7 +775,7 @@ async function main() {
           bars: document.querySelectorAll('.sc-bar').length
         };
       });
-      assert(r.cards === 4 && r.imgs === 4 && r.dials === 4 && r.locked === 3 && r.bars === 4, JSON.stringify(r));
+      assert(r.cards === 7 && r.imgs === 7 && r.dials === 7 && r.locked === 6 && r.bars === 4, JSON.stringify(r)); // v5.28 : 7 vaisseaux, 6 verrouillés au départ
     });
     await pw.evaluate(() => { document.querySelectorAll('.overlay').forEach(o => o.classList.add('hidden')); const b = [...document.querySelectorAll('button')].find(x => /campagne/i.test(x.textContent)); if (b) b.click(); });
     await pw.waitForTimeout(2600);
