@@ -7,7 +7,8 @@
       // B. Jauges (coque, bouclier, énergie, surcharge) : plus en haut à gauche, où le HUD
       //    fantôme les faisait disparaître ; fines jauges verticales en bas à gauche,
       //    au-dessus du bouton CANON, toujours visibles.
-      // C. Bouton TIR (mode manuel) : 84 px pour le pouce, viseur dessiné.
+      // C. Bouton TIR (mode manuel) : 84 px pour le pouce, viseur dessiné. Il n'apparaît qu'en jeu et en
+//    tir manuel (la règle de verre v5.21 le laissait visible en permanence, même au menu).
       // (La lance NOVA et le grincement de l'Orgue sont assagis dans le code d'origine.)
       // ============================================================
       (() => {
@@ -53,6 +54,7 @@ body.playing #hud .mid .bar-row span::after{content:attr(data-l);font:700 8px va
 body.playing #hud .mid .bar{position:absolute!important;left:50%;bottom:12px;width:52px!important;height:5px!important;margin:0!important;
   transform-origin:0 50%;transform:rotate(-90deg);flex:none!important}
 #fireBtn{width:84px!important;height:84px!important;right:14px!important;bottom:calc(env(safe-area-inset-bottom) + 190px)!important}
+#fireBtn:not(.show){opacity:0!important;pointer-events:none!important}
 #fireBtn svg{width:34px;height:34px;display:block;margin:0 auto}
 #fireBtn span{font-size:9px}
 `;

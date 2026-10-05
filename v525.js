@@ -39,7 +39,7 @@
         function go(p, d) {
           if (log.length < 400) log.push([phase, +age.toFixed(1)]);
           phase = p; age = 0; dur = d !== undefined ? d : rnd(DUR[p][0], DUR[p][1]);
-          if (p === 'peak') { peakHurt = false; peakStartedAt = gameTime; cycles++; if (window.addText && state === 'playing') addText(W / 2, H * 0.32, 'DÉFERLANTE', '#fca5a5'); }
+          if (p === 'peak') { peakHurt = false; peakStartedAt = gameTime; cycles++; }
           if (p === 'breath') afterPeak();
         }
 
@@ -56,7 +56,7 @@
           if (age === 0 && log.length && log[log.length - 1][0] === 'peak' && !peakHurt && gameTime - lastMerit > 60 && gameTime - peakStartedAt > 10) {
             lastMerit = gameTime; merits++;
             dropPowerup(x, -20, hr < 0.7 ? 'H' : pick(['S', 'B', 'M']));
-            if (window.addText) addText(W / 2, H * 0.32, 'SANS UN COUP', '#a7f3d0');
+            addText(W / 2, H * 0.32, 'SANS UN COUP', '#a7f3d0');
           }
         }
 

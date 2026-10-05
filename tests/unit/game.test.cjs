@@ -247,14 +247,14 @@ test('v5.24 random capsules from ordinary enemies are throttled; bosses still dr
 test('v5.24 gauges sit at the bottom left, labelled, and ignore the ghost HUD; the fire button is thumb-sized',()=>{
  const h=boot();try{const d=h.w.document;const css=d.getElementById('hud24').textContent;
   assert.match(css,/panel\.bars\{position:fixed!important;top:auto!important/);assert.match(css,/panel\.bars\.np-ghost\{opacity:\.92!important\}/);
-  assert.match(css,/#fireBtn\{width:84px!important/);
+  assert.match(css,/#fireBtn\{width:84px!important/);assert.match(css,/#fireBtn:not\(\.show\)\{opacity:0!important/);
   const labels=[...d.querySelectorAll('#hud .mid .bar-row span')].map(s=>s.dataset.l);assert.ok(labels.slice(0,3).join('')==='CBÉ',labels.join(''));
   assert.ok(d.querySelector('#fireBtn svg'));checkErrors(h);
  }finally{h.close();}
 });
 test('v5.24 NOVA lance recharges slowly and only fires on a target in its lane',()=>{
  const h=boot({meta:{autoFire:true}});try{h.w.document.getElementById('modeCampagne').click();h.advance(300);
-  assert.ok(h.g.v12.lanceT()>=12);h.g.enemies.length=0;h.advance(16000);assert.ok(h.g.v12.charge()>=0.99,'chargée mais sans cible');
+  assert.ok(h.g.v12.lanceT()>=12);h.g.enemies.length=0;h.advance(h.g.v12.lanceT()*1000+2500);assert.ok(h.g.v12.charge()>=0.99,'chargée mais sans cible');
   checkErrors(h);
  }finally{h.close();}
 });
@@ -281,6 +281,73 @@ test('v5.25 director: a boss suspends the cycle and its fall gives a long breath
   D.force('build',40);D.force('peak',30);h.advance(11000);D.force('breath',6);assert.equal(D.drops().merits,1,'au plus une par minute');
   h.g.player.hull=10;h.g.player.shield=0;D.force('build',10);D.force('breath',6);assert.equal(D.drops().reliefs,1,'coque très basse : capsule de secours');
   D.force('build',10);D.force('breath',6);assert.equal(D.drops().reliefs,1,'au plus une par 75 s');
+  checkErrors(h);
+ }finally{h.close();}
+});
+
+test('v5.26 story: first launch shows the briefing once, the mission dossier replays it, acts unlock progressively (or freely by setting)',()=>{
+ const h=boot();try{const d=h.w.document,S=h.g.story;
+  h.advance(900);assert.ok(d.getElementById('brief26').classList.contains('on'),'briefing au premier lancement');
+  for(let i=0;i<3;i++)d.querySelector('#brief26 .go').click();
+  assert.match(d.querySelector('#brief26 .go').textContent,/commandes/);d.querySelector('#brief26 .go').click();
+  assert.ok(S.briefed());assert.ok(!d.getElementById('brief26').classList.contains('on'));
+  assert.equal(JSON.parse(h.w.localStorage.getItem('nebula4_meta')).story.briefed,true);
+  assert.equal(d.getElementById('jumpActe1').disabled,false);assert.equal(d.getElementById('jumpActe2').disabled,true);assert.equal(d.getElementById('jumpActe5').disabled,true);
+  assert.match(d.getElementById('signalPath26').textContent,/0 %/);
+  d.getElementById('dossierBtn26').click();assert.ok(d.getElementById('dossier26').classList.contains('on'));
+  assert.match(d.getElementById('dossier26').textContent,/PROTOCOLE III/);
+  d.querySelector('#dossier26 [data-t=archives]').click();assert.match(d.getElementById('dossier26').textContent,/0 \/ 17/);
+  d.getElementById('dsClose26').click();
+  S.complete(1);assert.equal(d.getElementById('jumpActe2').disabled,false,'acte I terminé : acte II ouvert');assert.equal(d.getElementById('jumpActe3').disabled,true);
+  const sel=d.getElementById('stAccess26');sel.value='free';sel.dispatchEvent(new h.w.Event('change',{bubbles:true}));
+  assert.equal(d.getElementById('jumpActe5').disabled,false);sel.value='progressive';sel.dispatchEvent(new h.w.Event('change',{bubbles:true}));assert.equal(d.getElementById('jumpActe5').disabled,true);
+  checkErrors(h);
+ }finally{h.close();}
+});
+test('v5.26 story: ÉCHO speaks once per beat, archives unlock with the waves, only the campaign advances the goal',()=>{
+ const h=boot({meta:{story:{briefed:true}}});try{const d=h.w.document,S=h.g.story;
+  d.getElementById('modeCampagne').click();h.advance(300);h.g.player.invuln=99;
+  S.startWave(2);h.advance(3000);assert.ok(d.getElementById('echo26').classList.contains('on'));assert.match(d.getElementById('echo26').textContent,/pirates/);
+  assert.ok(S.seen('b2'));const n=S.echoCount();S.startWave(2);h.advance(3000);assert.equal(S.echoCount(),n,'une transmission ne se répète pas');
+  S.startWave(4);assert.ok(S.arch('II'));assert.equal(S.far(),4);assert.ok(S.pct()>0);
+  h.g.density.setMode('survie');S.startWave(30);assert.equal(S.far(),4,'la Survie ne fait pas avancer la campagne');
+  h.g.density.setMode('campagne');
+  S.victory(15);const line=d.getElementById('storyLine26');assert.ok(line);assert.match(line.textContent,/Nébuleuse Prime/);assert.ok(S.done(1));assert.ok(S.unlocked(2));
+  assert.ok(!S.finale());checkErrors(h);
+ }finally{h.close();}
+});
+test('v5.26 story: act V ends on the epilogue (once) and fills the goal to 100 %',()=>{
+ const h=boot({meta:{story:{briefed:true,far:50}}});try{const d=h.w.document,S=h.g.story;
+  d.getElementById('modeCampagne').click();h.advance(300);
+  S.victory(51);h.advance(2000);assert.ok(S.finale());assert.equal(S.pct(),100);assert.ok(d.getElementById('epilogue26').classList.contains('on'));
+  for(let i=0;i<3;i++)d.querySelector('#epilogue26 .go').click();d.querySelector('#epilogue26 .go').click();assert.ok(!d.getElementById('epilogue26').classList.contains('on'));
+  S.victory(51);h.advance(2000);assert.ok(!d.getElementById('epilogue26').classList.contains('on'),'épilogue une seule fois');
+  checkErrors(h);
+ }finally{h.close();}
+});
+
+test('v5.27 bilan: record gap, boss fall with its remaining hull, next lab tier, story progress, folded details; REVANCHE after a boss',()=>{
+ const h=boot({meta:{story:{briefed:true},nanites:20}});try{const d=h.w.document,B=h.g.bilan;
+  d.getElementById('modeCampagne').click();h.advance(300);h.g.player.invuln=99;
+  h.g.spawnBoss();h.advance(300);const b=h.g.boss;b.hp=Math.round(b.maxHp*0.2);
+  for(let i=0;i<40&&h.g.state==='playing';i++){h.g.player.invuln=0;h.g.hurt(9999);h.advance(100);}h.advance(3000);
+  assert.equal(h.g.state,'gameover');
+  const rows=B.rows();assert.equal(rows.map(r=>r.k).slice(0,4).join(),'RECORD,CHUTE,PALIER,SOURCE');
+  assert.match(rows[1].v,/20 %/);assert.match(d.getElementById('bilan27').textContent,/Distance à la Source/);
+  assert.equal(d.getElementById('retryBtn').textContent,'Revanche');
+  assert.ok(d.getElementById('finalStats').classList.contains('np27-fold'),'détails repliés');
+  d.getElementById('statsToggle27').click();assert.ok(!d.getElementById('finalStats').classList.contains('np27-fold'));
+  assert.ok(B.nextTalent().cost>0);assert.ok(!d.getElementById('labEnd27').classList.contains('on'),'20⬡ : rien d\'achetable');checkErrors(h);
+ }finally{h.close();}
+});
+test('v5.27 bilan: an affordable lab tier gets a shortcut, a normal death says Rejouer, the record marks fire once per run',()=>{
+ const h=boot({meta:{story:{briefed:true},nanites:140}});try{const d=h.w.document,B=h.g.bilan;
+  d.getElementById('modeCampagne').click();h.advance(300);h.g.player.invuln=99;
+  for(let i=0;i<40&&h.g.state==='playing';i++){h.g.player.invuln=0;h.g.hurt(9999);h.advance(100);}h.advance(3000);
+  if(h.g.state==='gameover'&&d.getElementById('reviveNo')&&!d.getElementById('reviveOverlay').classList.contains('hidden'))d.getElementById('reviveNo').click();
+  assert.equal(h.g.state,'gameover');assert.equal(d.getElementById('retryBtn').textContent,'Rejouer');
+  assert.ok(B.rows().some(r=>r.k==='PALIER'&&r.lab));assert.ok(d.getElementById('labEnd27').classList.contains('on'));
+  d.getElementById('labEnd27').click();assert.equal(h.g.state,'menu');assert.ok(!d.getElementById('labOverlay').classList.contains('hidden'));
   checkErrors(h);
  }finally{h.close();}
 });

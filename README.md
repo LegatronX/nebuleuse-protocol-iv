@@ -2,6 +2,36 @@
 
 Petit shoot 'em up vertical en HTML/CSS/JS pur (aucune dépendance), jouable directement dans un navigateur.
 
+## v5.27 — Bilan de fin de partie
+
+L'écran de fin ne donnait qu'une pile de chiffres. Le module `v527.js` ajoute un bilan de quatre lignes (au-dessus du rang de mission) qui donne envie de relancer :
+
+| Ligne | Contenu |
+|---|---|
+| **RECORD** | « À 1 240 points du record », « Presque ! » dès 85 % du record, ou « Nouveau record ! +x » |
+| **CHUTE** | vague atteinte ; si un boss était en vie : son nom et la coque qu'il lui restait (rouge sous 35 %) |
+| **PALIER** | prochaine amélioration du Laboratoire et nanites manquants ; si elle est achetable, un bouton **Laboratoire** apparaît |
+| **SOURCE** | distance à la Source du Signal (v5.26) et vagues gagnées pendant la partie (Campagne) |
+
+- « Rejouer » devient **Revanche** quand un boss a eu raison de toi.
+- Les détails chiffrés (mode, difficulté, frôlements, temps…) sont repliés derrière « Détails de la partie ».
+- En cours de partie : un repère « RECORD À n POINTS » à 90 % du record personnel, puis « NOUVEAU RECORD », une fois chacun par partie (hors Opération du jour et Tournoi).
+- Corrigé : le texte « SANS UN COUP » de la v5.25 ne s'affichait jamais (test `window.addText`, une fonction locale).
+- Extension : `__NP4.bilan.addRow(() => ({ k, v }))`.
+
+## v5.26 — Le Signal : une histoire et un but
+
+Le jeu avait de la matière (cinq actes, un Signal, un codex dans les actes III–V) mais aucun fil visible : on jouait « pour le score ». Le module `v526.js` donne un but et une voix au jeu.
+
+- **Le but** : remonter le Signal jusqu'à sa **Source** (vague 51, acte V). Une jauge « Distance à la Source » (menu, pause, écran de victoire) montre le chemin parcouru : 0 % au départ, +1 acte à chaque boss final vaincu, 100 % quand la Source a répondu. Seule la Campagne compte.
+- **Le récit** : au premier lancement, un briefing de 4 écrans (2417, la mélodie, les trois Protocoles perdus, ta mission) ; rejouable depuis **Dossier de mission** (menu). Absent en automatisation (`navigator.webdriver`) et avec `?nobrief`.
+- **ÉCHO**, l'IA de bord, parle par de courtes transmissions (carte en verre, haut de l'écran) à 17 vagues clés (jamais un boss). Chacune ne s'affiche **qu'une fois pour toute la sauvegarde** : pas de bavardage. Fil : les machines sont réveillées, pas méchantes → le Protocole III → ÉCHO est faite de la voix de son pilote → la Source attend une note.
+- **Archives** : les archives I–VIII (actes I–II, une par secteur) rejoignent les archives IX–XVII (actes III–V) dans un seul dossier de 17 entrées ; les entrées non déchiffrées sont grisées.
+- **Fin d'acte** : une phrase de conclusion d'ÉCHO sur l'écran de victoire. **Fin de l'acte V** : un épilogue, une seule fois.
+- **Accès aux actes** (réglage) : *Progressif* (défaut, un acte s'ouvre quand le précédent est terminé ; les joueurs ayant déjà des archives du Signal sont migrés) ou *Libre* (accès direct à tous, comme avant).
+- **Correctif v5.21 → v5.24** : le bouton TIR restait visible en permanence (même au menu et en tir automatique) à cause de la règle « verre ». Il n'apparaît plus qu'en jeu, en tir manuel.
+- Sauvegarde : `meta.story = { briefed, far, done, seen, arch, finale }` et `meta.access` (additifs).
+
 ## v5.25 — Le Réalisateur (rythme de partie)
 
 Les retours de jeu avaient une cause commune : rien ne pilotait l'intensité de la partie. La densité, les phénomènes, la musique et les bonus avaient chacun leur horloge. Le module `v525.js` les relie par une courbe de tension. Il remplace l'accélération linéaire par des cycles :
@@ -9,7 +39,7 @@ Les retours de jeu avaient une cause commune : rien ne pilotait l'intensité de 
 | Phase | Durée | Effet |
 |---|---|---|
 | **Montée** | ~28 s | rythme normal ; accéléré si l'écran est vide plus d'1,2 s ou si le joueur domine |
-| **Déferlante** | ~16 s | arrivées ×1,6, plafond de menace ×1,35 (v5.20), escadrilles légères ajoutées ; le mot « DÉFERLANTE » apparaît |
+| **Déferlante** | ~16 s | arrivées ×1,6, plafond de menace ×1,35 (v5.20), escadrilles légères ajoutées ; aucun texte à l'écran (le rythme se ressent, il ne s'affiche pas) |
 | **Souffle** | ~6 s (8 s après un boss) | plus aucune arrivée : on reprend son souffle, les phénomènes passent ; la musique baisse un peu |
 
 - **Adaptation** : un joueur en difficulté (coque basse, coups reçus) saute la déferlante ; un joueur qui domine enchaîne plus vite.
