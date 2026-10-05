@@ -2,6 +2,22 @@
 
 Petit shoot 'em up vertical en HTML/CSS/JS pur (aucune dépendance), jouable directement dans un navigateur.
 
+## v5.25 — Le Réalisateur (rythme de partie)
+
+Les retours de jeu avaient une cause commune : rien ne pilotait l'intensité de la partie. La densité, les phénomènes, la musique et les bonus avaient chacun leur horloge. Le module `v525.js` les relie par une courbe de tension. Il remplace l'accélération linéaire par des cycles :
+
+| Phase | Durée | Effet |
+|---|---|---|
+| **Montée** | ~28 s | rythme normal ; accéléré si l'écran est vide plus d'1,2 s ou si le joueur domine |
+| **Déferlante** | ~16 s | arrivées ×1,6, plafond de menace ×1,35 (v5.20), escadrilles légères ajoutées ; le mot « DÉFERLANTE » apparaît |
+| **Souffle** | ~6 s (8 s après un boss) | plus aucune arrivée : on reprend son souffle, les phénomènes passent ; la musique baisse un peu |
+
+- **Adaptation** : un joueur en difficulté (coque basse, coups reçus) saute la déferlante ; un joueur qui domine enchaîne plus vite.
+- **Capsules méritées** : une déferlante traversée sans dégât offre une capsule (« SANS UN COUP », 1 par minute au plus). Un joueur très bas reçoit au plus une capsule de coque par 75 s.
+- **Mesure** (bot invulnérable, 150 s d'Acte I) : 4,97 ennemis à l'écran en moyenne, contre 4,96 sans le Réalisateur. Mais 6,1 en déferlante, 5,1 en montée et 1,9 en souffle : le jeu respire au lieu de rester plat.
+- **Équité** : désactivé en Opération du jour et en Tournoi. Réglage « Rythme de partie » : Dynamique (défaut) ou Classique.
+- Actes III–V : l'accalmie d'acte de la v5.13 compte comme un souffle ; le plafond de menace suit la courbe.
+
 ## v5.24 — Confort de jeu
 
 - **NOVA LANCE** (le rayon central qui partait du vaisseau) : en tir automatique, elle se déclenchait toutes les 2,6 s. Elle se recharge maintenant en 12 à 20 s, de façon irrégulière, et ne part que sur une cible dans son axe. Son son et sa secousse sont adoucis, et le texte « NOVA LANCE » est retiré.

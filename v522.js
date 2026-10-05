@@ -255,6 +255,9 @@
           if (chest && !chestSeen && live && wanted()) jingle('tresor', 10);
           chestSeen = chest;
 
+          // v5.25 : le Réalisateur fait respirer le volume (souffle plus doux, déferlante pleine)
+          if (bus && G && G.director) bus.gain.setTargetAtTime(G.director.musicMul(), AudioSys.ctx.currentTime, 1.2);
+
           if (!wanted() || !unlocked) { if (active) { stop(active, 0.6); active = null; curCue = ''; } return; }
           const silent = document.hidden || AudioSys.muted;
           if (silent) { for (const d of decks.concat(sting)) if (d.want && !d.el.paused) d.el.pause(); return; }

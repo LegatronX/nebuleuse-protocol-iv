@@ -258,3 +258,29 @@ test('v5.24 NOVA lance recharges slowly and only fires on a target in its lane',
   checkErrors(h);
  }finally{h.close();}
 });
+test('v5.25 director: build → peak → breath cycle, spawns held during the breath, classic setting and fixed modes disable it',()=>{
+ const h=boot({meta:{autoFire:false}});try{const d=h.w.document,D=h.g.director;d.getElementById('modeCampagne').click();h.advance(300);
+  assert.ok(D.enabled());assert.equal(D.phase(),'build');
+  D.force('peak',30);assert.equal(D.phase(),'peak');assert.ok(D.k()>1.4);assert.ok(D.budget()>1.2);
+  D.force('breath',6);h.g.player.invuln=99;const q0=h.g.pacing.queue().length,e0=h.g.enemies.length;
+  h.advance(3000);assert.equal(h.g.pacing.queue().length,q0,'aucune arrivée pendant le souffle');assert.ok(h.g.enemies.length<=e0);
+  h.advance(4000);assert.equal(D.phase(),'build','le souffle prend fin');
+  h.w.document.getElementById('stRhythm25').value='classic';h.w.document.getElementById('stRhythm25').dispatchEvent(new h.w.Event('change',{bubbles:true}));
+  assert.ok(!D.enabled());assert.equal(D.budget(),1);
+  h.w.document.getElementById('stRhythm25').value='dynamic';h.w.document.getElementById('stRhythm25').dispatchEvent(new h.w.Event('change',{bubbles:true}));
+  assert.ok(D.enabled());h.g.density.setMode('operation');assert.ok(!D.enabled(),'équité : Opération du jour');h.g.density.setMode('tournoi');assert.ok(!D.enabled());
+  checkErrors(h);
+ }finally{h.close();}
+});
+test('v5.25 director: a boss suspends the cycle and its fall gives a long breath; a clean peak earns one capsule, a low hull earns a relief capsule',()=>{
+ const h=boot({meta:{autoFire:false}});try{const d=h.w.document,D=h.g.director;d.getElementById('modeCampagne').click();h.advance(300);h.g.player.invuln=99;
+  h.g.spawnBoss();h.advance(200);assert.equal(D.phase(),'boss');
+  const b=h.g.boss;h.g.enemies.splice(h.g.enemies.indexOf(b),1);h.advance(200);assert.equal(D.phase(),'breath');assert.ok(D.dur()>=7.5);
+  D.force('build',40);h.advance(100);D.force('peak',30);h.advance(11000);h.g.player.invuln=99;D.force('breath',6);
+  assert.equal(D.drops().merits,1,'déferlante sans dégât : capsule méritée');
+  D.force('build',40);D.force('peak',30);h.advance(11000);D.force('breath',6);assert.equal(D.drops().merits,1,'au plus une par minute');
+  h.g.player.hull=10;h.g.player.shield=0;D.force('build',10);D.force('breath',6);assert.equal(D.drops().reliefs,1,'coque très basse : capsule de secours');
+  D.force('build',10);D.force('breath',6);assert.equal(D.drops().reliefs,1,'au plus une par 75 s');
+  checkErrors(h);
+ }finally{h.close();}
+});
