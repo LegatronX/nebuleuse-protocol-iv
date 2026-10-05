@@ -2,6 +2,146 @@
 
 Petit shoot 'em up vertical en HTML/CSS/JS pur (aucune dépendance), jouable directement dans un navigateur.
 
+## v5.29 — Frisson (le frôlement devient utile) et cohérence
+
+Frôler un tir ne rapportait que quelques points et un peu d'énergie NOVA, qui part maintenant toute seule : le geste le plus risqué du jeu n'avait plus d'enjeu. Le module `v529.js` lui en donne un.
+
+- **Jauge de Frisson** : chaque frôlement la remplit (3 points + 0,15 par frôlement de la chaîne, au plus 5) ; un arc fin autour du vaisseau en montre le niveau. Sans frôlement pendant 3 s, elle redescend de 4 points par seconde.
+- **FRISSON** : jauge pleine (≈ 25 frôlements), le vaisseau s'embrase 6 s : **score ×1,5** et **tir 20 % plus vif**. L'arc doré se vide avec le temps, puis la jauge repart de zéro. Danser entre les balles paie ; se cacher en bas de l'écran, non.
+- **Équité** : désactivé en Opération du jour et en Tournoi.
+- Le bilan de fin de partie compte les Frissons (ligne FRISSON, et « Frissons : n » dans les détails).
+- **Cohérence** : la version du menu suit la version réelle (elle affichait « 5.20 · aperçu ») ; le manuel de vol décrit le Frisson et le spécial par vaisseau ; la fiche du talent « Réacteur NOVA » rappelle que la NOVA part seule à 100 %.
+
+## v5.28 — Hangar : sept vaisseaux, sept silhouettes, sept spéciaux
+
+Les quatre vaisseaux se distinguaient par leurs chiffres et leurs fiches, mais en jeu c'était la même flèche recolorée ; et le bouton CANON n'avait de sens que pour le TITAN. Le module `v528.js` change ça.
+
+| Vaisseau | Silhouette | Arme principale | Spécial (bouton **C**) | Débloqué |
+|---|---|---|---|---|
+| PULSE | flèche à ailerons | tir équilibré | **SALVE** : 9 missiles à tête chercheuse en 3 vagues | d'emblée |
+| VECTOR | dard effilé | lasers perçants | **LANCE** : rayon perçant 0,7 s | record 15 000 |
+| TITAN | forteresse à canons | tir lourd | **CANON** : 5 obus perçants (inchangé) | record 60 000 |
+| MIRAGE | fantôme à double image | éventail guidé | **PHASE** : intangible 2,6 s + temps ralenti | record 120 000 |
+| **AUBE** | goutte à halo | éventail d'or léger, bouclier +50 % de régénération | **HALO** : onde qui efface les tirs, blesse, rend 50 de bouclier | terminer l'Acte I |
+| **FAUCHEUR** | faux à deux lames | cinq plombs courts en éventail (redoutable au contact) | **FAUCHÉE** : arc balayant l'écran devant soi | terminer l'Acte III |
+| **ÉCLIPSE** | disque à couronne | orbes lourds et perçants, cadence lente | **SINGULARITÉ** : trou noir 3,4 s qui attire tirs et ennemis, puis s'effondre (2 charges au départ) | atteindre la Source |
+
+- Les spéciaux partagent les mêmes **charges rares** (capsule `O`, 1 au départ, 3 au plus) : le bouton prend l'icône et le nom du spécial du vaisseau.
+- **Histoire** : AUBE est la rescapée du Protocole I, FAUCHEUR est forgé dans les épaves du Protocole II, ÉCLIPSE est le vaisseau du pilote du Protocole III. Les fiches du hangar le disent ; la victoire qui débloque un vaisseau l'annonce (une fois).
+- **Hangar refait** : sept fiches (spécial, passif, anecdote, niveau d'XP, condition de déblocage) ; les trois nouvelles fiches sont dessinées en code, dans la veine des schémas existants.
+- Technique : crochet `window.__np4DrawShip` dans `drawPlayer` (repli sur l'ancienne flèche si absent) ; les armes et spéciaux n'utilisent aucun aléa de jeu.
+- Le bilan de fin de partie nomme le prochain vaisseau à débloquer.
+
+## v5.27 — Bilan de fin de partie
+
+L'écran de fin ne donnait qu'une pile de chiffres. Le module `v527.js` ajoute un bilan de quatre lignes (au-dessus du rang de mission) qui donne envie de relancer :
+
+| Ligne | Contenu |
+|---|---|
+| **RECORD** | « À 1 240 points du record », « Presque ! » dès 85 % du record, ou « Nouveau record ! +x » |
+| **CHUTE** | vague atteinte ; si un boss était en vie : son nom et la coque qu'il lui restait (rouge sous 35 %) |
+| **PALIER** | prochaine amélioration du Laboratoire et nanites manquants ; si elle est achetable, un bouton **Laboratoire** apparaît |
+| **SOURCE** | distance à la Source du Signal (v5.26) et vagues gagnées pendant la partie (Campagne) |
+
+- « Rejouer » devient **Revanche** quand un boss a eu raison de toi.
+- Les détails chiffrés (mode, difficulté, frôlements, temps…) sont repliés derrière « Détails de la partie ».
+- En cours de partie : un repère « RECORD À n POINTS » à 90 % du record personnel, puis « NOUVEAU RECORD », une fois chacun par partie (hors Opération du jour et Tournoi).
+- Corrigé : le texte « SANS UN COUP » de la v5.25 ne s'affichait jamais (test `window.addText`, une fonction locale).
+- Extension : `__NP4.bilan.addRow(() => ({ k, v }))`.
+
+## v5.26 — Le Signal : une histoire et un but
+
+Le jeu avait de la matière (cinq actes, un Signal, un codex dans les actes III–V) mais aucun fil visible : on jouait « pour le score ». Le module `v526.js` donne un but et une voix au jeu.
+
+- **Le but** : remonter le Signal jusqu'à sa **Source** (vague 51, acte V). Une jauge « Distance à la Source » (menu, pause, écran de victoire) montre le chemin parcouru : 0 % au départ, +1 acte à chaque boss final vaincu, 100 % quand la Source a répondu. Seule la Campagne compte.
+- **Le récit** : au premier lancement, un briefing de 4 écrans (2417, la mélodie, les trois Protocoles perdus, ta mission) ; rejouable depuis **Dossier de mission** (menu). Absent en automatisation (`navigator.webdriver`) et avec `?nobrief`.
+- **ÉCHO**, l'IA de bord, parle par de courtes transmissions (carte en verre, haut de l'écran) à 17 vagues clés (jamais un boss). Chacune ne s'affiche **qu'une fois pour toute la sauvegarde** : pas de bavardage. Fil : les machines sont réveillées, pas méchantes → le Protocole III → ÉCHO est faite de la voix de son pilote → la Source attend une note.
+- **Archives** : les archives I–VIII (actes I–II, une par secteur) rejoignent les archives IX–XVII (actes III–V) dans un seul dossier de 17 entrées ; les entrées non déchiffrées sont grisées.
+- **Fin d'acte** : une phrase de conclusion d'ÉCHO sur l'écran de victoire. **Fin de l'acte V** : un épilogue, une seule fois.
+- **Accès aux actes** (réglage) : *Progressif* (défaut, un acte s'ouvre quand le précédent est terminé ; les joueurs ayant déjà des archives du Signal sont migrés) ou *Libre* (accès direct à tous, comme avant).
+- **Correctif v5.21 → v5.24** : le bouton TIR restait visible en permanence (même au menu et en tir automatique) à cause de la règle « verre ». Il n'apparaît plus qu'en jeu, en tir manuel.
+- Sauvegarde : `meta.story = { briefed, far, done, seen, arch, finale }` et `meta.access` (additifs).
+
+## v5.25 — Le Réalisateur (rythme de partie)
+
+Les retours de jeu avaient une cause commune : rien ne pilotait l'intensité de la partie. La densité, les phénomènes, la musique et les bonus avaient chacun leur horloge. Le module `v525.js` les relie par une courbe de tension. Il remplace l'accélération linéaire par des cycles :
+
+| Phase | Durée | Effet |
+|---|---|---|
+| **Montée** | ~28 s | rythme normal ; accéléré si l'écran est vide plus d'1,2 s ou si le joueur domine |
+| **Déferlante** | ~16 s | arrivées ×1,6, plafond de menace ×1,35 (v5.20), escadrilles légères ajoutées ; aucun texte à l'écran (le rythme se ressent, il ne s'affiche pas) |
+| **Souffle** | ~6 s (8 s après un boss) | plus aucune arrivée : on reprend son souffle, les phénomènes passent ; la musique baisse un peu |
+
+- **Adaptation** : un joueur en difficulté (coque basse, coups reçus) saute la déferlante ; un joueur qui domine enchaîne plus vite.
+- **Capsules méritées** : une déferlante traversée sans dégât offre une capsule (« SANS UN COUP », 1 par minute au plus). Un joueur très bas reçoit au plus une capsule de coque par 75 s.
+- **Mesure** (bot invulnérable, 150 s d'Acte I) : 4,97 ennemis à l'écran en moyenne, contre 4,96 sans le Réalisateur. Mais 6,1 en déferlante, 5,1 en montée et 1,9 en souffle : le jeu respire au lieu de rester plat.
+- **Équité** : désactivé en Opération du jour et en Tournoi. Réglage « Rythme de partie » : Dynamique (défaut) ou Classique.
+- Actes III–V : l'accalmie d'acte de la v5.13 compte comme un souffle ; le plafond de menace suit la courbe.
+
+## v5.24 — Confort de jeu
+
+- **NOVA LANCE** (le rayon central qui partait du vaisseau) : en tir automatique, elle se déclenchait toutes les 2,6 s. Elle se recharge maintenant en 12 à 20 s, de façon irrégulière, et ne part que sur une cible dans son axe. Son son et sa secousse sont adoucis, et le texte « NOVA LANCE » est retiré.
+- **NOVA automatique** (v5.23) : elle part au plus toutes les 25 s, et seulement face à 4 ennemis ou plus, ou à un boss.
+- **L'Orgue pétrifié** (monde des machines, vague 27) : en deuxième phase, le grincement métallique sonnait toutes les 1,1 s. Il revient maintenant toutes les 5 à 9 s, plus bas.
+- **Bonus** : les ennemis ordinaires lâchent au plus une capsule aléatoire toutes les 9 s de jeu (4 s pour une élite). Avant, 17 % de chances par ennemi, avec la densité v5.19, faisaient pleuvoir les capsules. Boss, mini-boss et capsules spéciales ne changent pas.
+- **Jauges** : coque, bouclier, énergie et surcharge quittent le haut gauche, où le HUD fantôme les faisait disparaître. Ce sont maintenant de fines jauges verticales en bas à gauche, au-dessus du bouton CANON, toujours visibles.
+- **Bouton TIR** (tir manuel) : 84 px avec un viseur. La v5.21 l'avait réduit à 58 px.
+
+## v5.23 — Canon lourd à la demande
+
+Retour de jeu : en tir automatique, le canon à rail du TITAN partait à chaque salve (environ toutes les 0,6 s). Il écrasait les ennemis et son bruit devenait lassant (`v523.js`).
+
+- Le canon lourd n'est plus automatique. Il se tire avec le bouton **CANON**, qui remplace l'ancien bouton NOVA (touche <kbd>C</kbd>), comme la bombe. Chaque obus donne une salve de 3 tirs perçants, 5 pour le TITAN, avec une explosion à partir du niveau 2 du vaisseau.
+- Les obus sont rares. Une capsule **O** (orange) en donne un : elle tombe toujours d'un boss, avec 30 % de chances d'un mini-boss et 4 % d'un blindé ou d'une élite. Le maximum est de 3 obus, dont 1 au départ (2 pour le TITAN).
+- Le TITAN garde sa cadence et ses dégâts normaux. Il n'a plus de pénalité, puisque le rail ne part plus à chaque salve.
+- La NOVA n'a plus de bouton : elle part d'elle-même quand l'énergie est pleine. Frôler les tirs la charge toujours, et les missions, succès et prototypes NOVA restent valables.
+- Le manuel de vol est mis à jour.
+
+## v5.22 — Bande-son « Nébuleuse »
+
+Les 31 morceaux Suno retenus sur la page d'écoute (tri et commentaires du 27/09) deviennent la bande-son par défaut (`v522.js`). Elle se règle dans Réglages → Bande-son : Nébuleuse, Studio ou Évolutive.
+
+| Situation | Morceaux (commentaire du tri) |
+|---|---|
+| Menu | Les Balises oubliées A et B (« générique/menu ») |
+| Ouverture de campagne (vagues 1–2) | Traversée du Signal C (« générique, plutôt au début »), puis D |
+| Combat léger (Acte I) | Traversée du Signal D et C |
+| Transition après un boss, Actes II–III | Traversée du Signal G et H (« pas au début… entre deux scènes importantes ») |
+| Combat intense (Actes IV–V, Déchaînée, survie avancée) | Traversée du Signal E et F (« nombreux ennemis ») |
+| Routes, Carnet | Traversée du Signal B, I et J (« exploration », « découverte ») |
+| Phénomène épique (supernova, armada, regard, ver, faille, éclipse) | Rêve lucide A (« contemplation active, épique »), Victoire 1 E |
+| Phénomène contemplatif (baleine, aurores, cristal, silence) | Rêve lucide B (« solitaire, lente ») |
+| Premier boss de l'Acte I | Le Gardien de la faille D (« petit boss ») |
+| Boss (Actes I–III) | Le Gardien de la faille A et B |
+| Boss (Actes IV–V) | Le Gardien de la faille E, Victoire 1 A |
+| Boss final | Le Gardien de la faille C (« fait penser à Inception ») |
+| Triomphe (22 s après un boss) | Victoire 1 B, Le Gardien de la faille F |
+| Pause | Attente A et B, Les Balises oubliées B (« musique d'attente ») |
+| Défaite | Défaite du joueur A ; B quand la défaite est écrasante (10 ennemis ou plus, ou Acte III et au-delà) |
+| Victoire finale | Victoire 1 F (« cinématique »), puis Traversée du Signal A (« générique joyeux ») |
+| Coffre du jour, missions | Victoire 1 C (« gain de pièces ») |
+| Jingles | Effet A (« découverte d'un trésor ») à l'ouverture du coffre ; Effet B (« apaisement ») au début d'une accalmie |
+
+- **Départs** : tous les longs morceaux montent en puissance pendant 30 à 60 s (mesure du volume par tranche de 30 s). Les boss, triomphes et combats intenses démarrent donc dans la partie déjà dense.
+- **Variété** : chaque situation alterne entre ses morceaux, sans répéter le dernier. Un morceau seul dans sa situation reprend après son introduction.
+- **Continuité** : fondus enchaînés de 1,8 s entre deux lecteurs. Après une pause, un phénomène ou une photo, la musique reprend à l'endroit où elle s'était arrêtée.
+- **Volume** : un gain par morceau, calculé d'après la mesure, harmonise le niveau (il y avait jusqu'à 5 dB d'écart).
+- **Poids** : fichiers MP3 à 96 kbit/s dans `assets/music/game/` (108 Mo en tout). Ils sont lus en continu : seul le morceau joué est téléchargé, et rien n'est gardé en mémoire. Le service worker ne les met pas en cache, car une réponse complète casserait la lecture partielle sur iOS.
+- **Hors ligne** : si la lecture échoue deux fois, la bande-son studio reprend. Un nouvel essai a lieu toutes les 90 s.
+- Morceaux écartés au tri : Fin du jeu A et B, Victoire 1 D. Les originaux restent dans `assets/music/suno-originals/`.
+
+## v5.21 — Interface unifiée et lisibilité
+
+Réponse aux retours de jeu sur la v5.20 (`v521.js`, intégré par `tools/build-experience.py`).
+
+- **Barre de boss** : fine (3 px), centrée, et visible seulement quand un boss est en jeu. Depuis la v5.16, le « HUD fantôme » la laissait affichée à 40 % sur toute la largeur, même sans boss.
+- **Moins d'informations à l'écran** : les gains de score rapprochés sont fusionnés en un seul texte, avec six textes flottants au maximum. Le record, le compteur de frôlements et les étiquettes sous les boutons sont retirés du HUD.
+- **Un seul style d'interface**, en verre translucide flouté avec une seule famille de caractères, appliqué aux panneaux, badges, notifications, barre de boss et boutons.
+- **Commandes tactiles** : NOVA, BOMBE, DASH et TIR deviennent des boutons de verre de 58 px avec une icône. La charge de la NOVA s'affiche en anneau et le nombre de bombes en pastille. Une tape à deux doigts, n'importe où, lance une bombe (astuce affichée une fois).
+- **Tir humanisé** (réglage, activé par défaut) : la cadence accélère et ralentit comme une gâchette tenue à la main, avec de courtes rafales et de micro-hésitations. Le son alterne trois timbres, avec une hauteur (±70 cents), une vélocité et un départ légèrement variables. Les missiles et le plasma n'arrivent plus à intervalle fixe. Le choix « Métronome » rétablit le comportement d'avant.
+- **Planètes générées** : sept genres (géante gazeuse, tellurique, glacée, volcanique, océanique, désertique, toxique), avec une palette dérivée du secteur, des anneaux à plusieurs bandes, des lunes et des planètes lointaines en parallaxe. Un genre ne revient pas avant trois autres.
+- **Frôlements** : la mécanique reste (passer très près d'un tir ennemi charge la NOVA), mais le texte « FRÔLEMENT xN » quitte l'écran.
+
 ## v5.20 — Aperçu : rencontres et profondeur
 
 Basé sur la v5.19 de Claude (`07b4a3e`). Lancer cet aperçu avec `npm start`, puis ouvrir **http://127.0.0.1:8179/**.

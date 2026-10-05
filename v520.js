@@ -5,7 +5,8 @@
         let parallax = 0, musicLevel = 1, musicTick = 0;
         const density = () => window.__NP4.density.level();
         const pressure = () => enemies.reduce((n, e) => n + (e.type === 'boss' ? 0 : E.cost(e.type)), 0);
-        const limit = () => E.budget(wave, density(), W);
+        // v5.25 : le Réalisateur relève le plafond pendant une déferlante et le baisse pendant le souffle
+        const limit = () => E.budget(wave, density(), W) * ((window.__NP4.director && window.__NP4.director.budget()) || 1);
         const canSpawn = (type) => pressure() + E.cost(type) <= limit();
 
         const start20 = startWave;

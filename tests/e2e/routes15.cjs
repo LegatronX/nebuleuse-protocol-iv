@@ -211,6 +211,8 @@ async function main() {
   await T('restauration : tap → vague, score, secteur et route Forge restaurés, modificateur actif', async () => {
     await page.tap('#routeResumeBtn');
     await wait(2800);
+    // le badge reste masqué pendant la bannière de vague, plus longue sous charge
+    await page.waitForFunction(() => document.getElementById('routeBadge').classList.contains('show'), null, { timeout: 6000 }).catch(() => {});
     const r = await G(() => {
       const g = window.__NP4;
       g.v10.spawnQ('drone');
@@ -444,10 +446,10 @@ async function main() {
     const r = await p.evaluate(() => {
       const b = document.getElementById('routeBadge').getBoundingClientRect();
       const bars = document.querySelector('#hud .mid .panel.bars');
-      const bb = bars ? bars.getBoundingClientRect() : { bottom: 0 };
-      return { st: window.__NP4.state, act: window.__NP4.routes.active(), badgeTop: b.top, barsBottom: bb.bottom, badgeBottom: b.bottom, ih: innerHeight };
+      const bb = bars ? bars.getBoundingClientRect() : { top: 0, bottom: 0 };
+      return { st: window.__NP4.state, act: window.__NP4.routes.active(), badgeTop: b.top, barsTop: bb.top, barsBottom: bb.bottom, badgeBottom: b.bottom, ih: innerHeight };
     });
-    A(r.st === 'playing' && r.act && r.badgeTop >= r.barsBottom - 1 && r.badgeBottom < r.ih * 0.5, JSON.stringify(r));
+    A(r.st === 'playing' && r.act && (r.badgeTop >= r.barsBottom - 1 || r.badgeBottom <= r.barsTop + 1) && r.badgeBottom < r.ih * 0.5 /* v5.24 : jauges en bas ; pas de chevauchement */, JSON.stringify(r));
     await c.close();
   });
 
@@ -505,7 +507,7 @@ async function main() {
   // --- PWA / hors ligne ---
   await T('PWA : service worker v5.15 (purge du cache v5.14), index.html dans le cœur hors ligne', async () => {
     const sw = fs.readFileSync(path.join(APP_DIR, 'sw.js'), 'utf8');
-    A(/VERSION = 'np4-v5\.1[5-9]'/.test(sw) && /'index.html'/.test(sw), 'sw.js');
+    A(/VERSION = 'np4-v5\.(1[5-9]|[2-9]\d)(?:-preview\d+)?'/.test(sw) && /'index.html'/.test(sw), 'sw.js');
     A(!fs.existsSync(path.join(APP_DIR, 'v515.js')) || /MODULE V5\.15/.test(fs.readFileSync(path.join(APP_DIR, 'index.html'), 'utf8')), 'module non intégré dans index.html');
   });
 

@@ -24,6 +24,7 @@ class AudioContext {
   createStereoPanner(){return new Node(this,'pan');} createBufferSource(){return new Node(this,'source');}
   createDynamicsCompressor(){return new Node(this,'compressor');} createConvolver(){return new Node(this,'convolver');}
   createWaveShaper(){return new Node(this,'shaper');}
+  createMediaElementSource(el){const n=new Node(this,'media');n.element=el;return n;}
   createBuffer(ch,len,rate) { const a=Array.from({length:ch},()=>new Float32Array(len));return {getChannelData:n=>a[n],duration:len/rate,length:len}; }
   decodeAudioData() { return Promise.resolve(this.createBuffer(2,800,8000)); }
   resume() { this.state='running'; return Promise.resolve(); }
